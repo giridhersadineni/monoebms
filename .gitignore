@@ -1,0 +1,41 @@
+# Dependencies
+apps/ebms-platform/vendor/
+apps/ebms-platform/node_modules/
+studentsportal/vendor/
+postexams.uasckuexams.in/vendor/
+students.uasckuexams.in/vendor/
+backoffice.uasckuexams.in/vendor/
+
+# Environment files — never commit secrets
+apps/ebms-platform/.env
+apps/ebms-platform/.env.dusk.local
+studentsportal/.env
+postexams.uasckuexams.in/.env
+students.uasckuexams.in/.env
+backoffice.uasckuexams.in/.env
+
+# Built assets
+apps/ebms-platform/public/build/
+apps/ebms-platform/public/hot
+
+# Laravel runtime
+apps/ebms-platform/storage/framework/cache/data/*
+apps/ebms-platform/storage/framework/sessions/*
+apps/ebms-platform/storage/framework/views/*
+apps/ebms-platform/storage/logs/*
+apps/ebms-platform/bootstrap/cache/*
+
+# Dusk
+apps/ebms-platform/tests/Browser/screenshots/*
+apps/ebms-platform/tests/Browser/console/*
+apps/ebms-platform/tests/Browser/source/*
+
+# Deploy credentials
+apps/ebms-platform/deploy.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
