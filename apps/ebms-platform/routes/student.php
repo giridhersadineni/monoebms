@@ -4,6 +4,7 @@ use App\Http\Controllers\Student\AuthController;
 use App\Http\Controllers\Student\ChallanController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\EnrollmentController;
+use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\RevaluationController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,11 @@ Route::middleware('auth:student')->group(function () {
     Route::match(['GET', 'POST'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile
+    Route::get('/profile',            [ProfileController::class, 'show'])->name('profile');
+    Route::post('/profile/photo',     [ProfileController::class, 'uploadPhoto'])->name('profile.photo');
+    Route::post('/profile/signature', [ProfileController::class, 'uploadSignature'])->name('profile.signature');
 
     // Enrollments
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');

@@ -15,25 +15,26 @@ class ExamFactory extends Factory
             'exam_type'        => 'regular',
             'month'            => 'November',
             'year'             => 2024,
-            'status'           => 'open',
+            'status'           => 'RUNNING',
             'scheme'           => 'CBCS',
             'revaluation_open' => false,
-            'fee_json'         => ['BA' => ['regular' => 500, 'above_2_sem' => 700], 'BCOM' => ['regular' => 600, 'above_2_sem' => 800]],
+            'fee_regular'      => 650,
+            'fee_supply_upto2' => null,
         ];
     }
 
     public function open(): static
     {
-        return $this->state(['status' => 'open']);
+        return $this->state(['status' => 'RUNNING']);
     }
 
     public function closed(): static
     {
-        return $this->state(['status' => 'closed']);
+        return $this->state(['status' => 'CLOSED']);
     }
 
     public function withRevaluationOpen(): static
     {
-        return $this->state(['revaluation_open' => true, 'status' => 'closed']);
+        return $this->state(['revaluation_open' => true, 'status' => 'REVALOPEN']);
     }
 }

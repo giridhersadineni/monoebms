@@ -43,6 +43,13 @@
         </div>
         <p style="font-size:13px;color:var(--muted);margin:0;">Check your scores</p>
     </a>
+    <a href="{{ route('student.profile') }}" class="card" style="padding:20px;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(22,43,62,.1)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 1px 4px rgba(22,43,62,.06)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <p style="font-size:14px;font-weight:700;color:var(--navy);margin:0;">My Profile</p>
+            <span style="color:var(--muted);font-size:18px;">→</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:0;">Photo &amp; signature</p>
+    </a>
 </div>
 
 {{-- Recent Enrollments --}}

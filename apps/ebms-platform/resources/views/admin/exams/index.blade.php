@@ -20,8 +20,9 @@
                 class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
             <option value="">All Status</option>
-            <option value="open"   {{ request('status') === 'open'   ? 'selected' : '' }}>Open</option>
-            <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Closed</option>
+            @foreach(['NOTIFY' => 'Notify', 'RUNNING' => 'Running', 'REVALOPEN' => 'Reval Open', 'CLOSED' => 'Closed'] as $val => $label)
+            <option value="{{ $val }}" {{ request('status') === $val ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
         </select>
         <input type="text" name="course" value="{{ request('course') }}"
                placeholder="Course (e.g. CS)"

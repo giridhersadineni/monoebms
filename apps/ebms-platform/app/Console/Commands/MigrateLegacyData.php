@@ -5,14 +5,16 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MigrateLegacyData extends Command
 {
     protected $signature = 'ebms:migrate-legacy
                             {--dry-run : Preview changes without writing to DB}
                             {--chunk=500 : Rows per chunk for large tables}
-                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|gpas|grades)}
+                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|gpas|grades|photos)}
                             {--exam-id= : Restrict results migration to a single legacy EXAMID}';
 
     protected $description = 'Migrate legacy EBMS data from the legacy database to the new schema';
@@ -47,6 +49,7 @@ class MigrateLegacyData extends Command
             'results'     => fn () => $this->migrateResults(),
             'gpas'        => fn () => $this->migrateGpas(),
             'grades'      => fn () => $this->migrateGrades(),
+            'photos'      => fn () => $this->migratePhotos(),
         ];
 
         if ($this->table !== 'all' && ! array_key_exists($this->table, $steps)) {
@@ -106,24 +109,27 @@ class MigrateLegacyData extends Command
 
     private function migrateExams(): void
     {
-        $courseKeys = ['BA', 'BCOM', 'BSC', 'BCOMCA', 'BAHONS'];
-
-        $this->legacy()->table('examsmaster')->orderBy('EXID')->chunk($this->chunk, function ($rows) use ($courseKeys) {
+        $this->legacy()->table('examsmaster')->orderBy('EXID')->chunk($this->chunk, function ($rows) {
             foreach ($rows as $row) {
-                $feeJson  = [];
-                foreach ($courseKeys as $course) {
-                    $regular = $row->{$course . '_FEE'} ?? $row->FEE ?? 0;
-                    $above2  = $row->{$course . '_ABOVE_2'} ?? $regular;
-                    $feeJson[$course] = ['regular' => (int) $regular, 'above_2_sem' => (int) $above2];
-                }
-
-                $status   = strtolower($row->STATUS ?? 'open') === 'close' ? 'closed' : strtolower($row->STATUS ?? 'open');
+                $legacyStatus = strtolower($row->STATUS ?? 'open');
+                $status = match ($legacyStatus) {
+                    'open'  => 'RUNNING',
+                    'close', 'closed' => 'CLOSED',
+                    default => 'CLOSED',
+                };
                 $examType = match (strtolower($row->EXAMTYPE ?? 'regular')) {
                     'supply', 'supplementary' => 'supplementary',
                     'revaluation'             => 'revaluation',
                     'improvement'             => 'improvement',
                     default                   => 'regular',
                 };
+
+                // SUPPLY: FEE = per-subject fee (≤2 papers), ABOVE2SUBS = flat fee (>2 papers)
+                // REGULAR: FEE = flat fee regardless of subject count
+                $isSupply   = $examType === 'supplementary';
+                $feeRegular = $isSupply
+                    ? (int) ($row->ABOVE2SUBS ?? $row->FEE ?? 0)
+                    : (int) ($row->FEE ?? 0);
 
                 $data = [
                     'name'             => $row->EXAMNAME,
@@ -132,10 +138,13 @@ class MigrateLegacyData extends Command
                     'exam_type'        => $examType,
                     'month'            => $row->MONTH ?? null,
                     'year'             => (int) ($row->YEAR ?? date('Y')),
-                    'status'           => in_array($status, ['open', 'closed', 'cancelled']) ? $status : 'closed',
+                    'status'           => $status,
                     'scheme'           => $row->SCHEME ?? null,
                     'revaluation_open' => (bool) ($row->REVALOPEN ?? false),
-                    'fee_json'         => json_encode($feeJson),
+                    'fee_regular'      => $feeRegular,
+                    'fee_supply_upto2' => $isSupply ? (int) ($row->FEE ?? 0) : null,
+                    'fee_improvement'  => (int) ($row->IMPROVEMENT ?? 0) ?: null,
+                    'fee_fine'         => (int) ($row->FINE ?? 0) ?: null,
                 ];
 
                 if (! $this->dryRun) {
@@ -592,6 +601,64 @@ class MigrateLegacyData extends Command
         });
     }
 
+    // ─── Photos & Signatures ─────────────────────────────────────────────────
+
+    private function migratePhotos(): void
+    {
+        $basePhoto = 'https://students.uasckuexams.in/upload/images/';
+        $baseSig   = 'https://students.uasckuexams.in/upload/signatures/';
+
+        $fetched  = 0;
+        $skipped  = 0;
+
+        DB::table('students')
+            ->whereNotNull('aadhaar')
+            ->orderBy('id')
+            ->chunk($this->chunk, function ($rows) use ($basePhoto, $baseSig, &$fetched, &$skipped) {
+                foreach ($rows as $row) {
+                    $updates = [];
+
+                    foreach (['photo' => [$basePhoto, 'students/photos'], 'signature' => [$baseSig, 'students/signatures']] as $type => [$base, $dir]) {
+                        $col = $type . '_path';
+
+                        // Skip if already set
+                        if ($row->$col) {
+                            continue;
+                        }
+
+                        $url  = $base . $row->aadhaar . '.jpg';
+                        $dest = $dir . '/' . $row->hall_ticket . '.jpg';
+
+                        if ($this->dryRun) {
+                            $this->line("  [dry] would fetch {$url} → {$dest}");
+                            $fetched++;
+                            continue;
+                        }
+
+                        try {
+                            $response = Http::timeout(10)->get($url);
+                            if ($response->successful()) {
+                                Storage::disk('public')->put($dest, $response->body());
+                                $updates[$col] = $dest;
+                                $fetched++;
+                            } else {
+                                $skipped++;
+                            }
+                        } catch (\Throwable $e) {
+                            Log::channel('single')->warning("Photo fetch failed [{$type}] student {$row->id}: {$e->getMessage()}");
+                            $skipped++;
+                        }
+                    }
+
+                    if (! empty($updates)) {
+                        DB::table('students')->where('id', $row->id)->update($updates);
+                    }
+                }
+            });
+
+        $this->line("  photos: {$fetched} fetched, {$skipped} skipped (failed or already set)");
+    }
+
     // ─── Helpers: resolve or create missing dependencies ─────────────────────
 
     /**
@@ -650,7 +717,12 @@ class MigrateLegacyData extends Command
             return null;
         }
 
-        $status   = strtolower($row->STATUS ?? 'closed') === 'close' ? 'closed' : strtolower($row->STATUS ?? 'closed');
+        $legacyStatus = strtolower($row->STATUS ?? 'closed');
+        $status = match ($legacyStatus) {
+            'open'  => 'RUNNING',
+            'close', 'closed' => 'CLOSED',
+            default => 'CLOSED',
+        };
         $examType = match (strtolower($row->EXAMTYPE ?? 'regular')) {
             'supply', 'supplementary' => 'supplementary',
             'revaluation'             => 'revaluation',
@@ -665,10 +737,11 @@ class MigrateLegacyData extends Command
             'exam_type'        => $examType,
             'month'            => $row->MONTH ?? null,
             'year'             => (int) ($row->YEAR ?? date('Y')),
-            'status'           => in_array($status, ['open', 'closed', 'cancelled']) ? $status : 'closed',
+            'status'           => $status,
             'scheme'           => $row->SCHEME ?? null,
             'revaluation_open' => (bool) ($row->REVALOPEN ?? false),
-            'fee_json'         => '{}',
+            'fee_regular'      => null,
+            'fee_supply_upto2' => null,
         ];
 
         DB::table('exams')->upsert($data, ['name', 'semester', 'year', 'course'], array_keys($data));

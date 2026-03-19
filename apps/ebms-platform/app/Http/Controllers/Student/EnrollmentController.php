@@ -49,20 +49,18 @@ class EnrollmentController extends Controller
         $student = Auth::guard('student')->user();
         $exam = Exam::findOrFail($request->exam_id);
 
-        $compulsorySubjects = Subject::forCourse($student->course)
+        $subjectQuery = Subject::forCourse($student->course)
             ->forSemester($exam->semester)
-            ->compulsory()
             ->where('medium', $student->medium)
-            ->where('scheme', $student->scheme)
-            ->get();
+            ->where('scheme', $student->scheme);
 
-        $electiveSubjects = Subject::forCourse($student->course)
-            ->forSemester($exam->semester)
-            ->elective()
-            ->where('medium', $student->medium)
-            ->where('scheme', $student->scheme)
-            ->get()
-            ->groupBy('elective_group');
+        if ($student->group_code) {
+            $subjectQuery->where('group_code', $student->group_code);
+        }
+
+        $compulsorySubjects = (clone $subjectQuery)->compulsory()->get();
+
+        $electiveSubjects = (clone $subjectQuery)->elective()->get()->groupBy('elective_group');
 
         return view('student.enrollments.subjects', compact('student', 'exam', 'compulsorySubjects', 'electiveSubjects'));
     }
@@ -78,7 +76,8 @@ class EnrollmentController extends Controller
         );
 
         $subjects = Subject::whereIn('id', $subjectIds)->get();
-        $fee = $this->feeCalculator->calculate($exam, $student);
+        $exam->load('feeRules');
+        $fee = $this->feeCalculator->calculate($exam, count($subjectIds), $student->course, $student->group_code);
 
         $request->session()->put('pending_enrollment', [
             'exam_id'    => $exam->id,

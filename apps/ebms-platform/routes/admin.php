@@ -4,7 +4,10 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DFormController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\ExamController;
+use App\Http\Controllers\Admin\ExamFeeRuleController;
+use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\GradeSheetController;
 use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +47,24 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
     Route::patch('/exams/{exam}/status', [ExamController::class, 'toggleStatus'])->name('exams.toggle-status');
     Route::patch('/exams/{exam}/revaluation', [ExamController::class, 'toggleRevaluation'])->name('exams.toggle-revaluation');
+    Route::post('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'store'])->name('exams.fee-rules.store');
+    Route::delete('/exams/{exam}/fee-rules/{rule}', [ExamFeeRuleController::class, 'destroy'])->name('exams.fee-rules.destroy');
+
+    // Courses & Groups
+    Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+    Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
+    Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+    Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+    Route::post('/courses/{course}/groups', [CourseController::class, 'storeGroup'])->name('courses.groups.store');
+    Route::get('/courses/{course}/groups/{group}/edit', [CourseController::class, 'editGroup'])->name('courses.groups.edit');
+    Route::put('/courses/{course}/groups/{group}', [CourseController::class, 'updateGroup'])->name('courses.groups.update');
+    Route::delete('/courses/{course}/groups/{group}', [CourseController::class, 'destroyGroup'])->name('courses.groups.destroy');
+
+    // Papers (Subjects)
+    Route::resource('papers', SubjectController::class);
 
     // D-Form
     Route::get('/dform', [DFormController::class, 'index'])->name('dform.index');

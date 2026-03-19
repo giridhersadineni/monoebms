@@ -60,6 +60,47 @@
     </div>
     @endif
 
+    {{-- Fee preview --}}
+    @if($exam->fee_regular !== null)
+    <div id="fee-preview" class="animate-in delay-3"
+         style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;"
+         data-fee-regular="{{ $exam->fee_regular }}"
+         data-fee-supply-upto2="{{ $exam->fee_supply_upto2 ?? 0 }}"
+         data-exam-type="{{ $exam->exam_type }}"
+         data-fee-improvement="{{ $exam->fee_improvement ?? 0 }}">
+        <span style="font-size:13px;font-weight:600;color:#92400E;">Estimated Fee</span>
+        <span id="fee-preview-amount" class="font-display" style="font-size:20px;font-weight:700;color:var(--amber);">₹{{ number_format($exam->fee_regular) }}</span>
+    </div>
+    <script nonce="{{ $csp_nonce ?? '' }}">
+    (function () {
+        var preview   = document.getElementById('fee-preview');
+        var amountEl  = document.getElementById('fee-preview-amount');
+        var regular      = parseInt(preview.dataset.feeRegular, 10) || 0;
+        var supplyUpto2  = parseInt(preview.dataset.feeSupplyUpto2, 10) || 0;
+        var examType     = preview.dataset.examType || 'regular';
+        var feeImprov    = parseInt(preview.dataset.feeImprovement, 10) || 0;
+
+        function recalc() {
+            var checked = document.querySelectorAll(
+                'input[name="compulsory_subjects[]"]:checked, input[name^="elective_subjects["]:checked'
+            ).length;
+            var fee = regular;
+            if (examType === 'improvement' && feeImprov) {
+                fee = feeImprov * Math.max(1, checked);
+            } else if (examType === 'supplementary' && supplyUpto2 && checked > 0 && checked <= 2) {
+                fee = supplyUpto2;
+            }
+            amountEl.textContent = '₹' + fee.toLocaleString('en-IN');
+        }
+
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]')
+            .forEach(function (el) { el.addEventListener('change', recalc); });
+
+        recalc();
+    }());
+    </script>
+    @endif
+
     <div class="animate-in delay-3">
         <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:14px;">
             Continue to Review →

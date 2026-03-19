@@ -60,7 +60,7 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1.5">Exam Type <span class="text-red-500">*</span></label>
-                <select name="exam_type" required
+                <select name="exam_type" required onchange="onExamTypeChange(this.value)"
                         class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
                                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
                     @foreach(['regular', 'supplementary', 'special', 'backlog'] as $type)
@@ -115,8 +115,9 @@
             <select name="status" required
                     class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
-                <option value="open"   {{ old('status', $exam?->status ?? 'open') === 'open'   ? 'selected' : '' }}>Open</option>
-                <option value="closed" {{ old('status', $exam?->status) === 'closed' ? 'selected' : '' }}>Closed</option>
+                @foreach(['NOTIFY' => 'Notify', 'RUNNING' => 'Running', 'REVALOPEN' => 'Reval Open', 'CLOSED' => 'Closed'] as $val => $label)
+                <option value="{{ $val }}" {{ old('status', $exam?->status ?? 'NOTIFY') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
             </select>
             <x-form-error field="status" />
         </div>
@@ -130,17 +131,82 @@
             <label for="revaluation_open" class="text-sm text-slate-700 font-medium">Revaluation open</label>
         </div>
 
-        {{-- Fee JSON --}}
-        <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1.5">Fee Configuration (JSON)</label>
-            <textarea name="fee_json" rows="6" spellcheck="false"
-                      placeholder='{"CS": {"regular": 500, "above_2_sem": 800}, "default": 400}'
-                      class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-mono
-                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
-                             placeholder:font-sans placeholder:text-slate-400 resize-y">{{ old('fee_json', $exam?->fee_json ? json_encode($exam->fee_json, JSON_PRETTY_PRINT) : '') }}</textarea>
-            <p class="text-xs text-slate-400 mt-1">Leave blank if not applicable. Must be valid JSON.</p>
-            <x-form-error field="fee_json" />
-        </div>
+        {{-- Fee Configuration --}}
+        <fieldset class="border border-slate-200 rounded-lg p-4 space-y-4">
+            <legend class="text-xs font-semibold text-slate-600 px-1">Fee Configuration</legend>
+
+            {{-- Regular fee (always shown; label adapts to exam type) --}}
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1.5">
+                    <span id="fee_regular_label_text">Fee (₹)</span>
+                    <span class="text-red-500">*</span>
+                </label>
+                <input type="number" name="fee_regular" id="fee_regular"
+                       value="{{ old('fee_regular', $exam?->fee_regular) }}"
+                       min="0" placeholder="e.g. 650"
+                       class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm
+                              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
+                <p class="text-xs text-slate-400 mt-1" id="fee_regular_hint">Flat fee charged for all students</p>
+                <x-form-error field="fee_regular" />
+            </div>
+
+            {{-- Supply ≤2 papers tier (shown only for supplementary exam type) --}}
+            <div id="fee_supply_upto2_fields" class="{{ old('exam_type', $exam?->exam_type) === 'supplementary' ? '' : 'hidden' }}">
+                <label class="block text-xs font-medium text-slate-600 mb-1.5">
+                    Fee — up to 2 papers (₹) <span class="text-red-500">*</span>
+                </label>
+                <input type="number" name="fee_supply_upto2"
+                       value="{{ old('fee_supply_upto2', $exam?->fee_supply_upto2) }}"
+                       min="0" placeholder="e.g. 450"
+                       class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm
+                              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
+                <p class="text-xs text-slate-400 mt-1">
+                    Flat fee for 1–2 papers &nbsp;·&nbsp; 3+ papers use the fee above
+                </p>
+                <x-form-error field="fee_supply_upto2" />
+            </div>
+
+            {{-- Improvement & Fine --}}
+            <div class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1.5">
+                        Improvement Fee (₹) <span class="text-xs text-slate-400 font-normal">/ paper</span>
+                    </label>
+                    <input type="number" name="fee_improvement"
+                           value="{{ old('fee_improvement', $exam?->fee_improvement) }}"
+                           min="0" placeholder="e.g. 300"
+                           class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm
+                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
+                    <x-form-error field="fee_improvement" />
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1.5">Late Fine (₹)</label>
+                    <input type="number" name="fee_fine"
+                           value="{{ old('fee_fine', $exam?->fee_fine) }}"
+                           min="0" placeholder="e.g. 50"
+                           class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm
+                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
+                    <x-form-error field="fee_fine" />
+                </div>
+            </div>
+        </fieldset>
+
+        <script nonce="{{ $csp_nonce ?? '' }}">
+        function onExamTypeChange(type) {
+            const supplyFields = document.getElementById('fee_supply_upto2_fields');
+            const regularText  = document.getElementById('fee_regular_label_text');
+            const regularHint  = document.getElementById('fee_regular_hint');
+            if (type === 'supplementary') {
+                supplyFields.classList.remove('hidden');
+                regularText.textContent = 'Fee — 3+ papers (₹)';
+                regularHint.textContent = 'Flat fee for 3 or more papers';
+            } else {
+                supplyFields.classList.add('hidden');
+                regularText.textContent = 'Fee (₹)';
+                regularHint.textContent = 'Flat fee charged for all students';
+            }
+        }
+        </script>
 
         {{-- Actions --}}
         <div class="flex items-center gap-3 pt-2 border-t border-slate-100">

@@ -13,6 +13,36 @@
         </a>
     </div>
 
+    {{-- Photo & Signature --}}
+    @if($student->photo_url || $student->signature_url)
+    <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6 flex items-start gap-6">
+        <div class="text-center">
+            @if($student->photo_url)
+                <img src="{{ $student->photo_url }}" alt="Photo" class="w-24 rounded border border-gray-200 object-cover mb-1">
+                <p class="text-xs text-gray-400">Photo</p>
+            @else
+                <div class="w-24 h-32 bg-gray-100 rounded border border-dashed border-gray-300 flex items-center justify-center mb-1">
+                    <span class="text-xs text-gray-400">No photo</span>
+                </div>
+            @endif
+        </div>
+        <div class="text-center">
+            @if($student->signature_url)
+                <img src="{{ $student->signature_url }}" alt="Signature" class="h-12 rounded border border-gray-200 mb-1">
+                <p class="text-xs text-gray-400">Signature</p>
+            @else
+                <div class="w-40 h-12 bg-gray-100 rounded border border-dashed border-gray-300 flex items-center justify-center mb-1">
+                    <span class="text-xs text-gray-400">No signature</span>
+                </div>
+            @endif
+        </div>
+    </div>
+    @else
+    <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex items-center gap-3">
+        <span class="text-gray-400 text-sm">No photo or signature uploaded.</span>
+    </div>
+    @endif
+
     {{-- Student Details Card --}}
     <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
         <div class="grid grid-cols-3 gap-4 text-sm">

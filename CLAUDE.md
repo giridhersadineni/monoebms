@@ -93,6 +93,15 @@ Student → hasOne(Grade)  ← cumulative CGPA/division
 - **Connection:** `mariadb` (primary), `legacy` (read-only, `LEGACY_DB_*` env vars, points to `uascexams_ebms`)
 - **Test DB:** SQLite in-memory (configured in `phpunit.xml`)
 - The `audit_events.actor_id` is a polymorphic unsignedBigInteger (no FK constraint) — references either `students.id` or `admin_users.id`
+- The `exams` table uses flat fee columns (no `fee_json`):
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `fee_mode` | `varchar(20)` default `flat` | `flat` or `per_subject` |
+| `fee_regular` | `unsignedInteger` nullable | Flat fee, or fallback for supply/improvement when subject count exceeds threshold |
+| `fee_per_subject` | `unsignedInteger` nullable | Per-paper fee for supplementary exams (≤ 2 subjects) |
+| `fee_improvement` | `unsignedInteger` nullable | Per-paper fee for improvement exams (no threshold) |
+| `fee_fine` | `unsignedInteger` nullable | Late fine — 0 by default, manually set during grace period |
 
 ### Security Middleware (applied globally)
 
@@ -102,7 +111,11 @@ Student → hasOne(Grade)  ← cumulative CGPA/division
 
 ### Services
 
-- `FeeCalculatorService` — Calculates enrollment fee from `exam.fee_json` based on student course and semester count
+- `FeeCalculatorService` — Calculates enrollment fee via `Exam::calculateFee(int $subjectCount)`. Fee logic by exam type:
+  - `regular` / `flat` mode: `fee_regular` (flat, always)
+  - `supplementary` / `per_subject` mode: `fee_per_subject × count` for ≤ 2 subjects, else `fee_regular`
+  - `improvement`: `fee_improvement × count` (always per-subject, no threshold)
+  - `fee_fine` (default 0) is always added — set to 0 until grace period, then updated manually by admin
 - `GpaCalculatorService` — SGPA/CGPA calculation
 - `ChallanPdfService` — Generates challan PDF using dompdf
 
@@ -119,7 +132,8 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - `0000-00-00` dates sanitized to `null` via `$safeDate` helper
 - Run order: `subjects → exams → students → admin_users → enrollments → results → gpas → grades`
 - `--exam-id=<LEGACY_EXAMID>` filters `enrollments` and `results` to a single legacy exam
-- The `results` table has 9 moderation columns added via migration `000013`: `marks_secured`, `etotal`, `itotal`, `floatation_marks`, `float_deduct`, `fl_scriptcode`, `moderation_marks`, `ac_marks`, `is_moderated`
+- The `results` table includes 9 moderation columns inline in migration `000007`: `marks_secured`, `etotal`, `itotal`, `floatation_marks`, `float_deduct`, `fl_scriptcode`, `moderation_marks`, `ac_marks`, `is_moderated` (migration `000013` was merged in and deleted — do not recreate it)
+- Legacy `examsmaster` fee columns map as: `FEE` → `fee_per_subject` (supply) or `fee_regular` (regular); `ABOVE2SUBS` → `fee_regular` (supply); `IMPROVEMENT` → `fee_improvement`; `FINE` → `fee_fine`
 
 ### Production Deployment
 
@@ -134,6 +148,7 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 ### Known Open Issues (production)
 
 - `Route [login] not defined` — the `Authenticate` middleware redirects unauthenticated requests to `route('login')`, but under the `admin.` prefix the correct route is `admin.login`. Needs a custom `redirectTo` in the auth middleware or a `withExceptions` redirect override.
+- `getMonthNameAttribute(): Argument #1 must be of type string, null given` — legacy-migrated exams have a numeric `month` stored as a string but some rows have null. Seen on `admin/exams/index`. Pre-existing.
 
 ## Constraints
 

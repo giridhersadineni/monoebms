@@ -20,7 +20,13 @@
             <p style="font-size:13px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}@if($exam->month ?? $exam->year) · {{ $exam->month ?? '' }} {{ $exam->year ?? '' }}@endif</p>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-            <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->getFeeForCourse($student->course ?? '')) }}</p>
+            @if($exam->exam_type === 'improvement' && $exam->fee_improvement)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_improvement) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">/paper</span></p>
+            @elseif($exam->exam_type === 'supplementary' && $exam->fee_supply_upto2)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_supply_upto2) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">–{{ number_format($exam->fee_regular) }}</span></p>
+            @elseif($exam->fee_regular)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_regular) }}</p>
+            @endif
             <span class="badge badge-open">Open</span>
         </div>
     </a>

@@ -16,7 +16,7 @@ class ChallanController extends Controller
     {
         $student = Auth::guard('student')->user();
 
-        if ($enrollment->student_id !== $student->id) {
+        if ((int) $enrollment->student_id !== (int) $student->id) {
             abort(403);
         }
 

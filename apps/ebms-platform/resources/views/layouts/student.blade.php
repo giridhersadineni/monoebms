@@ -93,6 +93,54 @@
         ::-webkit-scrollbar { width:5px; height:5px; }
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:var(--border); border-radius:99px; }
+
+        /* Student ID card in sidebar */
+        .student-id-card {
+            display:block; text-decoration:none;
+            background:linear-gradient(135deg,#F8F6F1 0%,#fff 100%);
+            border:1px solid var(--border); border-radius:12px;
+            padding:12px; transition:box-shadow .2s, border-color .2s;
+            position:relative; overflow:hidden;
+        }
+        .student-id-card::before {
+            content:''; position:absolute; left:0; top:0; bottom:0;
+            width:3px; background:var(--amber); border-radius:3px 0 0 3px;
+        }
+        .student-id-card:hover { border-color:rgba(212,145,46,.4); box-shadow:0 4px 16px rgba(212,145,46,.12); }
+        .id-photo {
+            width:44px; height:56px; border-radius:6px; object-fit:cover;
+            border:2px solid var(--amber); box-shadow:0 2px 8px rgba(212,145,46,.25);
+            flex-shrink:0;
+        }
+        .id-photo-placeholder {
+            width:44px; height:56px; border-radius:6px; flex-shrink:0;
+            background:#F0EDE6; border:2px dashed #D4B896;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .id-sig-strip {
+            margin-top:10px; padding-top:10px;
+            border-top:1px dashed #D9D4CA;
+            text-align:center;
+        }
+        .id-sig-strip img {
+            max-height:28px; max-width:100%; object-fit:contain;
+            filter:contrast(1.1);
+        }
+        .id-sig-label {
+            font-size:9px; letter-spacing:.8px; text-transform:uppercase;
+            color:#B8AFA3; font-weight:700; margin-bottom:5px;
+        }
+
+        /* Mobile profile tab with photo avatar */
+        .mobile-profile-avatar {
+            width:24px; height:24px; border-radius:50%;
+            object-fit:cover; border:2px solid var(--amber);
+        }
+        .mobile-profile-circle {
+            width:24px; height:24px; border-radius:50%;
+            background:#EEE9E0; border:2px dashed #C8B99A;
+            display:flex; align-items:center; justify-content:center;
+        }
     </style>
 </head>
 <body>
@@ -136,6 +184,7 @@
                     ['route'=>'student.enrollments.index', 'label'=>'My Enrollments', 'icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                     ['route'=>'student.results.index',     'label'=>'Results',        'icon'=>'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
                     ['route'=>'student.revaluation.index', 'label'=>'Revaluation',   'icon'=>'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'],
+                    ['route'=>'student.profile',           'label'=>'My Profile',     'icon'=>'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
             @endphp
             <nav class="flex flex-col gap-1 flex-1">
@@ -149,8 +198,39 @@
                     </a>
                 @endforeach
             </nav>
-            <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:16px;">
-                <p style="font-size:11px; color:var(--muted); font-weight:600;">Examination Branch</p>
+            @php $me = auth('student')->user(); @endphp
+            <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:8px;">
+                <a href="{{ route('student.profile') }}" class="student-id-card">
+                    <div style="display:flex; gap:10px; align-items:flex-start;">
+                        @if($me?->photo_url)
+                            <img src="{{ $me->photo_url }}" class="id-photo" alt="Photo">
+                        @else
+                            <div class="id-photo-placeholder">
+                                <svg width="18" height="18" fill="none" stroke="#C8B99A" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                        @endif
+                        <div style="min-width:0; flex:1;">
+                            <p style="font-size:12px; font-weight:700; color:var(--navy); margin:0 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                {{ $me?->name }}
+                            </p>
+                            <code style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--amber); background:rgba(212,145,46,.1); padding:2px 6px; border-radius:4px; display:inline-block;">
+                                {{ $me?->hall_ticket }}
+                            </code>
+                            <p style="font-size:10px; color:var(--muted); margin:5px 0 0; font-weight:600; letter-spacing:.2px;">
+                                {{ $me?->course_name ?? $me?->course }}
+                            </p>
+                        </div>
+                    </div>
+                    @if($me?->signature_url)
+                    <div class="id-sig-strip">
+                        <p class="id-sig-label">Signature</p>
+                        <img src="{{ $me->signature_url }}" alt="Signature">
+                    </div>
+                    @endif
+                </a>
+                <p style="font-size:10px; color:var(--muted); font-weight:600; text-align:center; margin-top:10px; letter-spacing:.3px;">Examination Branch</p>
             </div>
         </aside>
 
@@ -187,8 +267,9 @@
                 ['route'=>'student.dashboard',         'label'=>'Home',        'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
                 ['route'=>'student.enrollments.index', 'label'=>'Enrollments', 'icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                 ['route'=>'student.results.index',     'label'=>'Results',     'icon'=>'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
-                ['route'=>'student.revaluation.index', 'label'=>'Revaluation', 'icon'=>'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'],
+                ['route'=>'student.revaluation.index', 'label'=>'Revalu.',     'icon'=>'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'],
             ];
+            $mobileMe = auth('student')->user();
         @endphp
         @foreach($mobileLinks as $link)
             @php $active = request()->routeIs($link['route'].'*'); @endphp
@@ -199,7 +280,23 @@
                 {{ $link['label'] }}
             </a>
         @endforeach
+        {{-- Profile tab with photo avatar --}}
+        @php $profileActive = request()->routeIs('student.profile*'); @endphp
+        <a href="{{ route('student.profile') }}" class="mobile-nav-link {{ $profileActive ? 'active' : '' }}">
+            @if($mobileMe?->photo_url)
+                <img src="{{ $mobileMe->photo_url }}" class="mobile-profile-avatar {{ $profileActive ? 'ring' : '' }}"
+                     style="{{ $profileActive ? 'border-color:var(--navy);' : '' }}" alt="Photo">
+            @else
+                <div class="mobile-profile-circle">
+                    <svg width="12" height="12" fill="none" stroke="#C8B99A" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+            @endif
+            Profile
+        </a>
     </nav>
 
+@stack('scripts')
 </body>
 </html>

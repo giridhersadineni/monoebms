@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ExamRequest;
+use App\Models\Course;
+use App\Models\CourseGroup;
 use App\Models\Exam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,9 +35,11 @@ class ExamController extends Controller
     public function show(Exam $exam): View
     {
         $exam->loadCount('enrollments');
+        $exam->load('feeRules');
         $recentEnrollments = $exam->enrollments()->with('student')->latest()->limit(10)->get();
+        $courses = Course::with('groups')->where('is_active', true)->orderBy('code')->get();
 
-        return view('admin.exams.show', compact('exam', 'recentEnrollments'));
+        return view('admin.exams.show', compact('exam', 'recentEnrollments', 'courses'));
     }
 
     public function create(): View
@@ -45,12 +49,7 @@ class ExamController extends Controller
 
     public function store(ExamRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        if (isset($data['fee_json'])) {
-            $data['fee_json'] = json_decode($data['fee_json'], true);
-        }
-
-        $exam = Exam::create($data);
+        $exam = Exam::create($request->validated());
 
         return redirect()->route('admin.exams.show', $exam)
             ->with('success', 'Exam created successfully.');
@@ -63,12 +62,7 @@ class ExamController extends Controller
 
     public function update(ExamRequest $request, Exam $exam): RedirectResponse
     {
-        $data = $request->validated();
-        if (isset($data['fee_json'])) {
-            $data['fee_json'] = json_decode($data['fee_json'], true);
-        }
-
-        $exam->update($data);
+        $exam->update($request->validated());
 
         return redirect()->route('admin.exams.show', $exam)
             ->with('success', 'Exam updated successfully.');
@@ -76,9 +70,10 @@ class ExamController extends Controller
 
     public function toggleStatus(Exam $exam): RedirectResponse
     {
-        $exam->update(['status' => $exam->status === 'open' ? 'closed' : 'open']);
+        $next = $exam->nextStatus();
+        $exam->update(['status' => $next]);
 
-        return back()->with('success', 'Exam status updated to ' . ($exam->status === 'open' ? 'closed' : 'open') . '.');
+        return back()->with('success', 'Exam status updated to ' . $next . '.');
     }
 
     public function toggleRevaluation(Exam $exam): RedirectResponse

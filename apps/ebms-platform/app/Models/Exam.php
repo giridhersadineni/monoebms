@@ -5,20 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Exam extends Model
 {
     use HasFactory;
     protected $fillable = [
         'name', 'semester', 'course', 'exam_type', 'month', 'year',
-        'status', 'scheme', 'revaluation_open', 'fee_json',
+        'status', 'scheme', 'revaluation_open',
+        'fee_regular', 'fee_supply_upto2', 'fee_improvement', 'fee_fine',
     ];
 
     protected $casts = [
-        'fee_json'         => 'array',
         'revaluation_open' => 'boolean',
         'semester'         => 'integer',
         'year'             => 'integer',
+        'fee_regular'      => 'integer',
+        'fee_supply_upto2' => 'integer',
+        'fee_improvement'  => 'integer',
+        'fee_fine'         => 'integer',
     ];
 
     public function enrollments(): HasMany
@@ -26,9 +31,38 @@ class Exam extends Model
         return $this->hasMany(ExamEnrollment::class);
     }
 
+    public function feeRules(): HasMany
+    {
+        return $this->hasMany(ExamFeeRule::class);
+    }
+
+    // Status constants
+    const STATUS_NOTIFY    = 'NOTIFY';
+    const STATUS_RUNNING   = 'RUNNING';
+    const STATUS_REVALOPEN = 'REVALOPEN';
+    const STATUS_CLOSED    = 'CLOSED';
+
+    /** Next status in the admin cycle: NOTIFY → RUNNING → CLOSED → NOTIFY */
+    public function nextStatus(): string
+    {
+        return match ($this->status) {
+            self::STATUS_NOTIFY    => self::STATUS_RUNNING,
+            self::STATUS_RUNNING   => self::STATUS_CLOSED,
+            self::STATUS_REVALOPEN => self::STATUS_CLOSED,
+            default                => self::STATUS_NOTIFY,
+        };
+    }
+
+    /** True when students may submit enrollment forms (NOTIFY = enrollment window) */
     public function scopeOpen($query)
     {
-        return $query->where('status', 'open');
+        return $query->where('status', self::STATUS_NOTIFY);
+    }
+
+    /** True when the exam is in progress and hall tickets can be downloaded */
+    public function canDownloadHallTicket(): bool
+    {
+        return $this->status === self::STATUS_RUNNING;
     }
 
     public function scopeForCourse($query, string $course)
@@ -49,15 +83,48 @@ class Exam extends Model
         return ucfirst(strtolower($value));
     }
 
-    public function getFeeForCourse(string $course, bool $above2 = false): int
+    public function calculateFee(int $subjectCount, ?string $course = null, ?string $groupCode = null): int
     {
-        $fees = $this->fee_json ?? [];
-        $key  = strtoupper($course);
+        $rule = $this->resolveFeeRule($course, $groupCode);
 
-        if (! isset($fees[$key])) {
-            return (int) ($fees['default'] ?? 0);
+        $feeRegular   = $rule?->fee_regular      ?? $this->fee_regular;
+        $feeSupply    = $rule?->fee_supply_upto2  ?? $this->fee_supply_upto2;
+        $feeImprove   = $rule?->fee_improvement   ?? $this->fee_improvement;
+        $fine         = $rule?->fee_fine          ?? $this->fee_fine ?? 0;
+
+        // Improvement exams: always per-subject, no threshold
+        if ($this->exam_type === 'improvement' && $feeImprove) {
+            return $feeImprove * max(1, $subjectCount) + $fine;
         }
 
-        return (int) ($above2 ? ($fees[$key]['above_2_sem'] ?? $fees[$key]['regular'] ?? 0) : ($fees[$key]['regular'] ?? 0));
+        // Supply exams: flat ≤2-paper tier, then flat regular fee for 3+
+        if ($this->exam_type === 'supplementary' && $feeSupply !== null && $subjectCount > 0 && $subjectCount <= 2) {
+            return $feeSupply + $fine;
+        }
+
+        return ($feeRegular ?? 0) + $fine;
+    }
+
+    private function resolveFeeRule(?string $course, ?string $groupCode): ?ExamFeeRule
+    {
+        if (! $this->exists) {
+            return null;
+        }
+
+        /** @var Collection $rules */
+        $rules = $this->feeRules;
+
+        // 1. Exact match: course + group
+        if ($course && $groupCode) {
+            $r = $rules->where('course', $course)->where('group_code', $groupCode)->first();
+            if ($r) return $r;
+        }
+        // 2. Course only (group_code IS NULL in DB)
+        if ($course) {
+            $r = $rules->where('course', $course)->whereNull('group_code')->first();
+            if ($r) return $r;
+        }
+        // 3. Exam-wide default (both null)
+        return $rules->whereNull('course')->whereNull('group_code')->first();
     }
 }

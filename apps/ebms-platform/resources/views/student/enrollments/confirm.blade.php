@@ -30,9 +30,25 @@
             @endforeach
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
-            <p style="font-size:14px;color:var(--muted);margin:0;font-weight:600;">Fee Amount</p>
-            <p class="font-display" style="font-size:26px;font-weight:700;color:var(--amber);margin:0;">₹{{ number_format($fee) }}</p>
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+            @if($exam->exam_type === 'improvement' && $exam->fee_improvement)
+            <p style="font-size:12px;color:var(--muted);margin:0 0 6px;text-align:right;">
+                {{ $subjects->count() }} {{ Str::plural('subject', $subjects->count()) }}
+                × ₹{{ number_format($exam->fee_improvement) }} per paper
+            </p>
+            @elseif($exam->exam_type === 'supplementary' && $subjects->count() <= 2)
+            <p style="font-size:12px;color:var(--muted);margin:0 0 6px;text-align:right;">
+                {{ $subjects->count() }} {{ Str::plural('paper', $subjects->count()) }} — flat fee
+            </p>
+            @elseif($exam->exam_type === 'supplementary')
+            <p style="font-size:12px;color:var(--muted);margin:0 0 6px;text-align:right;">
+                {{ $subjects->count() }} papers — flat fee applies
+            </p>
+            @endif
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <p style="font-size:14px;color:var(--muted);margin:0;font-weight:600;">Fee Amount</p>
+                <p class="font-display" style="font-size:26px;font-weight:700;color:var(--amber);margin:0;">₹{{ number_format($fee) }}</p>
+            </div>
         </div>
     </div>
 </div>
