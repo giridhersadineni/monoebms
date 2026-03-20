@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DFormController;
@@ -27,11 +28,15 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Students
+    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
     Route::get('/students/{hallTicket}', [StudentController::class, 'show'])->name('students.show');
     Route::put('/students/{id}', [StudentController::class, 'update'])
         ->middleware('role:admin,superadmin')
         ->name('students.update');
+    Route::post('/students/{hallTicket}/login-as', [StudentController::class, 'loginAs'])
+        ->middleware('role:admin,superadmin')
+        ->name('students.login-as');
 
     // Enrollments
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
@@ -47,7 +52,10 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
     Route::patch('/exams/{exam}/status', [ExamController::class, 'toggleStatus'])->name('exams.toggle-status');
     Route::patch('/exams/{exam}/revaluation', [ExamController::class, 'toggleRevaluation'])->name('exams.toggle-revaluation');
+    Route::get('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'index'])->name('exams.fee-rules.index');
     Route::post('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'store'])->name('exams.fee-rules.store');
+    Route::get('/exams/{exam}/fee-rules/{rule}/edit', [ExamFeeRuleController::class, 'edit'])->name('exams.fee-rules.edit');
+    Route::put('/exams/{exam}/fee-rules/{rule}', [ExamFeeRuleController::class, 'update'])->name('exams.fee-rules.update');
     Route::delete('/exams/{exam}/fee-rules/{rule}', [ExamFeeRuleController::class, 'destroy'])->name('exams.fee-rules.destroy');
 
     // Courses & Groups
@@ -73,6 +81,15 @@ Route::middleware('auth:admin')->group(function () {
     // Attendance Sheet
     Route::get('/attendance', [DFormController::class, 'attendanceIndex'])->name('attendance.index');
     Route::get('/attendance/print', [DFormController::class, 'attendancePrint'])->name('attendance.print');
+
+    // Admin Users (superadmin only)
+    Route::middleware('role:superadmin')->group(function () {
+        Route::get('/admin-users', [AdminUserController::class, 'index'])->name('admin-users.index');
+        Route::get('/admin-users/create', [AdminUserController::class, 'create'])->name('admin-users.create');
+        Route::post('/admin-users', [AdminUserController::class, 'store'])->name('admin-users.store');
+        Route::patch('/admin-users/{adminUser}/toggle-active', [AdminUserController::class, 'toggleActive'])->name('admin-users.toggle-active');
+        Route::post('/admin-users/{adminUser}/reset-password', [AdminUserController::class, 'resetPassword'])->name('admin-users.reset-password');
+    });
 
     // Grade Sheets
     Route::get('/gradesheets/{student}', [GradeSheetController::class, 'show'])->name('gradesheets.show');

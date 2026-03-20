@@ -39,11 +39,19 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1.5">Course <span class="text-red-500">*</span></label>
-                <input type="text" name="course" value="{{ old('course', $exam?->course) }}" required
-                       placeholder="e.g. CS, BCA"
-                       class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-mono
-                              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
-                              placeholder:font-sans placeholder:text-slate-400">
+                <select name="course"
+                        class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-mono bg-white
+                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
+                    <option value="" {{ old('course', $exam?->course) === null ? 'selected' : '' }}>
+                        All Courses (BA / BCOM / BSC)
+                    </option>
+                    @foreach($courses as $c)
+                    <option value="{{ $c->code }}"
+                            {{ old('course', $exam?->course) === $c->code ? 'selected' : '' }}>
+                        {{ $c->code }} — {{ $c->name }}
+                    </option>
+                    @endforeach
+                </select>
                 <x-form-error field="course" />
             </div>
             <div>

@@ -16,25 +16,35 @@
 
 @if($enrollments->count())
 
-{{-- Mobile card stack --}}
-<div class="sm:hidden animate-in delay-1" style="display:flex;flex-direction:column;gap:10px;">
-    @foreach($enrollments as $i => $enrollment)
-    <div class="card" style="padding:16px 18px;animation-delay:{{ $i * .04 }}s;" >
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-            <div style="flex:1;min-width:0;margin-right:12px;">
-                <p style="font-size:15px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $enrollment->exam?->name }}</p>
-                <p style="font-size:12px;color:var(--muted);margin:0;">Sem {{ $enrollment->exam?->semester }} · {{ $enrollment->enrolled_at?->format('d M Y') }}</p>
-                <p style="font-size:11px;color:var(--muted);margin:2px 0 0;font-family:'JetBrains Mono',monospace;">Challan #{{ $enrollment->id }}</p>
+<div class="animate-in delay-1" style="display:flex;flex-direction:column;gap:10px;">
+    @foreach($enrollments as $enrollment)
+    @php $paid = $enrollment->isFeePaid(); @endphp
+    <div class="card" style="padding:16px 20px;">
+        {{-- Top row: exam name + badge --}}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
+            <div style="flex:1;min-width:0;">
+                <p style="font-size:15px;font-weight:700;color:var(--navy);margin:0 0 3px;line-height:1.3;">
+                    {{ $enrollment->exam?->name ?? '—' }}
+                </p>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    @if($enrollment->exam?->semester)
+                        <span style="font-size:11px;font-weight:600;color:#fff;background:var(--navy);padding:1px 8px;border-radius:20px;">Sem {{ $enrollment->exam->semester }}</span>
+                    @endif
+                    <span style="font-size:12px;color:var(--muted);">{{ $enrollment->enrolled_at?->format('d M Y') }}</span>
+                    <code style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);background:#F0EDE8;padding:1px 6px;border-radius:4px;">#{{ $enrollment->id }}</code>
+                </div>
             </div>
-            @php $paid = $enrollment->isFeePaid(); @endphp
-            <span class="badge {{ $paid ? 'badge-paid' : 'badge-unpaid' }}">{{ $paid ? 'Paid' : 'Unpaid' }}</span>
+            <span class="badge {{ $paid ? 'badge-paid' : 'badge-unpaid' }}" style="flex-shrink:0;">
+                {{ $paid ? 'Paid' : 'Unpaid' }}
+            </span>
         </div>
+        {{-- Bottom row: fee + actions --}}
         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);">
-            <span style="font-size:14px;font-weight:700;color:var(--navy);">₹{{ number_format($enrollment->fee_amount) }}</span>
-            <div style="display:flex;gap:12px;">
-                <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan</a>
-                @if($enrollment->isFeePaid())
-                <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results</a>
+            <span style="font-size:15px;font-weight:700;color:var(--navy);">₹{{ number_format($enrollment->fee_amount) }}</span>
+            <div style="display:flex;gap:16px;">
+                <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan →</a>
+                @if($paid)
+                <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results →</a>
                 @endif
             </div>
         </div>
@@ -42,45 +52,8 @@
     @endforeach
 </div>
 
-{{-- Desktop table --}}
-<div class="card hidden sm:block animate-in delay-1" style="overflow:hidden;">
-    <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <thead>
-            <tr style="background:#F7F6F3;border-bottom:1px solid var(--border);">
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Exam</th>
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Semester</th>
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Challan #</th>
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Fee</th>
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Status</th>
-                <th style="padding:12px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($enrollments as $enrollment)
-            @php $paid = $enrollment->isFeePaid(); @endphp
-            <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:14px 20px;font-weight:700;color:var(--navy);">{{ $enrollment->exam?->name }}</td>
-                <td style="padding:14px 20px;color:var(--muted);">{{ $enrollment->exam?->semester }}</td>
-                <td style="padding:14px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">{{ $enrollment->id }}</td>
-                <td style="padding:14px 20px;font-weight:600;color:var(--navy);">₹{{ number_format($enrollment->fee_amount) }}</td>
-                <td style="padding:14px 20px;">
-                    <span class="badge {{ $paid ? 'badge-paid' : 'badge-unpaid' }}">{{ $paid ? 'Paid' : 'Unpaid' }}</span>
-                </td>
-                <td style="padding:14px 20px;">
-                    <div style="display:flex;gap:16px;">
-                        <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan</a>
-                        @if($paid)
-                        <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results</a>
-                        @endif
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">
-        {{ $enrollments->links() }}
-    </div>
+<div style="margin-top:16px;font-size:13px;color:var(--muted);">
+    {{ $enrollments->links() }}
 </div>
 
 @else

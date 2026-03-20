@@ -3,16 +3,104 @@
 
 @section('content')
 
-{{-- Greeting --}}
-<div class="animate-in" style="margin-bottom:24px;">
-    <h1 class="font-display" style="font-size:26px;font-weight:600;color:var(--navy);margin:0 0 4px;">
-        Hello, {{ explode(' ', $student->name)[0] }} 👋
-    </h1>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:14px;color:var(--muted);">{{ $student->course_name ?? $student->course }}</span>
-        <span style="color:var(--border);">·</span>
-        <code class="font-mono-code" style="font-size:12px;background:#EEF0F3;color:var(--navy);padding:2px 8px;border-radius:6px;">{{ $student->hall_ticket }}</code>
+{{-- ── Student Profile ─────────────────────────────────────────── --}}
+<div class="animate-in" style="margin-bottom:28px;">
+
+    {{-- Top: avatar + name + quick chips --}}
+    <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;">
+
+        {{-- Avatar --}}
+        <div style="flex-shrink:0;position:relative;">
+            @if($student->photo_url)
+                <img src="{{ $student->photo_url }}" alt="Photo"
+                     style="width:64px;height:64px;object-fit:cover;border-radius:50%;
+                            border:3px solid #fff;
+                            box-shadow:0 0 0 2px var(--amber), 0 4px 12px rgba(22,43,62,.15);">
+            @else
+                <div style="width:64px;height:64px;border-radius:50%;
+                            background:linear-gradient(135deg,#EAE5DC 0%,#D6CFC2 100%);
+                            border:3px solid #fff;
+                            box-shadow:0 0 0 2px #D9D4CA, 0 4px 12px rgba(22,43,62,.08);
+                            display:flex;align-items:center;justify-content:center;">
+                    <svg width="26" height="26" fill="none" stroke="#A89880" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+            @endif
+            {{-- Signature thumbnail --}}
+            @if($student->signature_url)
+                <div style="position:absolute;bottom:-2px;right:-4px;
+                            background:#fff;border:1px solid #E8E4DC;border-radius:5px;
+                            padding:2px 4px;box-shadow:0 1px 4px rgba(22,43,62,.1);">
+                    <img src="{{ $student->signature_url }}" alt="Sig"
+                         style="height:14px;max-width:40px;object-fit:contain;display:block;filter:contrast(1.1);">
+                </div>
+            @endif
+        </div>
+
+        {{-- Name + meta --}}
+        <div style="flex:1;min-width:0;padding-top:4px;">
+            <h1 class="font-display" style="font-size:22px;font-weight:600;color:var(--navy);margin:0 0 4px;line-height:1.15;letter-spacing:-.3px;">
+                {{ $student->name }}
+            </h1>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                <code class="font-mono-code" style="font-size:11px;color:var(--amber);background:rgba(212,145,46,.1);padding:2px 7px;border-radius:5px;font-weight:500;border:1px solid rgba(212,145,46,.2);">{{ $student->hall_ticket }}</code>
+                <span style="font-size:12px;font-weight:600;color:var(--muted);">{{ $student->course }}{{ $student->group_code ? ' / ' . $student->group_code : '' }}</span>
+                @if($student->semester)
+                    <span style="font-size:11px;font-weight:600;color:#fff;background:var(--navy);padding:1px 8px;border-radius:20px;">Sem {{ $student->semester }}</span>
+                @endif
+            </div>
+        </div>
+
+        <a href="{{ route('student.profile') }}"
+           style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--muted);text-decoration:none;
+                  display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:8px;
+                  border:1px solid var(--border);background:#fff;transition:all .15s;margin-top:4px;"
+           onmouseover="this.style.borderColor='var(--amber)';this.style.color='var(--amber)'"
+           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+            Edit
+        </a>
     </div>
+
+    {{-- Details grid --}}
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;">
+        @php
+            $fields = array_filter([
+                'Course'         => $student->course_name ?? $student->course,
+                'Father\'s Name' => $student->father_name,
+                'Mother\'s Name' => $student->mother_name,
+                'Scheme'         => $student->scheme,
+                'Medium'         => $student->medium ? ucfirst($student->medium) : null,
+                'Phone'          => $student->phone,
+                'Admission Year' => $student->admission_year,
+            ]);
+            $addressParts = array_filter([$student->address, $student->city, $student->state, $student->pincode]);
+            if ($addressParts) $fields['Address'] = implode(', ', $addressParts);
+            $entries = array_values(array_map(fn($k,$v) => [$k,$v], array_keys($fields), $fields));
+            $total = count($entries);
+        @endphp
+        @foreach($entries as $i => [$label, $value])
+        @php
+            $isLastRow  = $i >= $total - 2;
+            $borderRight = ($i % 2 === 0) ? 'border-right:1px solid var(--border);' : '';
+            $borderBottom = !$isLastRow ? 'border-bottom:1px solid var(--border);' : '';
+            $isWide = $label === 'Address';
+        @endphp
+        <div style="padding:11px 16px;{{ $borderRight }}{{ $borderBottom }}{{ $isWide ? 'grid-column:span 2;border-right:none;' : '' }}">
+            <p style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#B8AFA3;margin:0 0 2px;">{{ $label }}</p>
+            <p style="font-size:13px;font-weight:600;color:var(--text);margin:0;line-height:1.4;">{{ $value }}</p>
+        </div>
+        @endforeach
+        @if($total === 0)
+        <div style="padding:16px;grid-column:span 2;text-align:center;">
+            <p style="font-size:13px;color:var(--muted);margin:0;">No details on file. <a href="{{ route('student.profile') }}" style="color:var(--amber);">Update profile</a></p>
+        </div>
+        @endif
+    </div>
+
 </div>
 
 {{-- Stats --}}

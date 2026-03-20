@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExamRequest extends FormRequest
@@ -15,7 +16,7 @@ class ExamRequest extends FormRequest
     {
         return [
             'name'             => ['required', 'string', 'max:200'],
-            'course'           => ['required', 'string', 'max:20'],
+            'course'           => ['nullable', 'string', 'exists:courses,code'],
             'exam_type'        => ['required', 'string', 'in:regular,supplementary,special,backlog'],
             'semester'         => ['required', 'integer', 'min:1', 'max:10'],
             'month'            => ['required', 'integer', 'min:1', 'max:12'],

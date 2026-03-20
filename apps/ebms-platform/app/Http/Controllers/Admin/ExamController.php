@@ -37,14 +37,14 @@ class ExamController extends Controller
         $exam->loadCount('enrollments');
         $exam->load('feeRules');
         $recentEnrollments = $exam->enrollments()->with('student')->latest()->limit(10)->get();
-        $courses = Course::with('groups')->where('is_active', true)->orderBy('code')->get();
 
-        return view('admin.exams.show', compact('exam', 'recentEnrollments', 'courses'));
+        return view('admin.exams.show', compact('exam', 'recentEnrollments'));
     }
 
     public function create(): View
     {
-        return view('admin.exams.form', ['exam' => null]);
+        $courses = Course::where('is_active', true)->orderBy('code')->get();
+        return view('admin.exams.form', ['exam' => null, 'courses' => $courses]);
     }
 
     public function store(ExamRequest $request): RedirectResponse
@@ -57,7 +57,8 @@ class ExamController extends Controller
 
     public function edit(Exam $exam): View
     {
-        return view('admin.exams.form', compact('exam'));
+        $courses = Course::where('is_active', true)->orderBy('code')->get();
+        return view('admin.exams.form', compact('exam', 'courses'));
     }
 
     public function update(ExamRequest $request, Exam $exam): RedirectResponse

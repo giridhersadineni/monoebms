@@ -13,7 +13,7 @@
             </div>
             <h1 class="text-xl font-semibold text-slate-800">{{ $exam->name }}</h1>
             <p class="text-sm text-slate-500 mt-0.5">
-                {{ $exam->course }} · Semester {{ $exam->semester }} ·
+                {{ $exam->course ?? 'All Courses' }} · Semester {{ $exam->semester }} ·
                 {{ $exam->month_name }} {{ $exam->year }}
             </p>
         </div>
@@ -121,158 +121,41 @@
     </div>
     @endif
 
-    {{-- Fee Rules per Course/Group --}}
-    @php
-        $groupsByCourse = $courses->mapWithKeys(fn($c) => [
-            $c->code => $c->groups->pluck('code')->values()->all()
-        ]);
-    @endphp
+    {{-- Fee Rules summary card --}}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-4 overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-100 font-semibold text-slate-700 text-sm">
-            Fee Rules
-            <span class="ml-1.5 text-xs font-normal text-slate-400">Course/group overrides → course default → exam default.</span>
+        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="font-semibold text-slate-700 text-sm">Fee Rules</span>
+                <span class="ml-2 text-xs text-slate-400">{{ $exam->feeRules->count() }} {{ Str::plural('rule', $exam->feeRules->count()) }} configured</span>
+            </div>
+            <a href="{{ route('admin.exams.fee-rules.index', $exam) }}"
+               class="text-blue-600 hover:underline text-xs font-medium">
+                Manage Fee Rules →
+            </a>
         </div>
-
         @if($exam->feeRules->isNotEmpty())
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="bg-slate-50 text-xs text-slate-500 font-semibold uppercase tracking-wide border-b border-slate-100">
-                    <th class="px-4 py-2.5 text-left">Course</th>
-                    <th class="px-4 py-2.5 text-left">Group</th>
-                    <th class="px-4 py-2.5 text-right">Regular</th>
-                    <th class="px-4 py-2.5 text-right">Supply ≤2</th>
-                    <th class="px-4 py-2.5 text-right">Improvement</th>
-                    <th class="px-4 py-2.5 text-right">Fine</th>
-                    <th class="px-4 py-2.5"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($exam->feeRules->sortBy([['course', 'asc'], ['group_code', 'asc']]) as $rule)
-                <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors {{ is_null($rule->course) ? 'bg-amber-50 hover:bg-amber-100' : '' }}">
-                    <td class="px-4 py-2.5 font-medium text-slate-700">
-                        {{ $rule->course ?? '— all courses —' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-slate-500">
-                        {{ $rule->group_code ?? '— all groups —' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right font-mono text-slate-700">
-                        {{ $rule->fee_regular !== null ? '&#8377;'.number_format($rule->fee_regular) : '—' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right font-mono text-slate-700">
-                        {{ $rule->fee_supply_upto2 !== null ? '&#8377;'.number_format($rule->fee_supply_upto2) : '—' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right font-mono text-slate-700">
-                        {{ $rule->fee_improvement !== null ? '&#8377;'.number_format($rule->fee_improvement) : '—' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right font-mono text-slate-700">
-                        {{ $rule->fee_fine ? '&#8377;'.number_format($rule->fee_fine) : '—' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right">
-                        <form method="POST"
-                              action="{{ route('admin.exams.fee-rules.destroy', [$exam, $rule]) }}">
-                            @csrf @method('DELETE')
-                            <button type="submit"
-                                    class="text-red-400 hover:text-red-600 text-xs font-medium transition-colors">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        @else
-        <p class="px-5 py-4 text-sm text-slate-400">No rules yet — exam-level fee defaults apply to all students.</p>
-        @endif
-
-        {{-- Add Rule Form --}}
-        <div class="px-5 py-4 border-t border-slate-100 bg-slate-50">
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Add / Update Rule</p>
-            <form method="POST" action="{{ route('admin.exams.fee-rules.store', $exam) }}">
-                @csrf
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Course</label>
-                        <select name="course" id="fee-rule-course"
-                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                            <option value="">— All courses —</option>
-                            @foreach($courses as $course)
-                            <option value="{{ $course->code }}">{{ $course->code }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Group</label>
-                        <select name="group_code" id="fee-rule-group"
-                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                            <option value="">— All groups —</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Regular fee</label>
-                        <input type="number" name="fee_regular" min="0"
-                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="e.g. 1200">
-                    </div>
-                    @if($exam->exam_type === 'supplementary')
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Supply ≤2 fee</label>
-                        <input type="number" name="fee_supply_upto2" min="0"
-                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="e.g. 600">
-                    </div>
-                    @endif
-                    @if($exam->exam_type === 'improvement')
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Improvement fee / paper</label>
-                        <input type="number" name="fee_improvement" min="0"
-                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="e.g. 200">
-                    </div>
-                    @endif
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Fine</label>
-                        <input type="number" name="fee_fine" min="0" value="0"
-                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-                <button type="submit"
-                        class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    Save Rule
-                </button>
-            </form>
+        <div class="px-5 py-3 flex flex-wrap gap-2">
+            @foreach($exam->feeRules->sortBy([['course', 'asc'], ['group_code', 'asc']]) as $rule)
+            <a href="{{ route('admin.exams.fee-rules.edit', [$exam, $rule]) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200
+                      text-xs text-slate-600 hover:border-blue-300 hover:bg-blue-50 transition-colors
+                      {{ is_null($rule->course) ? 'bg-amber-50 border-amber-200' : 'bg-slate-50' }}">
+                <span class="font-medium">{{ $rule->course ?? 'All' }}</span>
+                @if($rule->group_code)
+                    <span class="text-slate-400">/</span>
+                    <span>{{ $rule->group_code }}</span>
+                @endif
+                @if($rule->fee_regular !== null)
+                    <span class="text-slate-400">·</span>
+                    <span class="font-mono">Rs.{{ number_format($rule->fee_regular) }}</span>
+                @endif
+            </a>
+            @endforeach
         </div>
+        @else
+        <p class="px-5 py-3 text-sm text-slate-400">No rules — exam-level fee defaults apply to all students.</p>
+        @endif
     </div>
-
-    @push('scripts')
-    <script nonce="{{ $csp_nonce ?? '' }}">
-    (function () {
-        var groupsByCourse = @json($groupsByCourse);
-        var courseSelect = document.getElementById('fee-rule-course');
-        var groupSelect  = document.getElementById('fee-rule-group');
-
-        function refreshGroups() {
-            var course = courseSelect.value;
-            var groups = groupsByCourse[course] || [];
-            while (groupSelect.firstChild) { groupSelect.removeChild(groupSelect.firstChild); }
-            var defaultOpt = document.createElement('option');
-            defaultOpt.value = '';
-            defaultOpt.textContent = '— All groups —';
-            groupSelect.appendChild(defaultOpt);
-            for (var i = 0; i < groups.length; i++) {
-                var opt = document.createElement('option');
-                opt.value = groups[i];
-                opt.textContent = groups[i];
-                groupSelect.appendChild(opt);
-            }
-            groupSelect.disabled = (groups.length === 0);
-        }
-
-        courseSelect.addEventListener('change', refreshGroups);
-        refreshGroups();
-    })();
-    </script>
-    @endpush
 
     {{-- Recent Enrollments --}}
     @if($recentEnrollments->isNotEmpty())

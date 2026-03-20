@@ -6,13 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    public function search(): View
+    public function index(Request $request): View
     {
-        return view('admin.students.search');
+        $query = Student::query()->orderBy('hall_ticket');
+
+        if ($q = $request->get('q')) {
+            $query->where(function ($sq) use ($q) {
+                $sq->where('hall_ticket', 'like', $q . '%')
+                   ->orWhere('name', 'like', '%' . $q . '%');
+            });
+        }
+        if ($request->filled('course')) {
+            $query->where('course', $request->get('course'));
+        }
+
+        $students = $query->paginate(50)->withQueryString();
+        $courses  = Student::distinct()->orderBy('course')->pluck('course');
+
+        return view('admin.students.index', compact('students', 'courses'));
     }
 
     public function show(string $hallTicket): View
@@ -43,5 +59,13 @@ class StudentController extends Controller
         $student->update($validated);
 
         return back()->with('success', 'Student record updated.');
+    }
+
+    public function loginAs(string $hallTicket): RedirectResponse
+    {
+        $student = Student::byHallTicket($hallTicket)->firstOrFail();
+        Auth::guard('student')->login($student);
+
+        return redirect('/student/dashboard');
     }
 }

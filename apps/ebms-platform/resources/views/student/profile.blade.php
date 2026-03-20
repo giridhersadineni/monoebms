@@ -415,16 +415,19 @@ btnOK.addEventListener('click', function () {
             return;
         }
 
-        var file = new File([blob], cfg.fileName, { type: 'image/jpeg' });
+        // Capture before closeModal() nulls cfg
+        var inputId = cfg.inputId;
+        var formId  = cfg.formId;
+        var fileName = cfg.fileName;
+
+        var file = new File([blob], fileName, { type: 'image/jpeg' });
         var dt   = new DataTransfer();
         dt.items.add(file);
 
-        var inputEl = document.getElementById(cfg.inputId);
-        inputEl.files = dt.files;
+        document.getElementById(inputId).files = dt.files;
 
-        // Close modal and submit immediately — no extra button click needed
         closeModal();
-        document.getElementById(cfg.formId).submit();
+        document.getElementById(formId).submit();
 
     }, 'image/jpeg', 0.92);
 });
