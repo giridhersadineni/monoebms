@@ -9,21 +9,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Add flat fee columns, drop legacy fee_json
-        Schema::table('exams', function (Blueprint $table) {
-            $table->unsignedInteger('fee_regular')->nullable()->after('revaluation_open');
-            $table->unsignedInteger('fee_supply_upto2')->nullable()->after('fee_regular');
-            $table->unsignedInteger('fee_improvement')->nullable()->after('fee_supply_upto2');
-            $table->unsignedInteger('fee_fine')->nullable()->after('fee_improvement');
-            $table->dropColumn('fee_json');
-        });
+        // Guard: skip column additions if the base migration already has them
+        // (the create_exams migration was consolidated to include flat fee columns).
+        if (!Schema::hasColumn('exams', 'fee_regular')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->unsignedInteger('fee_regular')->nullable()->after('revaluation_open');
+                $table->unsignedInteger('fee_supply_upto2')->nullable()->after('fee_regular');
+                $table->unsignedInteger('fee_improvement')->nullable()->after('fee_supply_upto2');
+                $table->unsignedInteger('fee_fine')->nullable()->after('fee_improvement');
+            });
+        }
 
-        // 2. Migrate existing status values before changing the enum
+        if (Schema::hasColumn('exams', 'fee_json')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->dropColumn('fee_json');
+            });
+        }
+
+        // Migrate existing status values (safe on MariaDB; no-op on fresh SQLite)
         DB::table('exams')->where('status', 'open')->update(['status' => 'RUNNING']);
         DB::table('exams')->whereIn('status', ['closed', 'cancelled'])->update(['status' => 'CLOSED']);
 
-        // 3. Change the status enum to the new set of values
-        DB::statement("ALTER TABLE exams MODIFY COLUMN status ENUM('NOTIFY','RUNNING','REVALOPEN','CLOSED') NOT NULL DEFAULT 'NOTIFY'");
+        // Change the status enum — only on MariaDB/MySQL (SQLite has no ENUM type)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE exams MODIFY COLUMN status ENUM('NOTIFY','RUNNING','REVALOPEN','CLOSED') NOT NULL DEFAULT 'NOTIFY'");
+        }
     }
 
     public function down(): void

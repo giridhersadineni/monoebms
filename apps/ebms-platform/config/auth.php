@@ -46,4 +46,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Legacy SSO Secret
+    |--------------------------------------------------------------------------
+    |
+    | HMAC-SHA256 shared secret used to validate signed SSO tokens from the
+    | legacy student portal (students.uasckuexams.in). The same secret must
+    | be configured in the legacy app's sso_config.php.
+    |
+    */
+    'sso_secret' => env('LEGACY_SSO_SECRET'),
+
 ];
