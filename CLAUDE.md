@@ -156,3 +156,38 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - OWASP controls and PII handling required — `aadhaar`, `dob`, `dost_id`, `email` are `$hidden` on models
 - No hardcoded secrets; use env vars
 - `studentsportal/` legacy app must remain stable during migration
+
+## AI Agent Skills
+
+Agent-specific skill files live in `skills/<platform>/SKILL.md`. Each file is a self-contained prompt fragment loaded at session start.
+
+### Available Skills
+
+| Platform | Path | Purpose |
+|----------|------|---------|
+| Claude (claude.ai) | `skills/claude/SKILL.md` | Claude workflows — migration & security tasks |
+| Claude Code (CLI) | `skills/claude-code/SKILL.md` | Claude Code CLI workflows |
+| Codex | `skills/codex/SKILL.md` | OpenAI Codex workflows |
+| Antigravity | `skills/antigravity/SKILL.md` | Antigravity agent workflows |
+| Google Antigravity | `skills/google-antigravity/SKILL.md` | Google Antigravity agent workflows |
+
+### How to load a skill
+
+- **Claude / Claude Code**: The file is referenced via `skills:` in `.claude/settings.json` or read manually at session start.
+- **Codex**: Pass the file content as a system prompt prefix.
+- **Other platforms**: Prepend the SKILL.md content to the agent system prompt before the task prompt.
+
+### Shared enforcement rules (all skills)
+
+1. Net-new code only in `apps/ebms-platform/`.
+2. Respect module path boundaries: `/student/*`, `/admin/*` (future: `/backoffice/*`, `/postexam/*`).
+3. Never hardcode secrets — use env vars.
+4. Keep `studentsportal/` stable (hotfixes/security only).
+5. After every change run `php artisan route:list && php artisan test`.
+
+### Adding or updating a skill
+
+1. Create/edit `skills/<platform>/SKILL.md`.
+2. Keep the YAML front-matter (`name`, `description`) in sync.
+3. Update the table above.
+4. Commit the skill file alongside any code it references.
