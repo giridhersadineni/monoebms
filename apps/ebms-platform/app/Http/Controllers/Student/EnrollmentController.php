@@ -60,9 +60,11 @@ class EnrollmentController extends Controller
             $subjectQuery->where('group_code', $student->group_code);
         }
 
-        $compulsorySubjects = (clone $subjectQuery)->compulsory()->get();
+        $allSubjects = (clone $subjectQuery)->get();
 
-        $electiveSubjects = (clone $subjectQuery)->elective()->get()->groupBy('elective_group');
+        $compulsorySubjects = $allSubjects->filter(fn($s) => is_null($s->elective_group))->values();
+
+        $electiveSubjects = $allSubjects->filter(fn($s) => !is_null($s->elective_group))->groupBy('elective_group');
 
         return view('student.enrollments.subjects', compact('student', 'exam', 'compulsorySubjects', 'electiveSubjects'));
     }
@@ -120,7 +122,7 @@ class EnrollmentController extends Controller
                         'enrollment_id' => $enrollment->id,
                         'subject_id'    => $subject->id,
                         'subject_code'  => $subject->code,
-                        'subject_type'  => $subject->paper_type === 'elective' ? 'elective' : 'regular',
+                        'subject_type'  => !is_null($subject->elective_group) ? 'elective' : 'regular',
                     ]);
                 }
             });

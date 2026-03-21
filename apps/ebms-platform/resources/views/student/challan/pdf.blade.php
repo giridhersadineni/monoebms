@@ -151,7 +151,7 @@ body {
             <div class="college">University Arts &amp; Science College</div>
             <div class="college-sub">(Autonomous), Hanamkonda</div>
             <div class="bank-name">STATE BANK OF INDIA</div>
-            <div class="bank-sub">Subedari Branch, Hanamkonda &nbsp;|&nbsp; A/C No. {{ $sbi_account }}</div>
+            <div class="bank-sub">Subedari Branch, Hanamkonda &nbsp;|&nbsp; A/C No. {{ $sbi_account }} &nbsp;|&nbsp; IFSC: {{ $sbi_ifsc }}</div>
         </td>
     </tr>
 

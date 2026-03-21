@@ -27,11 +27,15 @@ class ProfileController extends Controller
         $student = Auth::guard('student')->user();
         $path    = 'students/photos/' . $student->hall_ticket . '.jpg';
 
-        Storage::disk('public')->putFileAs(
+        $stored = Storage::disk('public')->putFileAs(
             'students/photos',
             $request->file('photo'),
             $student->hall_ticket . '.jpg'
         );
+
+        if ($stored === false) {
+            return back()->withErrors(['photo' => 'Failed to save photo. Please try again.']);
+        }
 
         $student->update(['photo_path' => $path]);
 
@@ -47,11 +51,15 @@ class ProfileController extends Controller
         $student = Auth::guard('student')->user();
         $path    = 'students/signatures/' . $student->hall_ticket . '.jpg';
 
-        Storage::disk('public')->putFileAs(
+        $stored = Storage::disk('public')->putFileAs(
             'students/signatures',
             $request->file('signature'),
             $student->hall_ticket . '.jpg'
         );
+
+        if ($stored === false) {
+            return back()->withErrors(['signature' => 'Failed to save signature. Please try again.']);
+        }
 
         $student->update(['signature_path' => $path]);
 
