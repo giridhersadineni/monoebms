@@ -51,11 +51,17 @@ class Student extends Authenticatable
 
     public function getPhotoUrlAttribute(): ?string
     {
-        return $this->photo_path ? Storage::disk('public')->url($this->photo_path) : null;
+        if (!$this->photo_path) return null;
+        $url  = Storage::disk('public')->url($this->photo_path);
+        $full = storage_path('app/public/' . $this->photo_path);
+        return $url . (file_exists($full) ? '?v=' . filemtime($full) : '');
     }
 
     public function getSignatureUrlAttribute(): ?string
     {
-        return $this->signature_path ? Storage::disk('public')->url($this->signature_path) : null;
+        if (!$this->signature_path) return null;
+        $url  = Storage::disk('public')->url($this->signature_path);
+        $full = storage_path('app/public/' . $this->signature_path);
+        return $url . (file_exists($full) ? '?v=' . filemtime($full) : '');
     }
 }

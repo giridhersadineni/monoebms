@@ -8,7 +8,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ChallanPdfService
 {
-    public const SBI_ACCOUNT = '52010041880';
+    public const SBI_ACCOUNT = '43903806244';
+    public const SBI_IFSC    = 'SBIN0020837';
     public const SBI_BRANCH  = 'Subedari Branch';
 
     public function generate(ExamEnrollment $enrollment): Response
@@ -22,6 +23,7 @@ class ChallanPdfService
             'subjects'     => $enrollment->enrollmentSubjects,
             'challan_no'   => $enrollment->id,
             'sbi_account'  => self::SBI_ACCOUNT,
+            'sbi_ifsc'     => self::SBI_IFSC,
             'sbi_branch'   => self::SBI_BRANCH,
             'fee_in_words' => $this->amountInWords($enrollment->fee_amount ?? 0),
         ];
