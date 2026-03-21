@@ -41,7 +41,8 @@
         {{-- Bottom row: fee + actions --}}
         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);">
             <span style="font-size:15px;font-weight:700;color:var(--navy);">₹{{ number_format($enrollment->fee_amount) }}</span>
-            <div style="display:flex;gap:16px;">
+            <div style="display:flex;gap:16px;align-items:center;">
+                <a href="{{ route('student.enrollments.application', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;" target="_blank">Application →</a>
                 <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan →</a>
                 @if($paid)
                 <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results →</a>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Student\AuthController;
 use App\Http\Controllers\Student\ChallanController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\EnrollmentController;
+use App\Http\Controllers\Student\PrintApplicationController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\RevaluationController;
@@ -41,6 +42,9 @@ Route::middleware('auth:student')->group(function () {
 
     // Challan
     Route::get('/challan/{enrollment}', [ChallanController::class, 'show'])->name('challan.show');
+
+    // Print Application
+    Route::get('/enrollments/{enrollment}/application', [PrintApplicationController::class, 'show'])->name('enrollments.application');
 
     // Revaluation
     Route::get('/revaluation', [RevaluationController::class, 'index'])->name('revaluation.index');
