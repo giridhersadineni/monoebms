@@ -8,9 +8,11 @@ SET @now = NOW();
 -- Step 1: Backup existing supplementary & improvement fees into a temp table
 DROP TEMPORARY TABLE IF EXISTS _tmp_existing_fees;
 
+-- Scope backup to exam_id 336 only to avoid fan-out duplicates on the LEFT JOIN
 CREATE TEMPORARY TABLE _tmp_existing_fees AS
 SELECT exam_id, course, group_code, fee_supply_upto2, fee_improvement, fee_fine
-FROM exam_fee_rules;
+FROM exam_fee_rules
+WHERE exam_id = 336;
 
 -- Step 2: Clear the table
 DELETE FROM exam_fee_rules;
