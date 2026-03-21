@@ -130,10 +130,6 @@
                 <button type="submit" class="btn-login">Sign In →</button>
             </form>
 
-            <p style="text-align:center;font-size:12px;color:#A0AEC0;margin-top:20px;">
-                Staff member?
-                <a href="{{ route('admin.login') }}" style="color:var(--navy);font-weight:700;text-decoration:none;">Admin login →</a>
-            </p>
         </div>
     </div>
 
