@@ -19,13 +19,19 @@
             <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 4px;">{{ $exam->name }}</p>
             <p style="font-size:13px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}@if($exam->month ?? $exam->year) · {{ $exam->month ?? '' }} {{ $exam->year ?? '' }}@endif</p>
         </div>
+        @php
+            $rf = $resolvedFees[$exam->id] ?? [];
+            $rfRegular = ($rf['fee_regular'] ?? 0) + ($rf['fee_fine'] ?? 0);
+            $rfSupply  = ($rf['fee_supply_upto2'] ?? 0) + ($rf['fee_fine'] ?? 0);
+            $rfImprove = $rf['fee_improvement'] ?? 0;
+        @endphp
         <div style="text-align:right;flex-shrink:0;">
-            @if($exam->exam_type === 'improvement' && $exam->fee_improvement)
-                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_improvement) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">/paper</span></p>
-            @elseif($exam->exam_type === 'supplementary' && $exam->fee_supply_upto2)
-                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_supply_upto2) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">–{{ number_format($exam->fee_regular) }}</span></p>
-            @elseif($exam->fee_regular)
-                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($exam->fee_regular) }}</p>
+            @if($exam->exam_type === 'improvement' && $rfImprove)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($rfImprove) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">/paper</span></p>
+            @elseif($exam->exam_type === 'supplementary' && $rfSupply)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($rfSupply) }}<span style="font-size:11px;font-weight:500;color:var(--muted);">–{{ number_format($rfRegular) }}</span></p>
+            @elseif($rfRegular)
+                <p style="font-size:16px;font-weight:700;color:var(--amber);margin:0 0 4px;">₹{{ number_format($rfRegular) }}</p>
             @endif
             <span class="badge badge-open">Open</span>
         </div>

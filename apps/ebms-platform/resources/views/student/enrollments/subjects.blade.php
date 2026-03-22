@@ -61,15 +61,20 @@
     @endif
 
     {{-- Fee preview --}}
-    @if($exam->fee_regular !== null)
+    @php
+        $rfRegular = ($resolvedFee['fee_regular'] ?? 0) + ($resolvedFee['fee_fine'] ?? 0);
+        $rfSupply  = ($resolvedFee['fee_supply_upto2'] ?? 0) + ($resolvedFee['fee_fine'] ?? 0);
+        $rfImprove = $resolvedFee['fee_improvement'] ?? 0;
+    @endphp
+    @if($rfRegular || $rfImprove)
     <div id="fee-preview" class="animate-in delay-3"
          style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;"
-         data-fee-regular="{{ $exam->fee_regular }}"
-         data-fee-supply-upto2="{{ $exam->fee_supply_upto2 ?? 0 }}"
+         data-fee-regular="{{ $rfRegular }}"
+         data-fee-supply-upto2="{{ $rfSupply }}"
          data-exam-type="{{ $exam->exam_type }}"
-         data-fee-improvement="{{ $exam->fee_improvement ?? 0 }}">
+         data-fee-improvement="{{ $rfImprove }}">
         <span style="font-size:13px;font-weight:600;color:#92400E;">Estimated Fee</span>
-        <span id="fee-preview-amount" class="font-display" style="font-size:20px;font-weight:700;color:var(--amber);">₹{{ number_format($exam->fee_regular) }}</span>
+        <span id="fee-preview-amount" class="font-display" style="font-size:20px;font-weight:700;color:var(--amber);">₹{{ number_format($rfRegular) }}</span>
     </div>
     <script nonce="{{ $csp_nonce ?? '' }}">
     (function () {
