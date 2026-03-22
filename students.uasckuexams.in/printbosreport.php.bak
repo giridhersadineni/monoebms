@@ -1,0 +1,254 @@
+<?php 
+
+include "config.php";
+
+//check connection
+$conn = mysqli_connect($servername, $dbuser, $dbpwd, $dbname);
+if ($conn->connect_error) {
+    die("connection failed:" . mysqli_connect_error());
+} else {
+      $sql = "select * from  examsmaster where EXID=" . $_GET['exam'];
+    $exam= $conn->query($sql);
+    if ($exam->num_rows > 0) {
+        while ($rows= $exam->fetch_assoc()) {
+            break;
+        }
+    }
+
+
+ $esql = "select * from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'];
+    $result = $conn->query($esql);
+      if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()){
+            break;
+        }
+    }
+    
+
+    $prssql = "select count(HALLTICKET) AS totalpresent from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'];
+    $totalpresent = $conn->query($prssql);
+        $values=mysqli_fetch_assoc($totalpresent);
+        $present=$values['totalpresent'];
+        
+
+    $psql = "select count(*) AS totalpass from rholdernew where EXAMID=".$_GET['exam']." and RESULT ='P' and PAPERCODE=".$_GET['pcode'];
+    $totalpass = $conn->query($psql);
+        $pass=mysqli_fetch_assoc($totalpass);
+        $tpass=$pass['totalpass'];
+      
+    $fsql = "select count(*) AS totalfail from rholdernew where EXAMID=".$_GET['exam']." and RESULT ='F' and PAPERCODE=".$_GET['pcode'];
+    $totalfail = $conn->query($fsql);
+        $fail=mysqli_fetch_assoc($totalfail);
+        $tfail=$fail['totalfail'];
+
+    $msql = "select MIN(MARKS) AS least from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode']." and MARKS !='#VALUE!'";
+   // echo $msql;
+    $least = $conn->query($msql);
+        $totalleast=mysqli_fetch_assoc($least);
+        $minmarks=$totalleast['least'];
+        
+ $mxsql = "select MAX(MARKS) AS mxmarks from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode']." and MARKS !='#VALUE!'";
+   // echo $mxsql;
+    $maxmarks= $conn->query($mxsql);
+        $totalmax=mysqli_fetch_assoc($maxmarks);
+        $maxmarks=$totalmax['mxmarks'];
+               
+ $avgsql = "select AVG(MARKS) AS avgmarks from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode']." and MARKS !='#VALUE!'";
+    //echo $avgsql;
+ $avrgmarks=$conn->query($avgsql);
+ 
+    $totalavg=mysqli_fetch_assoc($avrgmarks);
+    $average=$totalavg['avgmarks'];
+    
+    
+ $tsql = "select TOTALMARKS AS total from rholdernew where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'];
+     
+     $gettotal=$conn->query($tsql);
+     $total=mysqli_fetch_assoc($gettotal);
+       
+       $passmarks=($total['total']/100)*40;
+       
+    $onetopassquery="select count(TOTALMARKS) as count1 from rholdernew  where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'] ." and MARKS=" . ($passmarks-1) ."";
+    //echo $onetopassquery;
+    $onepass=$conn->query($onetopassquery);
+    $otpres=mysqli_fetch_assoc($onepass);
+    echo $one=$otpres['count1'];
+
+    
+    $twotopassquery="select count(TOTALMARKS) as count2 from rholdernew  where EXAMID=".$_GET['exam']."  and PAPERCODE=".$_GET['pcode'] ." and MARKS=".($passmarks-2)."";
+    $twopass=$conn->query($twotopassquery);
+    $twomarks=mysqli_fetch_assoc($twopass);
+    echo $two=$twomarks['count2'];
+       
+    $threetopassquery="select count(TOTALMARKS) as count3 from rholdernew  where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'] ." and MARKS=".($passmarks-3)."";
+    $threepass=$conn->query($threetopassquery);
+    $threemarks=mysqli_fetch_assoc($threepass);
+    echo $three=$threemarks['count3'];
+
+
+    $fourtopassquery="select count(TOTALMARKS) as count4 from rholdernew  where EXAMID=".$_GET['exam']." and PAPERCODE=".$_GET['pcode'] ." and MARKS=".($passmarks-4)."";
+    $fourpass=$conn->query($fourtopassquery);
+    $fourmarks=mysqli_fetch_assoc($fourpass);
+    echo $four=$fourmarks['count4'];
+        
+}
+
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Favicon icon -->
+
+</head>
+
+<style>
+.collegelogo {
+    position: absolute;
+    top: 48px;
+    display: block;
+    margin-left: 200px;
+}
+table{
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table1 td{
+    border: 1px solid black;
+    width: 80%;
+    padding:10px;
+
+}
+
+td, th {
+    border: 1px solid black;
+    text-align: left;
+    padding: 10px;
+
+}
+.tbl td th{
+  border:1px solid black;
+ width:70%;
+
+}
+
+
+</style>
+
+<body>
+
+<img src="images/arts.png" alt="" width="120px" class="collegelogo">
+<div class="header">
+<center>
+    <br>   
+    <h2> Office of the<br>CONTROLLER OF EXAMINATIONS <br>University Arts & Science College
+    <br><h5>(An Autonomous Institute under Kakatiya Universtiy)</h5></p>
+    <h2>
+ <h5></h5>
+ <h3><?php echo $rows['EXAMNAME']?></h3>
+  <h2>Course:<?php echo $rows['COURSE'] ?></h2>
+  <h3>DEPARTMENT OF___________________</h3>
+  
+</center>
+
+</div>
+
+
+<table>
+
+<tr>
+    <td style='text-align:center;'>Subject Code</td>
+        <td style='text-align:center;'>Title of the Paper</td>
+        <td style='text-align:center;'>Present</td>
+        <td style='text-align:center;'>Pass</td>
+           <td style='text-align:center;'>Fail</td>
+           <td style='text-align:center;'> Max.Marks</td>
+         <td style='text-align:center;'>Average</td>
+         <td style='text-align:center;'>Min.Marks</td>
+         <td style='text-align:center;' colspan="4"><center>No.Of Student to PASS<br>If__Marks Added </center></td>
+    
+    <tr>
+        
+
+<tr>
+       <th style='text-align:center;'><?php echo $_GET['pcode'] ?></th>
+        <th><?php echo $row['PAPERNAME'] ?></th>
+        <th style='text-align:center;'><?php echo $present ?></th>
+        <th style='text-align:center;'><?php   echo $tpass ?></th>
+           <th style='text-align:center;'><?php echo $tfail ?></th>
+           <th style='text-align:center;'><?php echo $maxmarks ?></th>
+         <th style='text-align:center;'><?php echo ROUND($average) ?> </th>
+         <th style='text-align:center;'><?php echo $minmarks ?></th>
+         
+         <td style='text-align:center;'>
+             <?php 
+             echo 'ONE TO PASS:'.'<br><br><b><center>';
+             if($one==0){
+                 echo $one;
+                 
+             }
+             echo '</b></center>'; 
+             ?>
+             </td>
+          <td style='text-align:center;'>
+                 
+             <?php 
+             echo 'TWO TO PASS:'.'<br><br><b><center>';
+             if($two==0){
+                 echo "0";
+             }else{
+                 echo $one+$two;
+             }
+             echo '</b></center>'; 
+             ?>
+        </td>
+        <td style='text-align:center;'>
+             <?php 
+             echo 'THREE TO PASS:'.'<br><br><b><center>';
+             if($three==0){
+                 echo $one+$two+$three;
+                 
+             }
+             echo '</b></center>'; 
+             ?>
+             </td>
+          <td style='text-align:center;'>
+                 
+             <?php 
+             echo 'FOUR TO PASS:'.'<br><br><b><center>';
+             if($four==0){
+                 echo "0";
+                 
+             }else{
+                 echo $one+$two+$three+$four;
+             }
+             echo '</b></center>'; 
+             ?>
+        </td>
+         
+            
+    <tr>        
+ </table>    
+    <br><br><br><br> 
+<h3>Recommendations:</h3>    
+<br><br><br><br><br><br>  
+
+  
+        <table>
+            <tr>
+      <td><h3 style="text-align:center;padding:2em;;padding-bottom:2em;">Sign.of HEAD/BOS:  </h3></td>
+      <td><h3 style="text-align:center;padding:2em;">Controller of Examinations: </h3></td>
+         <td><h3 style='text-align:center;padding:2em;'>Principal:</h3></td>
+  </tr>
+  </table>
+</body>
+
+</html>
