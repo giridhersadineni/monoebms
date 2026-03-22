@@ -174,14 +174,13 @@ if (isset($_POST['submit'])) {
             to   { opacity:1; transform:translateY(0); }
         }
 
-        /* Mobile logo */
-        .mobile-logo {
-            display:none;
+        /* Form logo (always visible in right pane) */
+        .form-logo {
             text-align:center;
             margin-bottom:32px;
         }
-        .mobile-logo img { height:52px; object-fit:contain; margin:0 auto 10px; display:block; }
-        .mobile-logo p { font-size:12px; color:#8A9AB0; font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
+        .form-logo img { height:64px; object-fit:contain; margin:0 auto 10px; display:block; }
+        .form-logo p { font-size:12px; color:#8A9AB0; font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
 
         .form-heading { margin-bottom:28px; }
         .form-heading h2 {
@@ -254,10 +253,6 @@ if (isset($_POST['submit'])) {
     <!-- Brand panel -->
     <div class="brand-panel">
         <div class="brand-inner">
-            <img class="brand-logo"
-                 src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
-                 alt="UASC KU">
-
             <div class="brand-badge">
                 <span class="brand-badge-dot"></span>
                 Student Portal
@@ -280,8 +275,8 @@ if (isset($_POST['submit'])) {
     <div class="form-panel">
         <div class="form-card">
 
-            <!-- Mobile logo -->
-            <div class="mobile-logo">
+            <!-- University logo -->
+            <div class="form-logo">
                 <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
                      alt="UASC KU">
                 <p>Student Portal</p>
