@@ -34,7 +34,10 @@
             border:40px solid rgba(255,255,255,.06);
         }
 
-        .form-panel { flex:1; display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+        .form-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; }
+        .form-panel-logo { text-align:center; margin-bottom:28px; width:100%; }
+        .form-panel-logo img { height:72px; object-fit:contain; display:inline-block; }
+        .form-panel-logo p { font-size:12px; color:#8A9AB0; font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin:8px 0 0; }
 
         .form-input {
             width:100%; border:1.5px solid #E2DDD6; border-radius:10px;
@@ -61,9 +64,6 @@
     {{-- Brand panel --}}
     <div class="brand-panel">
         <div style="position:relative;z-index:1;">
-            <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
-                 alt="UASC KU" style="height:60px;object-fit:contain;object-position:left;margin-bottom:40px;filter:brightness(0) invert(1);opacity:.9;">
-
             <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(212,145,46,.2);color:var(--amber);padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:16px;">
                 <span style="width:6px;height:6px;background:var(--amber);border-radius:50%;"></span>
                 Student Portal
@@ -84,14 +84,15 @@
 
     {{-- Form panel --}}
     <div class="form-panel">
-        <div class="form-card" style="width:100%;max-width:380px;">
 
-            {{-- Mobile logo --}}
-            <div class="md:hidden" style="text-align:center;margin-bottom:32px;">
-                <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
-                     alt="UASC KU" style="height:52px;object-fit:contain;margin:0 auto 10px;display:block;">
-                <p style="font-size:12px;color:#8A9AB0;font-weight:600;letter-spacing:.5px;text-transform:uppercase;">Student Portal</p>
-            </div>
+        {{-- University logo — centred across full right pane --}}
+        <div class="form-panel-logo">
+            <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
+                 alt="UASC KU">
+            <p>Student Portal</p>
+        </div>
+
+        <div class="form-card" style="width:100%;max-width:380px;">
 
             <div style="margin-bottom:28px;">
                 <h2 class="font-display" style="font-size:26px;font-weight:600;color:#162B3E;margin:0 0 6px;">Sign in</h2>

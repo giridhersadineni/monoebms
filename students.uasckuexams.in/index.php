@@ -160,9 +160,17 @@ if (isset($_POST['submit'])) {
         /* ── Form panel ── */
         .form-panel {
             flex:1;
-            display:flex; align-items:center; justify-content:center;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
             padding:32px 20px;
         }
+
+        .form-panel-logo {
+            text-align:center;
+            margin-bottom:28px;
+            width:100%;
+        }
+        .form-panel-logo img { height:72px; object-fit:contain; display:inline-block; }
+        .form-panel-logo p { font-size:12px; color:#8A9AB0; font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin:8px 0 0; }
 
         .form-card {
             width:100%; max-width:380px;
@@ -173,14 +181,6 @@ if (isset($_POST['submit'])) {
             from { opacity:0; transform:translateY(16px); }
             to   { opacity:1; transform:translateY(0); }
         }
-
-        /* Form logo (always visible in right pane) */
-        .form-logo {
-            text-align:center;
-            margin-bottom:32px;
-        }
-        .form-logo img { height:64px; object-fit:contain; margin:0 auto 10px; display:block; }
-        .form-logo p { font-size:12px; color:#8A9AB0; font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
 
         .form-heading { margin-bottom:28px; }
         .form-heading h2 {
@@ -273,14 +273,15 @@ if (isset($_POST['submit'])) {
 
     <!-- Form panel -->
     <div class="form-panel">
-        <div class="form-card">
 
-            <!-- University logo -->
-            <div class="form-logo">
-                <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
-                     alt="UASC KU">
-                <p>Student Portal</p>
-            </div>
+        <!-- University logo — centred across full right pane -->
+        <div class="form-panel-logo">
+            <img src="https://uasckuexams.in/wp-content/uploads/2021/11/cropped-cropped-cropped-uascku-header-png-1-1.png"
+                 alt="UASC KU">
+            <p>Student Portal</p>
+        </div>
+
+        <div class="form-card">
 
             <div class="form-heading">
                 <h2>Sign in</h2>
