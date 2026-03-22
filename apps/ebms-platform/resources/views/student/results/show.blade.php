@@ -4,12 +4,28 @@
 @section('content')
 
 {{-- Back + title --}}
-<div class="animate-in" style="margin-bottom:24px;">
+<div class="animate-in no-print" style="margin-bottom:24px;">
     <a href="{{ route('student.results.index') }}" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:16px;">
         ← Back to Results
     </a>
-    <h1 class="font-display" style="font-size:24px;font-weight:600;color:var(--navy);margin:0 0 4px;">{{ $exam->name }}</h1>
-    <p style="font-size:14px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}</p>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1 class="font-display" style="font-size:24px;font-weight:600;color:var(--navy);margin:0 0 4px;">{{ $exam->name }}</h1>
+            <p style="font-size:14px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}</p>
+        </div>
+        <button onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;" nonce="{{ $csp_nonce ?? '' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Results
+        </button>
+    </div>
+</div>
+
+{{-- Print header (only visible when printing) --}}
+<div class="print-only" style="display:none;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:14px;text-align:center;">
+    <img src="{{ asset('images/college-header.jpg') }}" alt="University Arts &amp; Science College" style="max-width:100%;height:auto;max-height:60px;display:block;margin:0 auto 4px;">
+    <p style="font-size:10px;font-weight:700;color:#333;margin:0 0 10px;letter-spacing:.2px;">An Autonomous Institute under Kakatiya University, Subedari, Hanamkonda, Warangal, Telangana State-506001</p>
+    <p style="font-size:13px;font-weight:700;color:#000;margin:0 0 2px;">{{ $exam->name }} — Semester {{ $exam->semester }}</p>
+    <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
 </div>
 
 {{-- Student info header --}}
@@ -64,9 +80,6 @@
                 <span style="font-size:22px;font-weight:700;{{ $failed ? 'color:#DC2626;' : 'color:var(--teal);' }}">{{ $result->grade }}</span>
             </div>
             <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);">
-                <span>Ext: <strong style="color:var(--navy);">{{ $result->is_absent_ext ? 'AB' : $result->ext_marks }}</strong></span>
-                <span>Int: <strong style="color:var(--navy);">{{ $result->is_absent_int ? 'AB' : $result->int_marks }}</strong></span>
-                <span>Total: <strong style="color:var(--navy);">{{ $result->total_marks }}</strong></span>
                 <span>Credits: <strong style="color:var(--navy);">{{ $result->credits }}</strong></span>
             </div>
         </div>
@@ -80,9 +93,6 @@
                 <tr style="background:#F7F6F3;border-bottom:1px solid var(--border);">
                     <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Paper Code</th>
                     <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Subject</th>
-                    <th style="padding:10px 20px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Ext</th>
-                    <th style="padding:10px 20px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Int</th>
-                    <th style="padding:10px 20px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Total</th>
                     <th style="padding:10px 20px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Credits</th>
                     <th style="padding:10px 20px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Grade</th>
                 </tr>
@@ -93,9 +103,6 @@
                 <tr style="border-bottom:1px solid var(--border);{{ $failed ? 'background:#FEF2F2;' : '' }}">
                     <td style="padding:13px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">{{ $result->subject?->code }}</td>
                     <td style="padding:13px 20px;font-weight:600;color:var(--navy);">{{ $result->subject?->name }}</td>
-                    <td style="padding:13px 20px;text-align:center;color:var(--muted);">{{ $result->is_absent_ext ? 'AB' : $result->ext_marks }}</td>
-                    <td style="padding:13px 20px;text-align:center;color:var(--muted);">{{ $result->is_absent_int ? 'AB' : $result->int_marks }}</td>
-                    <td style="padding:13px 20px;text-align:center;font-weight:600;color:var(--navy);">{{ $result->total_marks }}</td>
                     <td style="padding:13px 20px;text-align:center;color:var(--muted);">{{ $result->credits }}</td>
                     <td style="padding:13px 20px;text-align:center;">
                         <span style="font-size:16px;font-weight:700;{{ $failed ? 'color:#DC2626;' : 'color:var(--teal);' }}">{{ $result->grade }}</span>
@@ -192,6 +199,23 @@
     @media(max-width:640px) {
         .result-mobile { display:block !important; }
         .result-desktop { display:none !important; }
+    }
+    @media print {
+        .no-print { display:none !important; }
+        .print-only { display:block !important; }
+        .result-mobile { display:none !important; }
+        .result-desktop { display:block !important; }
+        .animate-in { animation:none !important; }
+        body { background:#fff !important; }
+        .card {
+            border:1px solid #ccc !important;
+            box-shadow:none !important;
+            border-radius:6px !important;
+            break-inside:avoid;
+        }
+        nav, header, footer, aside { display:none !important; }
+        a { text-decoration:none !important; color:inherit !important; }
+        @page { margin:1.5cm; }
     }
 </style>
 

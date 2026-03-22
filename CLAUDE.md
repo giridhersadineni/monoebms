@@ -150,6 +150,46 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - `Route [login] not defined` — the `Authenticate` middleware redirects unauthenticated requests to `route('login')`, but under the `admin.` prefix the correct route is `admin.login`. Needs a custom `redirectTo` in the auth middleware or a `withExceptions` redirect override.
 - `getMonthNameAttribute(): Argument #1 must be of type string, null given` — legacy-migrated exams have a numeric `month` stored as a string but some rows have null. Seen on `admin/exams/index`. Pre-existing.
 
+## AI Agent Skills
+
+Repo-specific skills live in `skills/` and teach AI coding agents the project's constraints, boundaries, and workflow. Each skill is a `SKILL.md` file tailored to a specific agent platform.
+
+| Skill file | Agent | When it applies |
+|---|---|---|
+| `skills/claude/SKILL.md` | Claude (claude.ai) | Claude-driven tasks referencing `.agents/claude.md` or Claude-specific reporting style |
+| `skills/claude-code/SKILL.md` | Claude Code | Any code change inside `monoebms` via Claude Code CLI |
+| `skills/codex/SKILL.md` | OpenAI Codex | Migration or security work via Codex |
+| `skills/antigravity/SKILL.md` | Antigravity | Automation-oriented migration, reliability, or rollout tasks |
+| `skills/google-antigravity/SKILL.md` | Google Antigravity | Tasks referencing `.agents/google-antigravity.md` or deterministic automation |
+
+### How to use these skills
+
+**In Claude Code** — skills are picked up automatically when you open the repo. The agent reads `CLAUDE.md` first, then loads the relevant skill when the task matches its description. No manual step required.
+
+**In Claude (Cowork / claude.ai)** — install a skill by opening the `.skill` package in the Claude desktop app, or point the agent at the `SKILL.md` path. Once installed, Claude loads it whenever the trigger conditions in the description match your request.
+
+**In other agents (Codex, Antigravity)** — configure the agent to read the corresponding `SKILL.md` at session start, or paste its contents into the agent's system context. Each skill is self-contained and describes its own trigger conditions.
+
+### What every skill enforces
+
+All skills in this repo share the same core rules regardless of agent:
+
+1. **Net-new code only in `apps/ebms-platform/`** — never add features to `studentsportal/`.
+2. **Module path boundaries** — `/student/*`, `/backoffice/*`, `/postexam/*` must be preserved.
+3. **OWASP security controls** — parameterized queries, `FormRequest` validation, JSON error contract with `trace_id`, security headers, audit logging for identity/finance/enrollment/result actions.
+4. **No hardcoded secrets** — all credentials via env vars.
+5. **Minimum validation before handoff**:
+   ```bash
+   php artisan route:list
+   php artisan migrate --force
+   php artisan test
+   composer audit --no-interaction
+   ```
+
+### Adding or updating a skill
+
+Edit the relevant `SKILL.md` under `skills/<agent>/`. Keep the YAML frontmatter `name` and `description` fields accurate — the `description` is the primary trigger the agent uses to decide whether to load the skill. After editing, re-package if the agent platform requires a `.skill` bundle.
+
 ## Constraints
 
 - Single domain, module paths `/student/*` and `/admin/*` (future: `/backoffice/*`, `/postexam/*`) must be preserved
