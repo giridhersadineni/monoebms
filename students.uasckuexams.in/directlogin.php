@@ -46,8 +46,8 @@ if (isset($_GET['ht'])) {
             $_SESSION['aadhar'] = $aadhar;
             mysqli_close($conn);
 
-            // Scheme-2026 students: redirect to new portal via signed SSO token
-            if ($scheme === '2026') {
+            // Scheme-2025+ students: redirect to new portal via signed SSO token
+            if (in_array($scheme, ['2025', '2026'], true)) {
                 include 'sso_config.php';
                 $ts  = time();
                 $sig = hash_hmac('sha256', $haltckt . '|' . $ts, $sso_secret);
