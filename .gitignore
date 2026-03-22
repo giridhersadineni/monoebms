@@ -6,13 +6,6 @@ postexams.uasckuexams.in/vendor/
 students.uasckuexams.in/vendor/
 backoffice.uasckuexams.in/vendor/
 
-# Environment files — never commit secrets
-apps/ebms-platform/.env
-apps/ebms-platform/.env.dusk.local
-studentsportal/.env
-postexams.uasckuexams.in/.env
-students.uasckuexams.in/.env
-backoffice.uasckuexams.in/.env
 
 # Built assets
 apps/ebms-platform/public/build/

@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ebms-platform-dev",
+      "runtimeExecutable": "composer",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "apps/ebms-platform",
+      "port": 8000
+    },
+    {
+      "name": "vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "apps/ebms-platform",
+      "port": 5173
+    },
+    {
+      "name": "laravel-serve",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve"],
+      "cwd": "apps/ebms-platform",
+      "port": 8000
+    }
+  ]
+}

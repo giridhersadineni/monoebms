@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    paths:
+      - 'apps/ebms-platform/**'
+  pull_request:
+    paths:
+      - 'apps/ebms-platform/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: ebms_test
+          MYSQL_USER: ebms
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, zip, gd
+
+      - name: Install dependencies
+        working-directory: apps/ebms-platform
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy env
+        working-directory: apps/ebms-platform
+        run: cp .env.example .env && php artisan key:generate
+
+      - name: Configure test database
+        working-directory: apps/ebms-platform
+        run: |
+          sed -i 's/DB_CONNECTION=mariadb/DB_CONNECTION=mariadb/' .env
+          sed -i 's/DB_DATABASE=ebms/DB_DATABASE=ebms_test/' .env
+          sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=secret/' .env
+
+      - name: Run migrations
+        working-directory: apps/ebms-platform
+        run: php artisan migrate --force
+
+      - name: Run tests
+        working-directory: apps/ebms-platform
+        run: php artisan test --coverage --min=75
