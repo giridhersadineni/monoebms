@@ -165,39 +165,47 @@ class MigrateLegacyData extends Command
                 $dob = null;
                 if (! empty($row->dob)) {
                     $parsed = \DateTime::createFromFormat('d/m/Y', $row->dob)
-                        ?? \DateTime::createFromFormat('Y-m-d', $row->dob)
-                        ?? null;
-                    $dob = $parsed?->format('Y-m-d');
+                        ?: \DateTime::createFromFormat('Y-m-d', $row->dob)
+                        ?: null;
+                    $dob = $parsed ? $parsed->format('Y-m-d') : null;
                 }
+
+                $str  = fn ($v) => ($v !== null && $v !== '') ? (string) $v : null;
+                $int  = fn ($v) => ($v !== null && $v !== '') ? (int) $v : null;
+                $gender = match (strtoupper(trim((string) ($row->gender ?? '')))) {
+                    'M', 'MALE', 'పురుషుడు' => 'M',
+                    'F', 'FEMALE', 'స్త్రీ'  => 'F',
+                    default                  => null,
+                };
 
                 $data = [
                     'hall_ticket'     => $row->haltckt,
                     'dob'             => $dob,
-                    'dost_id'         => $row->dostid ?? null,
-                    'name'            => $row->sname ?? '',
-                    'father_name'     => $row->fname ?? null,
-                    'mother_name'     => $row->mname ?? null,
-                    'email'           => $row->email ?? null,
-                    'phone'           => $row->phone ?? null,
-                    'aadhaar'         => $row->aadhar ?? null,
-                    'gender'          => $row->gender ?? null,
-                    'caste'           => $row->caste ?? null,
-                    'sub_caste'       => $row->subcaste ?? null,
-                    'course'          => $row->course ?? null,
-                    'course_name'     => $row->course_name ?? null,
-                    'group_code'      => $row->group ?? null,
-                    'medium'          => $row->medium ?? null,
-                    'semester'        => $row->sem ?? null,
-                    'admission_year'  => $row->curryear ?? null,
-                    'scheme'          => $row->SCHEME ?? null,
-                    'address'         => $row->address ?? null,
-                    'address2'        => $row->address2 ?? null,
-                    'mandal'          => $row->mandal ?? null,
-                    'city'            => $row->city ?? null,
-                    'state'           => $row->state ?? null,
-                    'pincode'         => $row->pincode ? (string) $row->pincode : null,
-                    'apaar_id'        => $row->apaar_id ?? null,
-                    'ssc_hall_ticket' => $row->ssc_hallticket ? (string) $row->ssc_hallticket : null,
+                    'dost_id'         => $str($row->dostid ?? null),
+                    'name'            => $str($row->sname ?? null) ?? '',
+                    'father_name'     => $str($row->fname ?? null),
+                    'mother_name'     => $str($row->mname ?? null),
+                    'email'           => $str($row->email ?? null),
+                    'phone'           => $str($row->phone ?? null),
+                    'aadhaar'         => $str($row->aadhar ?? null),
+                    'gender'          => $gender,
+                    'caste'           => $str($row->caste ?? null),
+                    'sub_caste'       => $str($row->subcaste ?? null),
+                    'course'          => $str($row->course ?? null),
+                    'course_name'     => $str($row->course_name ?? null),
+                    'group_code'      => $str($row->group ?? null),
+                    'medium'          => $str($row->medium ?? null),
+                    'semester'        => $int($row->sem ?? null),
+                    'admission_year'  => $int($row->curryear ?? null),
+                    'scheme'          => $str($row->SCHEME ?? null),
+                    'address'         => $str($row->address ?? null),
+                    'address2'        => $str($row->address2 ?? null),
+                    'mandal'          => $str($row->mandal ?? null),
+                    'city'            => $str($row->city ?? null),
+                    'state'           => $str($row->state ?? null),
+                    'pincode'         => $str($row->pincode ?? null),
+                    'apaar_id'        => $str($row->apaar_id ?? null),
+                    'ssc_hall_ticket' => $str($row->ssc_hallticket ?? null),
                     'is_active'       => true,
                     'legacy_stid'     => $row->stid,
                     'created_at'      => now(),
@@ -787,9 +795,9 @@ class MigrateLegacyData extends Command
         $dob = null;
         if ($legacy && ! empty($legacy->dob)) {
             $parsed = \DateTime::createFromFormat('d/m/Y', $legacy->dob)
-                ?? \DateTime::createFromFormat('Y-m-d', $legacy->dob)
-                ?? null;
-            $dob = $parsed?->format('Y-m-d');
+                ?: \DateTime::createFromFormat('Y-m-d', $legacy->dob)
+                ?: null;
+            $dob = $parsed ? $parsed->format('Y-m-d') : null;
         }
 
         $data = [

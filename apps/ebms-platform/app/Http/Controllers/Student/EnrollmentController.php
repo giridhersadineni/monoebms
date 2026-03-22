@@ -38,10 +38,15 @@ class EnrollmentController extends Controller
             ->where(function ($q) use ($student) {
                 $q->whereNull('course')->orWhere('course', $student->course);
             })
+            ->with('feeRules')
             ->orderByDesc('year')
             ->get();
 
-        return view('student.enrollments.create', compact('student', 'exams'));
+        $resolvedFees = $exams->mapWithKeys(
+            fn($e) => [$e->id => $e->resolvedFeeComponents($student->course, $student->group_code)]
+        );
+
+        return view('student.enrollments.create', compact('student', 'exams', 'resolvedFees'));
     }
 
     public function selectSubjects(Request $request): View
@@ -49,7 +54,7 @@ class EnrollmentController extends Controller
         $request->validate(['exam_id' => ['required', 'integer', 'exists:exams,id']]);
 
         $student = Auth::guard('student')->user();
-        $exam = Exam::findOrFail($request->exam_id);
+        $exam = Exam::with('feeRules')->findOrFail($request->exam_id);
 
         $subjectQuery = Subject::forCourse($student->course)
             ->forSemester($exam->semester)
@@ -66,7 +71,9 @@ class EnrollmentController extends Controller
 
         $electiveSubjects = $allSubjects->filter(fn($s) => !is_null($s->elective_group))->groupBy('elective_group');
 
-        return view('student.enrollments.subjects', compact('student', 'exam', 'compulsorySubjects', 'electiveSubjects'));
+        $resolvedFee = $exam->resolvedFeeComponents($student->course, $student->group_code);
+
+        return view('student.enrollments.subjects', compact('student', 'exam', 'compulsorySubjects', 'electiveSubjects', 'resolvedFee'));
     }
 
     public function confirm(EnrollRequest $request): View

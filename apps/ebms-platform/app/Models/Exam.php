@@ -105,6 +105,21 @@ class Exam extends Model
         return ($feeRegular ?? 0) + $fine;
     }
 
+    /**
+     * Return the resolved fee components for a given student course/group,
+     * falling back to exam-level values where no rule matches.
+     */
+    public function resolvedFeeComponents(?string $course, ?string $groupCode): array
+    {
+        $rule = $this->resolveFeeRule($course, $groupCode);
+        return [
+            'fee_regular'      => $rule?->fee_regular      ?? $this->fee_regular      ?? 0,
+            'fee_supply_upto2' => $rule?->fee_supply_upto2 ?? $this->fee_supply_upto2 ?? 0,
+            'fee_improvement'  => $rule?->fee_improvement  ?? $this->fee_improvement  ?? 0,
+            'fee_fine'         => $rule?->fee_fine         ?? $this->fee_fine         ?? 0,
+        ];
+    }
+
     private function resolveFeeRule(?string $course, ?string $groupCode): ?ExamFeeRule
     {
         if (! $this->exists) {
