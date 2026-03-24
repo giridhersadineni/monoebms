@@ -37,7 +37,9 @@ class EnrollmentController extends Controller
         $student = Auth::guard('student')->user();
         $exams = Exam::open()
             ->where(function ($q) use ($student) {
-                $q->whereNull('course')->orWhere('course', $student->course);
+                $q->whereNull('course')
+                  ->orWhere('course', 'ALL')
+                  ->orWhere('course', $student->course);
             })
             ->with('feeRules')
             ->orderByDesc('year')
