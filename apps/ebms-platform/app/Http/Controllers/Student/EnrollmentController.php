@@ -156,7 +156,19 @@ class EnrollmentController extends Controller
 
         $request->session()->forget('pending_enrollment');
 
-        // Redirect directly to challan so student can print immediately
-        return redirect()->route('student.challan.show', $enrollment);
+        return redirect()->route('student.enrollments.success', $enrollment);
+    }
+
+    public function success(ExamEnrollment $enrollment): View
+    {
+        $student = Auth::guard('student')->user();
+
+        if ((int) $enrollment->student_id !== (int) $student->id) {
+            abort(403);
+        }
+
+        $enrollment->load(['exam', 'enrollmentSubjects.subject']);
+
+        return view('student.enrollments.success', compact('enrollment'));
     }
 }

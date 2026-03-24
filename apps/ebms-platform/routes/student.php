@@ -35,6 +35,7 @@ Route::middleware('auth:student')->group(function () {
     Route::get('/enrollments/subjects', [EnrollmentController::class, 'selectSubjects'])->name('enrollments.subjects');
     Route::post('/enrollments/confirm', [EnrollmentController::class, 'confirm'])->name('enrollments.confirm');
     Route::post('/enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store');
+    Route::get('/enrollments/{enrollment}/success', [EnrollmentController::class, 'success'])->name('enrollments.success');
 
     // Results
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
