@@ -7,6 +7,7 @@ use App\Http\Requests\Student\EnrollRequest;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
 use App\Models\ExamEnrollmentSubject;
+use App\Models\Result;
 use App\Models\Subject;
 use App\Services\FeeCalculatorService;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -66,6 +67,21 @@ class EnrollmentController extends Controller
         }
 
         $allSubjects = (clone $subjectQuery)->get();
+
+        // For supplementary exams, only show subjects the student has failed
+        if ($exam->exam_type === 'supplementary') {
+            $failedSubjectIds = Result::where('hall_ticket', $student->hall_ticket)
+                ->whereIn('exam_id', Exam::where('exam_type', 'regular')
+                    ->where('semester', $exam->semester)
+                    ->pluck('id'))
+                ->where('result', '!=', 'P')
+                ->pluck('subject_id')
+                ->unique();
+
+            if ($failedSubjectIds->isNotEmpty()) {
+                $allSubjects = $allSubjects->whereIn('id', $failedSubjectIds->all())->values();
+            }
+        }
 
         $compulsorySubjects = $allSubjects->filter(fn($s) => is_null($s->elective_group))->values();
 

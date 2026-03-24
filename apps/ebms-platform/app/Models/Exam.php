@@ -97,9 +97,9 @@ class Exam extends Model
             return $feeImprove * max(1, $subjectCount) + $fine;
         }
 
-        // Supply exams: flat ≤2-paper tier, then flat regular fee for 3+
+        // Supply exams: per-subject fee for ≤2 papers; full regular fee for 3+
         if ($this->exam_type === 'supplementary' && $feeSupply !== null && $subjectCount > 0 && $subjectCount <= 2) {
-            return $feeSupply + $fine;
+            return $feeSupply * $subjectCount + $fine;
         }
 
         return ($feeRegular ?? 0) + $fine;

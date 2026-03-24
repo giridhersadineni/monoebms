@@ -279,7 +279,7 @@
 
 {{-- ── Screen toolbar (hidden on print) ──────────────────────── --}}
 <div class="no-print">
-    <button class="print-btn" onclick="window.print()">🖨&nbsp; Print Application</button>
+    <button class="print-btn" id="print-btn">🖨&nbsp; Print Application</button>
     <a href="{{ route('student.enrollments.index') }}" class="back-link">← Back</a>
     <span class="toolbar-hint">Set paper to A4, scale: Fit to page</span>
 </div>
@@ -473,5 +473,8 @@
 <div class="sig-row" style="margin-top:10px;">Signature of the Receiver</div>
 
 </div>{{-- .print-page --}}
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+</script>
 </body>
 </html>

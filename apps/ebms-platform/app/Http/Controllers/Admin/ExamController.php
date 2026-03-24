@@ -26,6 +26,9 @@ class ExamController extends Controller
         if ($request->filled('year')) {
             $query->where('year', $request->integer('year'));
         }
+        if ($request->filled('exam_type')) {
+            $query->where('exam_type', $request->exam_type);
+        }
 
         $exams = $query->orderByDesc('year')->orderByDesc('month')->paginate(20)->withQueryString();
 

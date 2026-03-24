@@ -51,7 +51,7 @@ class FeeCalculatorTest extends TestCase
     // ── Supplementary exams ──────────────────────────────────────────────────
 
     #[Test]
-    public function supply_exam_charges_flat_upto2_tier_for_one_subject(): void
+    public function supply_exam_charges_per_subject_for_one_subject(): void
     {
         $exam = $this->supplyExam(upto2: 450, regular: 550);
 
@@ -59,11 +59,11 @@ class FeeCalculatorTest extends TestCase
     }
 
     #[Test]
-    public function supply_exam_charges_same_flat_upto2_tier_for_two_subjects(): void
+    public function supply_exam_charges_per_subject_for_two_subjects(): void
     {
         $exam = $this->supplyExam(upto2: 450, regular: 550);
 
-        $this->assertEquals(450, $this->calculator->calculate($exam, 2));
+        $this->assertEquals(900, $this->calculator->calculate($exam, 2));
     }
 
     #[Test]

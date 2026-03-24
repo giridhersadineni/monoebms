@@ -20,6 +20,14 @@
                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-44 bg-white
                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
                       font-mono placeholder:font-sans placeholder:text-slate-400">
+        <select name="exam_id"
+                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
+            <option value="">All Exams</option>
+            @foreach($exams as $examId => $examName)
+            <option value="{{ $examId }}" {{ request('exam_id') == $examId ? 'selected' : '' }}>{{ $examName }}</option>
+            @endforeach
+        </select>
         <select name="fee_status"
                 class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
@@ -30,7 +38,7 @@
         <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Filter
         </button>
-        @if(request('id') || request('hall_ticket') || request('fee_status'))
+        @if(request('id') || request('hall_ticket') || request('fee_status') || request('exam_id'))
         <a href="{{ route('admin.enrollments.index') }}" class="text-slate-500 hover:text-slate-700 text-sm py-2 hover:underline">
             Clear
         </a>

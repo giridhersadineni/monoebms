@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FeeMarkRequest;
+use App\Models\Exam;
 use App\Models\ExamEnrollment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,9 @@ class EnrollmentController extends Controller
 
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
 
-        return view('admin.enrollments.index', compact('enrollments'));
+        $exams = Exam::orderByDesc('year')->orderByDesc('id')->pluck('name', 'id');
+
+        return view('admin.enrollments.index', compact('enrollments', 'exams'));
     }
 
     public function show(int $id): View
