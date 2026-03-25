@@ -4,6 +4,7 @@ namespace Tests\Feature\Student;
 
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
+use App\Models\Result;
 use App\Models\Student;
 use App\Models\Subject;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +71,152 @@ class EnrollmentTest extends TestCase
             ->get("/student/results/{$exam->id}");
 
         $response->assertStatus(403);
+    }
+
+    // ── Supplementary exam subject filtering ──────────────────────────────────
+
+    #[Test]
+    public function supplementary_exam_shows_only_failed_subjects(): void
+    {
+        $student = Student::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'scheme'     => 'CBCS',
+            'semester'   => 3,
+        ]);
+
+        $regularExam = Exam::factory()->closed()->create([
+            'course'     => 'BSC',
+            'semester'   => 3,
+            'exam_type'  => 'regular',
+        ]);
+
+        $failedSubject = Subject::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'semester'   => 3,
+            'scheme'     => 'CBCS',
+        ]);
+        $passedSubject = Subject::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'semester'   => 3,
+            'scheme'     => 'CBCS',
+        ]);
+
+        Result::create([
+            'hall_ticket' => $student->hall_ticket,
+            'exam_id'     => $regularExam->id,
+            'subject_id'  => $failedSubject->id,
+            'result'      => 'F',
+            'semester'    => 3,
+            'total_marks' => 100,
+        ]);
+        Result::create([
+            'hall_ticket' => $student->hall_ticket,
+            'exam_id'     => $regularExam->id,
+            'subject_id'  => $passedSubject->id,
+            'result'      => 'P',
+            'semester'    => 3,
+            'total_marks' => 100,
+        ]);
+
+        $supplyExam = Exam::factory()->open()->create([
+            'course'           => 'BSC',
+            'semester'         => 3,
+            'exam_type'        => 'supplementary',
+            'fee_regular'      => 750,
+            'fee_supply_upto2' => 550,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/subjects?exam_id={$supplyExam->id}");
+
+        $response->assertOk();
+        $response->assertSee($failedSubject->name);
+        $response->assertDontSee($passedSubject->name);
+    }
+
+    #[Test]
+    public function supplementary_exam_shows_no_subjects_when_student_passed_all(): void
+    {
+        $student = Student::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'scheme'     => 'CBCS',
+            'semester'   => 3,
+        ]);
+
+        $regularExam = Exam::factory()->closed()->create([
+            'course'    => 'BSC',
+            'semester'  => 3,
+            'exam_type' => 'regular',
+        ]);
+
+        $subject = Subject::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'semester'   => 3,
+            'scheme'     => 'CBCS',
+        ]);
+
+        Result::create([
+            'hall_ticket' => $student->hall_ticket,
+            'exam_id'     => $regularExam->id,
+            'subject_id'  => $subject->id,
+            'result'      => 'P',
+            'semester'    => 3,
+            'total_marks' => 100,
+        ]);
+
+        $supplyExam = Exam::factory()->open()->create([
+            'course'    => 'BSC',
+            'semester'  => 3,
+            'exam_type' => 'supplementary',
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/subjects?exam_id={$supplyExam->id}");
+
+        $response->assertOk();
+        $response->assertDontSee($subject->name);
+    }
+
+    // ── Enrollment success page ───────────────────────────────────────────────
+
+    #[Test]
+    public function student_can_view_own_enrollment_success_page(): void
+    {
+        $student    = Student::factory()->create();
+        $enrollment = ExamEnrollment::factory()->feePending()->create([
+            'student_id' => $student->id,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/success");
+
+        $response->assertOk();
+        $response->assertViewIs('student.enrollments.success');
+    }
+
+    #[Test]
+    public function student_cannot_view_another_students_success_page(): void
+    {
+        $student    = Student::factory()->create();
+        $other      = Student::factory()->create();
+        $enrollment = ExamEnrollment::factory()->feePending()->create([
+            'student_id' => $other->id,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/success");
+
+        $response->assertForbidden();
     }
 
     #[Test]
