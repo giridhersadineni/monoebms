@@ -93,7 +93,7 @@
             if (examType === 'improvement' && feeImprov) {
                 fee = feeImprov * Math.max(1, checked);
             } else if (examType === 'supplementary' && supplyUpto2 && checked > 0 && checked <= 2) {
-                fee = supplyUpto2 * checked;
+                fee = supplyUpto2;
             }
             amountEl.textContent = '₹' + fee.toLocaleString('en-IN');
         }
