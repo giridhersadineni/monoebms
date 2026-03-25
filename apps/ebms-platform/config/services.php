@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'legacy_sso' => [
+        'secret' => env('LEGACY_SSO_SECRET'),
+    ],
+
 ];

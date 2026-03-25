@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FeeMarkRequest;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -36,11 +37,16 @@ class EnrollmentController extends Controller
             $query->where('hall_ticket', $request->hall_ticket);
         }
 
+        if ($request->filled('year')) {
+            $query->whereHas('exam', fn($q) => $q->where('year', $request->integer('year')));
+        }
+
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
 
         $exams = Exam::orderByDesc('year')->orderByDesc('id')->pluck('name', 'id');
+        $years = Exam::distinct()->orderByDesc('year')->pluck('year');
 
-        return view('admin.enrollments.index', compact('enrollments', 'exams'));
+        return view('admin.enrollments.index', compact('enrollments', 'exams', 'years'));
     }
 
     public function show(int $id): View
@@ -63,5 +69,18 @@ class EnrollmentController extends Controller
         ]);
 
         return back()->with('success', 'Fee payment marked as received.');
+    }
+
+    public function destroy(int $id): RedirectResponse
+    {
+        $enrollment = ExamEnrollment::findOrFail($id);
+
+        DB::transaction(function () use ($enrollment) {
+            $enrollment->enrollmentSubjects()->delete();
+            $enrollment->delete();
+        });
+
+        return redirect()->route('admin.enrollments.index')
+            ->with('success', "Enrollment #{$id} deleted.");
     }
 }

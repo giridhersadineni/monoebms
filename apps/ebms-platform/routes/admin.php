@@ -42,6 +42,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
+    Route::delete('/enrollments/{id}', [EnrollmentController::class, 'destroy'])
+        ->middleware('role:admin,superadmin')
+        ->name('enrollments.destroy');
 
     // Exams
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');

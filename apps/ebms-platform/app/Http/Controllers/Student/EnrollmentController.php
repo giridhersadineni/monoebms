@@ -70,7 +70,9 @@ class EnrollmentController extends Controller
 
         $allSubjects = (clone $subjectQuery)->get();
 
-        // For supplementary exams, only show subjects the student has failed
+        // For supplementary exams, only show subjects the student has failed.
+        // Fetch directly by ID to avoid the group_code filter excluding subjects
+        // that belong to a different group code than the student record (e.g. BZC vs BTZC).
         if ($exam->exam_type === 'supplementary') {
             $failedSubjectIds = Result::where('hall_ticket', $student->hall_ticket)
                 ->whereIn('exam_id', Exam::where('exam_type', 'regular')
@@ -81,7 +83,7 @@ class EnrollmentController extends Controller
                 ->unique();
 
             if ($failedSubjectIds->isNotEmpty()) {
-                $allSubjects = $allSubjects->whereIn('id', $failedSubjectIds->all())->values();
+                $allSubjects = Subject::whereIn('id', $failedSubjectIds->all())->get();
             }
         }
 

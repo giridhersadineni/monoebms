@@ -78,6 +78,11 @@
                 {{ $exam->revaluation_open ? 'Close Revaluation' : 'Open Revaluation' }}
             </button>
         </form>
+        <a href="{{ route('admin.enrollments.index', ['exam_id' => $exam->id]) }}"
+           class="px-4 py-2 rounded-lg text-sm font-medium border border-blue-200 text-blue-700
+                  hover:bg-blue-50 transition-colors">
+            View Enrollments ({{ number_format($exam->enrollments_count) }})
+        </a>
     </div>
 
     {{-- Fee Configuration (exam-level defaults) --}}

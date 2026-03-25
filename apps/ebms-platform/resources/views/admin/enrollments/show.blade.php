@@ -3,8 +3,20 @@
 
 @section('content')
 <div class="max-w-3xl">
-    <h1 class="text-xl font-bold text-gray-800 mb-1">Enrollment #{{ $enrollment->id }}</h1>
-    <p class="text-sm text-gray-500 mb-6">{{ $enrollment->exam?->name }} — {{ $enrollment->hall_ticket }}</p>
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800 mb-1">Enrollment #{{ $enrollment->id }}</h1>
+            <p class="text-sm text-gray-500">{{ $enrollment->exam?->name }} — {{ $enrollment->hall_ticket }}</p>
+        </div>
+        <form method="POST" action="{{ route('admin.enrollments.destroy', $enrollment->id) }}"
+              onsubmit="return confirm('Delete enrollment #{{ $enrollment->id }}? This cannot be undone.');">
+            @csrf @method('DELETE')
+            <button type="submit"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors">
+                Delete
+            </button>
+        </form>
+    </div>
 
     <div class="bg-white rounded-lg border border-gray-200 p-5 mb-4">
         <div class="grid grid-cols-3 gap-4 text-sm">

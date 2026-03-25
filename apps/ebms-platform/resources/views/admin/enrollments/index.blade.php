@@ -20,6 +20,14 @@
                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-44 bg-white
                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
                       font-mono placeholder:font-sans placeholder:text-slate-400">
+        <select name="year"
+                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
+            <option value="">All Years</option>
+            @foreach($years as $y)
+            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+            @endforeach
+        </select>
         <select name="exam_id"
                 class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
@@ -38,7 +46,7 @@
         <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Filter
         </button>
-        @if(request('id') || request('hall_ticket') || request('fee_status') || request('exam_id'))
+        @if(request('id') || request('hall_ticket') || request('fee_status') || request('exam_id') || request('year'))
         <a href="{{ route('admin.enrollments.index') }}" class="text-slate-500 hover:text-slate-700 text-sm py-2 hover:underline">
             Clear
         </a>
@@ -72,11 +80,17 @@
                     <td class="px-5 py-3"><x-status-badge :status="$e->getFeeStatus()" /></td>
                     <td class="px-5 py-3 text-slate-400 text-xs">{{ $e->enrolled_at?->format('d M Y') }}</td>
                     <td class="px-5 py-3">
-                        <div class="flex gap-3">
+                        <div class="flex gap-3 items-center">
                             <a href="{{ route('admin.enrollments.show', $e) }}" class="text-blue-600 hover:underline text-xs font-medium">View</a>
                             @if(! $e->isFeePaid())
                                 <a href="{{ route('admin.enrollments.show', $e) }}#fee" class="text-emerald-600 hover:underline text-xs font-medium">Mark Paid</a>
                             @endif
+                            <form method="POST" action="{{ route('admin.enrollments.destroy', $e->id) }}"
+                                  onsubmit="return confirm('Delete enrollment #{{ $e->id }}?');"
+                                  style="display:inline;">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-500 hover:underline text-xs font-medium">Delete</button>
+                            </form>
                         </div>
                     </td>
                 </tr>
