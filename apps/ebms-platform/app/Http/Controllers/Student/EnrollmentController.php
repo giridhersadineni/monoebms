@@ -90,11 +90,15 @@ class EnrollmentController extends Controller
         $compulsorySubjects = $allSubjects->filter(fn($s) => is_null($s->elective_group))->values();
         $electiveSubjects   = $allSubjects->filter(fn($s) => !is_null($s->elective_group))->groupBy('elective_group');
 
-        // Improvement opt-in: show passed subjects if the exam has an improvement fee configured.
-        $improvementSubjects = collect();
         $resolvedFee = $exam->resolvedFeeComponents($student->course, $student->group_code);
 
-        if ($resolvedFee['fee_improvement'] > 0) {
+        // Improvement opt-in: always available for supplementary exams; available for
+        // other exam types only when fee_improvement is explicitly configured.
+        $improvementSubjects = collect();
+        $showImprovement = $exam->exam_type === 'supplementary'
+            || $resolvedFee['fee_improvement'] > 0;
+
+        if ($showImprovement) {
             $passedSubjectIds = Result::where('hall_ticket', $student->hall_ticket)
                 ->whereIn('exam_id', Exam::where('exam_type', 'regular')
                     ->where('semester', $exam->semester)
@@ -104,7 +108,6 @@ class EnrollmentController extends Controller
                 ->unique();
 
             if ($passedSubjectIds->isNotEmpty()) {
-                // Exclude subjects already in this enrollment (compulsory/elective)
                 $enrolledIds = $allSubjects->pluck('id');
                 $improvementSubjects = Subject::whereIn('id', $passedSubjectIds->all())
                     ->whereNotIn('id', $enrolledIds)
@@ -133,9 +136,10 @@ class EnrollmentController extends Controller
         }
 
         $exam->load('feeRules');
-        $resolvedFee     = $exam->resolvedFeeComponents($student->course, $student->group_code);
-        $fee             = $this->feeCalculator->calculate($exam, count($subjectIds), $student->course, $student->group_code);
-        $improvementFee  = $resolvedFee['fee_improvement'] * count($improvementIds);
+        $resolvedFee       = $exam->resolvedFeeComponents($student->course, $student->group_code);
+        $improvementRate   = $resolvedFee['fee_improvement'] ?: 300;
+        $fee               = $this->feeCalculator->calculate($exam, count($subjectIds), $student->course, $student->group_code);
+        $improvementFee    = $improvementRate * count($improvementIds);
         $totalFee        = $fee + $improvementFee;
 
         $subjects            = Subject::whereIn('id', $subjectIds)->get();
@@ -148,7 +152,7 @@ class EnrollmentController extends Controller
             'fee_amount'      => $totalFee,
         ]);
 
-        return view('student.enrollments.confirm', compact('student', 'exam', 'subjects', 'improvementSubjects', 'fee', 'improvementFee', 'totalFee'));
+        return view('student.enrollments.confirm', compact('student', 'exam', 'subjects', 'improvementSubjects', 'fee', 'improvementFee', 'improvementRate', 'totalFee'));
     }
 
     public function store(Request $request): RedirectResponse

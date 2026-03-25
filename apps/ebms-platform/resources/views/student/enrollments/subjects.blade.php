@@ -66,7 +66,7 @@
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
             <span style="width:8px;height:8px;background:#059669;border-radius:50%;flex-shrink:0;"></span>
             <p style="font-size:14px;font-weight:700;color:var(--navy);margin:0;">Improvement (Optional)</p>
-            <span style="margin-left:auto;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:99px;">₹{{ number_format($resolvedFee['fee_improvement']) }}/paper</span>
+            <span style="margin-left:auto;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:99px;">₹{{ number_format($resolvedFee['fee_improvement'] ?: 300) }}/paper</span>
         </div>
         <p style="font-size:12px;color:var(--muted);margin:0;padding:10px 20px 6px;">Select previously passed subjects you wish to improve your grade in.</p>
         @foreach($improvementSubjects as $subject)
@@ -94,7 +94,7 @@
          data-fee-regular="{{ $rfRegular }}"
          data-fee-supply-upto2="{{ $rfSupply }}"
          data-exam-type="{{ $exam->exam_type }}"
-         data-fee-improvement="{{ $rfImprove }}">
+         data-fee-improvement="{{ $rfImprove ?: 300 }}">
         <span style="font-size:13px;font-weight:600;color:#92400E;">Estimated Fee</span>
         <span id="fee-preview-amount" class="font-display" style="font-size:20px;font-weight:700;color:var(--amber);">₹{{ number_format($rfRegular) }}</span>
     </div>

@@ -65,7 +65,7 @@
                 <p style="font-size:13px;color:var(--navy);margin:0;font-weight:600;">₹{{ number_format($fee) }}</p>
             </div>
             <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-                <p style="font-size:13px;color:#059669;margin:0;">Improvement ({{ $improvementSubjects->count() }} × ₹{{ number_format($exam->fee_improvement) }})</p>
+                <p style="font-size:13px;color:#059669;margin:0;">Improvement ({{ $improvementSubjects->count() }} × ₹{{ number_format($improvementRate) }})</p>
                 <p style="font-size:13px;color:#059669;margin:0;font-weight:600;">₹{{ number_format($improvementFee) }}</p>
             </div>
             @endif
