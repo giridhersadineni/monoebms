@@ -14,11 +14,13 @@ class EnrollRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'exam_id'            => ['required', 'integer', 'exists:exams,id'],
-            'compulsory_subjects' => ['required', 'array', 'min:1'],
-            'compulsory_subjects.*' => ['integer', 'exists:subjects,id'],
-            'elective_subjects'  => ['nullable', 'array'],
-            'elective_subjects.*' => ['integer', 'exists:subjects,id'],
+            'exam_id'                => ['required', 'integer', 'exists:exams,id'],
+            'compulsory_subjects'    => ['nullable', 'array'],
+            'compulsory_subjects.*'  => ['integer', 'exists:subjects,id'],
+            'elective_subjects'      => ['nullable', 'array'],
+            'elective_subjects.*'    => ['integer', 'exists:subjects,id'],
+            'improvement_subjects'   => ['nullable', 'array'],
+            'improvement_subjects.*' => ['integer', 'exists:subjects,id'],
         ];
     }
 }

@@ -33,6 +33,16 @@ class ExamFactory extends Factory
         return $this->state(['status' => 'CLOSED']);
     }
 
+    public function supplementary(): static
+    {
+        return $this->state(['exam_type' => 'supplementary', 'fee_supply_upto2' => 550]);
+    }
+
+    public function improvement(): static
+    {
+        return $this->state(['exam_type' => 'improvement', 'fee_improvement' => 300]);
+    }
+
     public function withRevaluationOpen(): static
     {
         return $this->state(['revaluation_open' => true, 'status' => 'REVALOPEN']);

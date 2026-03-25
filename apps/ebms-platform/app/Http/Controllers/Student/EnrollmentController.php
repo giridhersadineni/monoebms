@@ -88,12 +88,33 @@ class EnrollmentController extends Controller
         }
 
         $compulsorySubjects = $allSubjects->filter(fn($s) => is_null($s->elective_group))->values();
+        $electiveSubjects   = $allSubjects->filter(fn($s) => !is_null($s->elective_group))->groupBy('elective_group');
 
-        $electiveSubjects = $allSubjects->filter(fn($s) => !is_null($s->elective_group))->groupBy('elective_group');
-
+        // Improvement opt-in: show passed subjects if the exam has an improvement fee configured.
+        $improvementSubjects = collect();
         $resolvedFee = $exam->resolvedFeeComponents($student->course, $student->group_code);
 
-        return view('student.enrollments.subjects', compact('student', 'exam', 'compulsorySubjects', 'electiveSubjects', 'resolvedFee'));
+        if ($resolvedFee['fee_improvement'] > 0) {
+            $passedSubjectIds = Result::where('hall_ticket', $student->hall_ticket)
+                ->whereIn('exam_id', Exam::where('exam_type', 'regular')
+                    ->where('semester', $exam->semester)
+                    ->pluck('id'))
+                ->where('result', 'P')
+                ->pluck('subject_id')
+                ->unique();
+
+            if ($passedSubjectIds->isNotEmpty()) {
+                // Exclude subjects already in this enrollment (compulsory/elective)
+                $enrolledIds = $allSubjects->pluck('id');
+                $improvementSubjects = Subject::whereIn('id', $passedSubjectIds->all())
+                    ->whereNotIn('id', $enrolledIds)
+                    ->get();
+            }
+        }
+
+        return view('student.enrollments.subjects', compact(
+            'student', 'exam', 'compulsorySubjects', 'electiveSubjects', 'improvementSubjects', 'resolvedFee'
+        ));
     }
 
     public function confirm(EnrollRequest $request): View
@@ -101,22 +122,33 @@ class EnrollmentController extends Controller
         $student = Auth::guard('student')->user();
         $exam = Exam::findOrFail($request->exam_id);
 
-        $subjectIds = array_merge(
+        $subjectIds     = array_merge(
             $request->input('compulsory_subjects', []),
             $request->input('elective_subjects', [])
         );
+        $improvementIds = $request->input('improvement_subjects', []);
 
-        $subjects = Subject::whereIn('id', $subjectIds)->get();
+        if (empty($subjectIds) && empty($improvementIds)) {
+            return back()->withErrors(['error' => 'Please select at least one subject.']);
+        }
+
         $exam->load('feeRules');
-        $fee = $this->feeCalculator->calculate($exam, count($subjectIds), $student->course, $student->group_code);
+        $resolvedFee     = $exam->resolvedFeeComponents($student->course, $student->group_code);
+        $fee             = $this->feeCalculator->calculate($exam, count($subjectIds), $student->course, $student->group_code);
+        $improvementFee  = $resolvedFee['fee_improvement'] * count($improvementIds);
+        $totalFee        = $fee + $improvementFee;
+
+        $subjects            = Subject::whereIn('id', $subjectIds)->get();
+        $improvementSubjects = Subject::whereIn('id', $improvementIds)->get();
 
         $request->session()->put('pending_enrollment', [
-            'exam_id'    => $exam->id,
-            'subject_ids' => $subjectIds,
-            'fee_amount' => $fee,
+            'exam_id'         => $exam->id,
+            'subject_ids'     => $subjectIds,
+            'improvement_ids' => $improvementIds,
+            'fee_amount'      => $totalFee,
         ]);
 
-        return view('student.enrollments.confirm', compact('student', 'exam', 'subjects', 'fee'));
+        return view('student.enrollments.confirm', compact('student', 'exam', 'subjects', 'improvementSubjects', 'fee', 'improvementFee', 'totalFee'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -143,13 +175,22 @@ class EnrollmentController extends Controller
                 ]);
 
                 $subjects = Subject::whereIn('id', $pending['subject_ids'])->get();
-
                 foreach ($subjects as $subject) {
                     ExamEnrollmentSubject::create([
                         'enrollment_id' => $enrollment->id,
                         'subject_id'    => $subject->id,
                         'subject_code'  => $subject->code,
                         'subject_type'  => !is_null($subject->elective_group) ? 'elective' : 'regular',
+                    ]);
+                }
+
+                $improvementSubjects = Subject::whereIn('id', $pending['improvement_ids'] ?? [])->get();
+                foreach ($improvementSubjects as $subject) {
+                    ExamEnrollmentSubject::create([
+                        'enrollment_id' => $enrollment->id,
+                        'subject_id'    => $subject->id,
+                        'subject_code'  => $subject->code,
+                        'subject_type'  => 'improvement',
                     ]);
                 }
             });

@@ -187,6 +187,66 @@ class EnrollmentTest extends TestCase
         $response->assertDontSee($subject->name);
     }
 
+    // ── Improvement exam subject filtering ────────────────────────────────────
+
+    #[Test]
+    public function improvement_exam_shows_only_passed_subjects(): void
+    {
+        $student = Student::factory()->create([
+            'course'     => 'BSC',
+            'group_code' => 'MPC',
+            'medium'     => 'EM',
+            'scheme'     => 'CBCS',
+            'semester'   => 3,
+        ]);
+
+        $regularExam = Exam::factory()->closed()->create([
+            'course'    => 'BSC',
+            'semester'  => 3,
+            'exam_type' => 'regular',
+        ]);
+
+        $passedSubject = Subject::factory()->create([
+            'course' => 'BSC', 'group_code' => 'MPC', 'medium' => 'EM',
+            'semester' => 3, 'scheme' => 'CBCS',
+        ]);
+        $failedSubject = Subject::factory()->create([
+            'course' => 'BSC', 'group_code' => 'MPC', 'medium' => 'EM',
+            'semester' => 3, 'scheme' => 'CBCS',
+        ]);
+
+        Result::create(['hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
+            'subject_id' => $passedSubject->id, 'result' => 'P', 'semester' => 3, 'total_marks' => 100]);
+        Result::create(['hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
+            'subject_id' => $failedSubject->id, 'result' => 'F', 'semester' => 3, 'total_marks' => 100]);
+
+        $imprvExam = Exam::factory()->open()->improvement()->create([
+            'course' => 'BSC', 'semester' => 3,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/subjects?exam_id={$imprvExam->id}");
+
+        $response->assertOk();
+        $response->assertSee($passedSubject->name);
+        $response->assertDontSee($failedSubject->name);
+    }
+
+    #[Test]
+    public function improvement_exam_fee_is_per_subject(): void
+    {
+        $exam = new Exam();
+        $exam->exam_type       = 'improvement';
+        $exam->fee_improvement = 300;
+        $exam->fee_regular     = 650;
+
+        $calculator = new \App\Services\FeeCalculatorService();
+
+        $this->assertEquals(300,  $calculator->calculate($exam, 1));
+        $this->assertEquals(600,  $calculator->calculate($exam, 2));
+        $this->assertEquals(900,  $calculator->calculate($exam, 3));
+    }
+
     // ── Enrollment success page ───────────────────────────────────────────────
 
     #[Test]
