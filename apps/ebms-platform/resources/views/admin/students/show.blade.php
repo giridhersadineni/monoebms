@@ -75,7 +75,6 @@
                     <td class="px-4 py-2"><x-status-badge :status="$enrollment->getFeeStatus()" /></td>
                     <td class="px-4 py-2 flex gap-2">
                         <a href="{{ route('admin.enrollments.show', $enrollment) }}" class="text-blue-600 hover:underline text-xs">Details</a>
-                        <a href="{{ route('admin.results.show', $enrollment) }}" class="text-green-600 hover:underline text-xs">Results</a>
                     </td>
                 </tr>
                 @endforeach

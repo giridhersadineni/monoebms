@@ -16,6 +16,7 @@
     <input type="hidden" name="exam_id" value="{{ $exam->id }}">
 
     {{-- Compulsory --}}
+    @if($compulsorySubjects->count() || $electiveSubjects->count())
     <div class="card animate-in delay-1" style="overflow:hidden;margin-bottom:14px;">
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
             <span style="width:8px;height:8px;background:var(--navy);border-radius:50%;flex-shrink:0;"></span>
@@ -33,6 +34,7 @@
         </label>
         @endforeach
     </div>
+    @endif
 
     {{-- Electives --}}
     @if($electiveSubjects->count())
@@ -115,9 +117,12 @@
                 'input[name="improvement_subjects[]"]:checked'
             ).length;
 
-            var fee = regular;
-            if (examType === 'supplementary' && supplyUpto2 && checked > 0 && checked <= 2) {
-                fee = supplyUpto2;
+            var fee = 0;
+            if (checked > 0) {
+                fee = regular;
+                if (examType === 'supplementary' && supplyUpto2 && checked <= 2) {
+                    fee = supplyUpto2;
+                }
             }
             fee += feeImprov * improvChecked;
             amountEl.textContent = '₹' + fee.toLocaleString('en-IN');

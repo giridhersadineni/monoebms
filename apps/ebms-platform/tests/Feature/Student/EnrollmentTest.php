@@ -141,7 +141,7 @@ class EnrollmentTest extends TestCase
     }
 
     #[Test]
-    public function supplementary_exam_shows_no_subjects_when_student_passed_all(): void
+    public function supplementary_exam_shows_passed_subjects_as_improvement_when_no_failures(): void
     {
         $student = Student::factory()->create([
             'course'     => 'BSC',
@@ -184,7 +184,9 @@ class EnrollmentTest extends TestCase
             ->get("/student/enrollments/subjects?exam_id={$supplyExam->id}");
 
         $response->assertOk();
-        $response->assertDontSee($subject->name);
+        // Subject should appear in the Improvement section, not as a compulsory/failed paper
+        $response->assertSee($subject->name);
+        $response->assertSee('Improvement');
     }
 
     // ── Improvement exam subject filtering ────────────────────────────────────

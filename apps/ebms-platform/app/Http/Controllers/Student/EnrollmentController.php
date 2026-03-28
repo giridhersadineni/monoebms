@@ -82,9 +82,11 @@ class EnrollmentController extends Controller
                 ->pluck('subject_id')
                 ->unique();
 
-            if ($failedSubjectIds->isNotEmpty()) {
-                $allSubjects = Subject::whereIn('id', $failedSubjectIds->all())->get();
-            }
+            // Always restrict to failed subjects — if none failed, $allSubjects is empty
+            // so the improvement section can show all passed subjects without being filtered out.
+            $allSubjects = $failedSubjectIds->isNotEmpty()
+                ? Subject::whereIn('id', $failedSubjectIds->all())->get()
+                : collect();
         }
 
         $compulsorySubjects = $allSubjects->filter(fn($s) => is_null($s->elective_group))->values();

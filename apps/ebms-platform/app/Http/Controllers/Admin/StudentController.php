@@ -64,6 +64,22 @@ class StudentController extends Controller
     public function loginAs(string $hallTicket): RedirectResponse
     {
         $student = Student::byHallTicket($hallTicket)->firstOrFail();
+
+        // Scheme-2025+ students are on the new platform.
+        // Older students live on the legacy portal — redirect there via signed SSO.
+        $newSchemes = ['2025', '2026'];
+        if (! in_array($student->scheme, $newSchemes, true)) {
+            $secret = config('services.legacy_sso.secret');
+            $ts     = time();
+            $sig    = hash_hmac('sha256', $hallTicket . '|' . $ts, $secret);
+            $url    = 'https://students.uasckuexams.in/admin_sso.php?' . http_build_query([
+                'ht'  => $hallTicket,
+                'ts'  => $ts,
+                'sig' => $sig,
+            ]);
+            return redirect($url);
+        }
+
         Auth::guard('student')->login($student);
 
         return redirect('/student/dashboard');
