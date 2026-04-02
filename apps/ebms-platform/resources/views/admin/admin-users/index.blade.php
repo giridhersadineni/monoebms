@@ -62,7 +62,7 @@
                                     {{ $user->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>
                             </form>
-                            <button onclick="document.getElementById('pw-modal-{{ $user->id }}').classList.remove('hidden')"
+                            <button type="button" data-show-pw="{{ $user->id }}"
                                     class="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors">
                                 Reset Password
                             </button>
@@ -94,8 +94,7 @@
                                     class="bg-slate-900 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
                                 Save
                             </button>
-                            <button type="button"
-                                    onclick="document.getElementById('pw-modal-{{ $user->id }}').classList.add('hidden')"
+                            <button type="button" data-hide-pw="{{ $user->id }}"
                                     class="text-sm text-slate-500 hover:text-slate-700">
                                 Cancel
                             </button>
@@ -109,4 +108,17 @@
     </div>
 
 </div>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.querySelectorAll('[data-show-pw]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('pw-modal-' + btn.dataset.showPw).classList.remove('hidden');
+    });
+});
+document.querySelectorAll('[data-hide-pw]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('pw-modal-' + btn.dataset.hidePw).classList.add('hidden');
+    });
+});
+</script>
 @endsection

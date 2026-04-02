@@ -46,6 +46,10 @@
                 <p class="text-xs text-slate-400 mb-0.5">Revaluation</p>
                 <x-status-badge :status="$exam->revaluation_open ? 'open' : 'closed'" />
             </div>
+            <div>
+                <p class="text-xs text-slate-400 mb-0.5">Results</p>
+                <x-status-badge :status="$exam->results_visible ? 'open' : 'closed'" />
+            </div>
         </div>
     </div>
 
@@ -76,6 +80,16 @@
                     class="px-4 py-2 rounded-lg text-sm font-medium border border-slate-200
                            text-slate-600 hover:bg-slate-50 transition-colors">
                 {{ $exam->revaluation_open ? 'Close Revaluation' : 'Open Revaluation' }}
+            </button>
+        </form>
+        <form method="POST" action="{{ route('admin.exams.toggle-results', $exam) }}">
+            @csrf @method('PATCH')
+            <button type="submit"
+                    class="px-4 py-2 rounded-lg text-sm font-medium border transition-colors
+                           {{ $exam->results_visible
+                               ? 'border-red-200 text-red-700 hover:bg-red-50'
+                               : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }}">
+                {{ $exam->results_visible ? 'Hide Results' : 'Publish Results' }}
             </button>
         </form>
         <a href="{{ route('admin.enrollments.index', ['exam_id' => $exam->id]) }}"

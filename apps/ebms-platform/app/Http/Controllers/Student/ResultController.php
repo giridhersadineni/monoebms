@@ -18,6 +18,7 @@ class ResultController extends Controller
         $enrollments = $student->enrollments()
             ->with(['exam', 'gpa'])
             ->feePaid()
+            ->whereHas('exam', fn ($q) => $q->where('results_visible', true))
             ->latest('enrolled_at')
             ->get();
 
@@ -26,6 +27,10 @@ class ResultController extends Controller
 
     public function show(Exam $exam): View|RedirectResponse
     {
+        if (! $exam->results_visible) {
+            return redirect()->route('student.results.index');
+        }
+
         $student = Auth::guard('student')->user();
 
         $enrollment = ExamEnrollment::where('exam_id', $exam->id)

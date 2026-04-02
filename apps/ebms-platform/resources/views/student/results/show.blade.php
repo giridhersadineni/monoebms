@@ -13,7 +13,7 @@
             <h1 class="font-display" style="font-size:24px;font-weight:600;color:var(--navy);margin:0 0 4px;">{{ $exam->name }}</h1>
             <p style="font-size:14px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}</p>
         </div>
-        <button onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;" nonce="{{ $csp_nonce ?? '' }}">
+        <button id="btn-print-result" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print Results
         </button>
@@ -22,7 +22,7 @@
 
 {{-- Print header (only visible when printing) --}}
 <div class="print-only" style="display:none;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:14px;text-align:center;">
-    <img src="{{ asset('images/college-header.jpg') }}" alt="University Arts &amp; Science College" style="max-width:100%;height:auto;max-height:60px;display:block;margin:0 auto 4px;">
+    <img src="https://students.uasckuexams.in/images/Logo1.jpg" alt="University Arts &amp; Science College" style="max-width:100%;height:auto;max-height:80px;display:block;margin:0 auto 4px;">
     <p style="font-size:10px;font-weight:700;color:#333;margin:0 0 10px;letter-spacing:.2px;">An Autonomous Institute under Kakatiya University, Subedari, Hanamkonda, Warangal, Telangana State-506001</p>
     <p style="font-size:13px;font-weight:700;color:#000;margin:0 0 2px;">{{ $exam->name }} — Semester {{ $exam->semester }}</p>
     <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
@@ -206,17 +206,45 @@
         .result-mobile { display:none !important; }
         .result-desktop { display:block !important; }
         .animate-in { animation:none !important; }
-        body { background:#fff !important; }
+        body { background:#fff !important; font-size:11px !important; }
         .card {
             border:1px solid #ccc !important;
             box-shadow:none !important;
-            border-radius:6px !important;
+            border-radius:4px !important;
             break-inside:avoid;
+            margin-bottom:6px !important;
         }
         nav, header, footer, aside { display:none !important; }
         a { text-decoration:none !important; color:inherit !important; }
-        @page { margin:1.5cm; }
+        /* Tighten spacing throughout */
+        [style*="margin-bottom:14px"] { margin-bottom:6px !important; }
+        [style*="margin-bottom:24px"] { margin-bottom:6px !important; }
+        [style*="padding:18px 22px"] { padding:8px 12px !important; }
+        [style*="padding:20px 22px"] { padding:8px 12px !important; }
+        [style*="padding:14px 20px"] { padding:6px 12px !important; }
+        [style*="padding:16px 20px"] { padding:6px 12px !important; }
+        [style*="padding:13px 20px"] { padding:5px 10px !important; }
+        [style*="font-size:28px"] { font-size:18px !important; }
+        [style*="font-size:26px"] { font-size:16px !important; }
+        [style*="font-size:16px"] { font-size:13px !important; }
+        [style*="font-size:14px"] { font-size:11px !important; }
+        [style*="font-size:13px"] { font-size:10px !important; }
+        [style*="font-size:11px"] { font-size:9px !important; }
+        [style*="font-size:10px"] { font-size:9px !important; }
+        /* Print header compact */
+        .print-only { margin-bottom:8px !important; padding-bottom:6px !important; }
+        /* GPA summary row instead of grid */
+        [style*="grid-template-columns"] { display:flex !important; flex-wrap:wrap !important; gap:8px !important; }
+        /* Grade legend compact */
+        [style*="padding:16px 20px;margin-bottom:24px"] { padding:6px 10px !important; margin-bottom:0 !important; }
+        @page { margin:1cm; size:A4 portrait; }
     }
 </style>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.getElementById('btn-print-result').addEventListener('click', function () {
+    window.print();
+});
+</script>
 
 @endsection

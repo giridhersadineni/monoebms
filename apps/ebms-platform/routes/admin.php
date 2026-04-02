@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ExamFeeRuleController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\GradeSheetController;
+use App\Http\Controllers\Admin\FeatureFlagController;
 use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ Route::middleware('auth:admin')->group(function () {
     // Students
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
+    Route::get('/students/{hallTicket}/edit', [StudentController::class, 'edit'])
+        ->middleware('role:admin,superadmin')
+        ->name('students.edit');
     Route::get('/students/{hallTicket}', [StudentController::class, 'show'])->name('students.show');
     Route::put('/students/{id}', [StudentController::class, 'update'])
         ->middleware('role:admin,superadmin')
@@ -40,8 +44,19 @@ Route::middleware('auth:admin')->group(function () {
 
     // Enrollments
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
+    Route::get('/enrollments/mark-payment', [EnrollmentController::class, 'markPaymentPage'])->name('enrollments.mark-payment');
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
+    Route::get('/enrollments/{id}/subjects', [EnrollmentController::class, 'manageSubjects'])->name('enrollments.subjects');
+    Route::post('/enrollments/{id}/subjects', [EnrollmentController::class, 'addSubject'])
+        ->middleware('role:admin,superadmin')
+        ->name('enrollments.subjects.store');
+    Route::delete('/enrollments/{id}/subjects/{subjectId}', [EnrollmentController::class, 'removeSubject'])
+        ->middleware('role:admin,superadmin')
+        ->name('enrollments.subjects.destroy');
+    Route::delete('/enrollments/{id}/fee', [EnrollmentController::class, 'clearPayment'])
+        ->middleware('role:admin,superadmin')
+        ->name('enrollments.fee.clear');
     Route::delete('/enrollments/{id}', [EnrollmentController::class, 'destroy'])
         ->middleware('role:admin,superadmin')
         ->name('enrollments.destroy');
@@ -55,6 +70,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
     Route::patch('/exams/{exam}/status', [ExamController::class, 'toggleStatus'])->name('exams.toggle-status');
     Route::patch('/exams/{exam}/revaluation', [ExamController::class, 'toggleRevaluation'])->name('exams.toggle-revaluation');
+    Route::patch('/exams/{exam}/results', [ExamController::class, 'toggleResults'])->name('exams.toggle-results');
     Route::get('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'index'])->name('exams.fee-rules.index');
     Route::post('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'store'])->name('exams.fee-rules.store');
     Route::get('/exams/{exam}/fee-rules/{rule}/edit', [ExamFeeRuleController::class, 'edit'])->name('exams.fee-rules.edit');
@@ -92,6 +108,13 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/admin-users', [AdminUserController::class, 'store'])->name('admin-users.store');
         Route::patch('/admin-users/{adminUser}/toggle-active', [AdminUserController::class, 'toggleActive'])->name('admin-users.toggle-active');
         Route::post('/admin-users/{adminUser}/reset-password', [AdminUserController::class, 'resetPassword'])->name('admin-users.reset-password');
+    });
+
+    // Feature Flags (superadmin only)
+    Route::middleware('role:superadmin')->group(function () {
+        Route::get('/feature-flags', [FeatureFlagController::class, 'index'])->name('feature-flags.index');
+        Route::patch('/feature-flags/{featureFlag}/toggle', [FeatureFlagController::class, 'toggle'])->name('feature-flags.toggle');
+        Route::patch('/feature-flags/{featureFlag}/message', [FeatureFlagController::class, 'updateMessage'])->name('feature-flags.message');
     });
 
     // Grade Sheets

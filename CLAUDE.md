@@ -144,11 +144,40 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - **Deploy order matters**: upload route files BEFORE uploading layout/view files that reference those routes. A layout referencing an unregistered route causes ERR_TOO_MANY_REDIRECTS across the entire admin portal.
 - After every deploy run: `php artisan optimize:clear` to flush route/view/config caches
 - Frontend: run `npm run build` locally and scp `public/build/` to server — Node.js is not available on the server
+- **SSH key is passphrase-protected.** Direct `ssh`/`scp` fails without loading the key first. Use ssh-agent in the same shell context:
+
+```bash
+eval $(ssh-agent -s) && \
+printf '#!/bin/sh\necho "PASSPHRASE"' > /tmp/askpass.sh && chmod +x /tmp/askpass.sh && \
+DISPLAY=fake SSH_ASKPASS=/tmp/askpass.sh ssh-add ~/.ssh/ebmsnova 2>/dev/null && \
+# scp / ssh commands here
+rm /tmp/askpass.sh
+```
 
 ### Known Open Issues (production)
 
 - `Route [login] not defined` — the `Authenticate` middleware redirects unauthenticated requests to `route('login')`, but under the `admin.` prefix the correct route is `admin.login`. Needs a custom `redirectTo` in the auth middleware or a `withExceptions` redirect override.
 - `getMonthNameAttribute(): Argument #1 must be of type string, null given` — legacy-migrated exams have a numeric `month` stored as a string but some rows have null. Seen on `admin/exams/index`. Pre-existing.
+
+### Troubleshooting: Student sees no papers during enrollment
+
+`EnrollmentController::selectSubjects()` chains 4–5 exact-match filters. Any mismatch silently returns empty. Check in order:
+
+1. `course` — student's `course` must match `subjects.course`
+2. `medium` — must match `subjects.medium` (TM / EM / BM)
+3. `scheme` — must match `subjects.scheme` (integer year, e.g. 2019)
+4. `group_code` — if set on student, only subjects with that `group_code` are returned
+5. Supplementary exams only — student must have `result != 'P'` rows in `results` for a regular exam in the same semester
+
+Fix mismatches via **Admin → Students → \[student\] → Edit** (`/admin/students/{hallTicket}/edit`, requires `admin` or `superadmin` role). Diagnostic tinker query:
+
+```php
+$s = App\Models\Student::where('hall_ticket', 'XXXX')->first();
+$e = App\Models\Exam::find(ID);
+App\Models\Subject::forCourse($s->course)->forSemester($e->semester)
+    ->selectRaw('medium, scheme, group_code, count(*) as cnt')
+    ->groupBy('medium','scheme','group_code')->get();
+```
 
 ## AI Agent Skills
 

@@ -29,9 +29,9 @@ class SecurityHeadersMiddleware
             'Content-Security-Policy',
             "default-src 'self'; " .
             "script-src 'self' 'nonce-{$nonce}'; " .
-            "style-src 'self' 'unsafe-inline'; " .
-            "img-src 'self' data:; " .
-            "font-src 'self'; " .
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .
+            "img-src 'self' data: https://students.uasckuexams.in; " .
+            "font-src 'self' https://fonts.gstatic.com; " .
             "connect-src 'self'; " .
             "frame-ancestors 'none';"
         );

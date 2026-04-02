@@ -12,12 +12,13 @@ class Exam extends Model
     use HasFactory;
     protected $fillable = [
         'name', 'semester', 'course', 'exam_type', 'month', 'year',
-        'status', 'scheme', 'revaluation_open',
+        'status', 'scheme', 'revaluation_open', 'results_visible',
         'fee_regular', 'fee_supply_upto2', 'fee_improvement', 'fee_fine',
     ];
 
     protected $casts = [
         'revaluation_open' => 'boolean',
+        'results_visible'  => 'boolean',
         'semester'         => 'integer',
         'year'             => 'integer',
         'fee_regular'      => 'integer',
