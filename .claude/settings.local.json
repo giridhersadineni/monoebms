@@ -40,7 +40,8 @@
       "Bash(find /c/source/monoebms/apps/ebms-platform/resources/views/student -name *.php -o -name *.blade.php)",
       "Bash(sshpass -V)",
       "Bash(bash deploy.sh \\\\\n  resources/views/admin/enrollments/mark-payment.blade.php \\\\\n  resources/views/admin/enrollments/show.blade.php \\\\\n  resources/views/admin/admin-users/index.blade.php \\\\\n  resources/views/student/results/show.blade.php \\\\\n  app/Http/Middleware/SecurityHeadersMiddleware.php 2>&1)",
-      "Bash(bash deploy.sh \\\\\n  resources/views/student/results/show.blade.php \\\\\n  app/Http/Middleware/SecurityHeadersMiddleware.php 2>&1)"
+      "Bash(bash deploy.sh \\\\\n  resources/views/student/results/show.blade.php \\\\\n  app/Http/Middleware/SecurityHeadersMiddleware.php 2>&1)",
+      "Bash(bash deploy.sh resources/views/student/results/show.blade.php 2>&1)"
     ]
   }
 }

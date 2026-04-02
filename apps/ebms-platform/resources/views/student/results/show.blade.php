@@ -29,36 +29,12 @@
 </div>
 
 {{-- Student info header --}}
-<div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;">
-    <div style="flex:1;min-width:0;">
-        <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $student->name }}</p>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <code class="font-mono-code" style="font-size:12px;background:#EEF0F3;color:var(--navy);padding:2px 8px;border-radius:6px;">{{ $student->hall_ticket }}</code>
-            <span style="font-size:13px;color:var(--muted);">{{ $student->course_name ?? $student->course }}</span>
-        </div>
+<div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;">
+    <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $student->name }}</p>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <code class="font-mono-code" style="font-size:12px;background:#EEF0F3;color:var(--navy);padding:2px 8px;border-radius:6px;">{{ $student->hall_ticket }}</code>
+        <span style="font-size:13px;color:var(--muted);">{{ $student->course_name ?? $student->course }}</span>
     </div>
-    @if($enrollment->gpa)
-    <div style="display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap;">
-        <div style="text-align:center;padding:12px 18px;background:linear-gradient(135deg,#F0FDFA 0%,#fff 100%);border:1px solid rgba(13,148,136,.2);border-radius:12px;">
-            <p class="font-display" style="font-size:28px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
-            <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">SGPA</p>
-        </div>
-        @php
-            $res = strtoupper($enrollment->gpa->result ?? '');
-            $resBg  = match(true) {
-                str_contains($res, 'PASS') || $res === 'PROMOTED' => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
-                str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
-                default => 'background:#EEF0F3;border-color:var(--border);color:var(--muted);'
-            };
-        @endphp
-        @if($enrollment->gpa->result)
-        <div style="text-align:center;padding:12px 18px;{{ $resBg }}border:1px solid;border-radius:12px;">
-            <p class="font-display" style="font-size:18px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
-            <p style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">Result</p>
-        </div>
-        @endif
-    </div>
-    @endif
 </div>
 
 {{-- Papers table --}}
@@ -120,11 +96,25 @@
     <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
         <p style="font-size:13px;font-weight:700;color:var(--navy);margin:0;letter-spacing:.3px;text-transform:uppercase;">GPA Summary</p>
     </div>
+    @php
+        $res = strtoupper($enrollment->gpa->result ?? '');
+        $resBg = match(true) {
+            str_contains($res, 'PASS') || $res === 'PROMOTED' => 'background:rgba(13,148,136,.1);border:1px solid rgba(13,148,136,.25);color:var(--teal);',
+            str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;',
+            default => 'background:#EEF0F3;border:1px solid var(--border);color:var(--muted);'
+        };
+    @endphp
     <div style="padding:20px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;">
-        <div style="text-align:center;">
+        <div style="text-align:center;padding:12px 18px;background:linear-gradient(135deg,#F0FDFA 0%,#fff 100%);border:1px solid rgba(13,148,136,.2);border-radius:12px;">
             <p class="font-display" style="font-size:26px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
             <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:6px 0 0;">SGPA</p>
         </div>
+        @if($enrollment->gpa->result)
+        <div style="text-align:center;padding:12px 18px;border-radius:12px;{{ $resBg }}">
+            <p class="font-display" style="font-size:20px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
+            <p style="font-size:11px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin:6px 0 0;">Result</p>
+        </div>
+        @endif
         @if($enrollment->gpa->cgpa_part1)
         <div style="text-align:center;">
             <p class="font-display" style="font-size:26px;font-weight:700;color:var(--navy);margin:0;line-height:1;">{{ $enrollment->gpa->cgpa_part1 }}</p>
