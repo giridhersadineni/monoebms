@@ -4,6 +4,7 @@ namespace Tests\Feature\Student;
 
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
+use App\Models\FeatureFlag;
 use App\Models\Result;
 use App\Models\Student;
 use App\Models\Subject;
@@ -296,5 +297,81 @@ class EnrollmentTest extends TestCase
             ->get("/student/challan/{$enrollment->id}");
 
         $this->assertNotEquals(403, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function hall_ticket_is_accessible_when_fee_is_paid_and_exam_is_running(): void
+    {
+        $student = Student::factory()->create(['dob' => '2000-01-01']);
+        $exam = Exam::factory()->create(['status' => Exam::STATUS_RUNNING]);
+        $enrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/hall-ticket");
+
+        $response->assertOk();
+        $response->assertSee('Hall Ticket', false);
+        $response->assertSee($student->hall_ticket, false);
+    }
+
+    #[Test]
+    public function hall_ticket_requires_fee_payment(): void
+    {
+        $student = Student::factory()->create(['dob' => '2000-01-01']);
+        $exam = Exam::factory()->create(['status' => Exam::STATUS_RUNNING]);
+        $enrollment = ExamEnrollment::factory()->feePending()->create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/hall-ticket");
+
+        $response->assertForbidden();
+    }
+
+    #[Test]
+    public function hall_ticket_requires_running_exam_status(): void
+    {
+        $student = Student::factory()->create(['dob' => '2000-01-01']);
+        $exam = Exam::factory()->create(['status' => Exam::STATUS_CLOSED]);
+        $enrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/hall-ticket");
+
+        $response->assertForbidden();
+    }
+
+    #[Test]
+    public function hall_ticket_respects_feature_flag(): void
+    {
+        FeatureFlag::create([
+            'name' => 'hall_ticket',
+            'label' => 'Hall Ticket Download',
+            'enabled' => false,
+        ]);
+
+        $student = Student::factory()->create(['dob' => '2000-01-01']);
+        $exam = Exam::factory()->create(['status' => Exam::STATUS_RUNNING]);
+        $enrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
+        $response = $this->actingAs($student, 'student')
+            ->get("/student/enrollments/{$enrollment->id}/hall-ticket");
+
+        $response->assertStatus(503);
     }
 }

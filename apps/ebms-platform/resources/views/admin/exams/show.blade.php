@@ -17,10 +17,12 @@
                 {{ $exam->month_name }} {{ $exam->year }}
             </p>
         </div>
+        @if(auth('admin')->user()->canAccess('exams.manage'))
         <a href="{{ route('admin.exams.edit', $exam) }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Edit
         </a>
+        @endif
     </div>
 
     {{-- Metadata --}}
@@ -55,6 +57,7 @@
 
     {{-- Quick Actions --}}
     <div class="flex gap-2.5 mb-4">
+        @if(auth('admin')->user()->canAccess('exams.manage'))
         <form method="POST" action="{{ route('admin.exams.toggle-status', $exam) }}">
             @csrf @method('PATCH')
             @php
@@ -92,6 +95,7 @@
                 {{ $exam->results_visible ? 'Hide Results' : 'Publish Results' }}
             </button>
         </form>
+        @endif
         <a href="{{ route('admin.enrollments.index', ['exam_id' => $exam->id]) }}"
            class="px-4 py-2 rounded-lg text-sm font-medium border border-blue-200 text-blue-700
                   hover:bg-blue-50 transition-colors">

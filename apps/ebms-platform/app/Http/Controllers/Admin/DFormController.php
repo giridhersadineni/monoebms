@@ -69,7 +69,7 @@ class DFormController extends Controller
             ->whereHas('enrollmentSubjects', fn ($q) =>
                 $q->where('subject_code', $subject->code)
             )
-            ->with('student:id,hall_ticket,name')
+            ->with('student:id,hall_ticket,name,photo_path,signature_path')
             ->orderBy('hall_ticket')
             ->get();
 

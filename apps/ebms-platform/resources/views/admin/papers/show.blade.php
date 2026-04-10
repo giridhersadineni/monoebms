@@ -19,10 +19,12 @@
                 &nbsp;·&nbsp; Sem {{ $paper->semester }}
             </p>
         </div>
+        @if(auth('admin')->user()->canAccess('papers.manage'))
         <a href="{{ route('admin.papers.edit', $paper) }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Edit Paper
         </a>
+        @endif
     </div>
 
     {{-- Detail card --}}
@@ -85,6 +87,7 @@
     </div>
 
     {{-- Delete action --}}
+    @if(auth('admin')->user()->canAccess('papers.manage'))
     <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
         <form method="POST" action="{{ route('admin.papers.destroy', $paper) }}"
               onsubmit="return confirm('Permanently delete paper {{ $paper->code }}?')">
@@ -92,5 +95,6 @@
             <button type="submit" class="text-red-500 hover:text-red-700 text-sm hover:underline">Delete Paper</button>
         </form>
     </div>
+    @endif
 </div>
 @endsection

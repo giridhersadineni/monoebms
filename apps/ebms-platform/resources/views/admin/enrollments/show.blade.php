@@ -8,6 +8,7 @@
             <h1 class="text-xl font-bold text-gray-800 mb-1">Enrollment #{{ $enrollment->id }}</h1>
             <p class="text-sm text-gray-500">{{ $enrollment->exam?->name }} — {{ $enrollment->hall_ticket }}</p>
         </div>
+        @if(auth('admin')->user()->canAccess('enrollments.manage'))
         <div class="flex gap-2">
             <a href="{{ route('admin.enrollments.subjects', $enrollment->id) }}"
                class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
@@ -22,6 +23,7 @@
                 </button>
             </form>
         </div>
+        @endif
     </div>
 
     <div class="bg-white rounded-lg border border-gray-200 p-5 mb-4">
@@ -98,6 +100,7 @@
             Fee received on {{ $enrollment->fee_paid_at?->format('d M Y') }} by {{ $enrollment->challan_received_by }}.
             Challan: {{ $enrollment->challan_number }}.
         </span>
+        @if(auth('admin')->user()->canAccess('enrollments.manage'))
         <form method="POST" action="{{ route('admin.enrollments.fee.clear', $enrollment->id) }}"
               onsubmit="return confirm('Clear payment record for enrollment #{{ $enrollment->id }}?');">
             @csrf @method('DELETE')
@@ -105,6 +108,7 @@
                 Clear Payment
             </button>
         </form>
+        @endif
     </div>
     @endif
 </div>

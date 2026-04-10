@@ -8,10 +8,12 @@
             <h1 class="text-xl font-semibold text-slate-800">Papers</h1>
             <p class="text-sm text-slate-500 mt-0.5">Manage exam papers for each course and group</p>
         </div>
+        @if(auth('admin')->user()->canAccess('papers.manage'))
         <a href="{{ route('admin.papers.create') }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             + New Paper
         </a>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -125,6 +127,7 @@
                     <td class="px-5 py-3 text-slate-500 text-xs font-mono">{{ $paper->elective_group ?? '—' }}</td>
                     <td class="px-5 py-3 text-slate-500 text-xs font-mono">{{ $paper->scheme }}</td>
                     <td class="px-5 py-3">
+                        @if(auth('admin')->user()->canAccess('papers.manage'))
                         <div class="flex gap-3">
                             <a href="{{ route('admin.papers.edit', $paper) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">Edit</a>
@@ -135,12 +138,13 @@
                                 <button type="submit" class="text-red-500 hover:underline text-xs font-medium">Delete</button>
                             </form>
                         </div>
+                        @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
                     <td colspan="10" class="px-5 py-10 text-center text-slate-400 text-sm">
-                        No papers found. <a href="{{ route('admin.papers.create') }}" class="text-blue-600 hover:underline">Add one</a>.
+                        No papers found.@if(auth('admin')->user()->canAccess('papers.manage')) <a href="{{ route('admin.papers.create') }}" class="text-blue-600 hover:underline">Add one</a>.@endif
                     </td>
                 </tr>
                 @endforelse

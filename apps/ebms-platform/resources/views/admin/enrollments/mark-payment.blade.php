@@ -81,6 +81,7 @@
                 Challan: <strong>{{ $enrollment->challan_number }}</strong>.
                 Received by: {{ $enrollment->challan_received_by }}.
             </span>
+            @if(auth('admin')->user()->canAccess('enrollments.manage'))
             <form method="POST" action="{{ route('admin.enrollments.fee.clear', $enrollment->id) }}"
                   onsubmit="return confirm('Clear payment record for enrollment #{{ $enrollment->id }}?');">
                 @csrf @method('DELETE')
@@ -89,6 +90,7 @@
                     Clear Payment
                 </button>
             </form>
+            @endif
         </div>
         @else
         <form method="POST" action="{{ route('admin.enrollments.fee', $enrollment->id) }}"

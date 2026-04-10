@@ -8,10 +8,12 @@
             <h1 class="text-xl font-semibold text-slate-800">Courses</h1>
             <p class="text-sm text-slate-500 mt-0.5">Manage course codes, names, and groups</p>
         </div>
+        @if(auth('admin')->user()->canAccess('courses.manage'))
         <a href="{{ route('admin.courses.create') }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             + New Course
         </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -48,15 +50,17 @@
                         <div class="flex gap-3">
                             <a href="{{ route('admin.courses.show', $course) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">Manage</a>
+                            @if(auth('admin')->user()->canAccess('courses.manage'))
                             <a href="{{ route('admin.courses.edit', $course) }}"
                                class="text-slate-500 hover:underline text-xs font-medium">Edit</a>
+                            @endif
                         </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
                     <td colspan="6" class="px-5 py-10 text-center text-slate-400 text-sm">
-                        No courses yet. <a href="{{ route('admin.courses.create') }}" class="text-blue-600 hover:underline">Create one</a>.
+                        No courses yet.@if(auth('admin')->user()->canAccess('courses.manage')) <a href="{{ route('admin.courses.create') }}" class="text-blue-600 hover:underline">Create one</a>.@endif
                     </td>
                 </tr>
                 @endforelse

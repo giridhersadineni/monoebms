@@ -5,6 +5,7 @@ use App\Http\Controllers\Student\SsoController;
 use App\Http\Controllers\Student\ChallanController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\EnrollmentController;
+use App\Http\Controllers\Student\HallTicketController;
 use App\Http\Controllers\Student\PrintApplicationController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\ResultController;
@@ -50,6 +51,9 @@ Route::middleware('auth:student')->group(function () {
 
     // Print Application
     Route::get('/enrollments/{enrollment}/application', [PrintApplicationController::class, 'show'])->name('enrollments.application');
+    Route::get('/enrollments/{enrollment}/hall-ticket', [HallTicketController::class, 'show'])
+        ->middleware('feature:hall_ticket')
+        ->name('enrollments.hall-ticket');
 
     // Revaluation
     Route::get('/revaluation', [RevaluationController::class, 'index'])->name('revaluation.index');

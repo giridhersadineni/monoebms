@@ -43,12 +43,14 @@
                     <td class="px-5 py-2.5 text-slate-800">{{ $es->subject?->name ?? $es->subject_code }}</td>
                     <td class="px-5 py-2.5 text-slate-500 text-xs capitalize">{{ $es->subject_type }}</td>
                     <td class="px-5 py-2.5 text-right">
+                        @if(auth('admin')->user()->canAccess('enrollments.manage'))
                         <form method="POST"
                               action="{{ route('admin.enrollments.subjects.destroy', [$enrollment->id, $es->id]) }}"
                               onsubmit="return confirm('Remove {{ addslashes($es->subject_code) }} from this enrollment?');">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-medium">Remove</button>
                         </form>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
@@ -58,6 +60,7 @@
     </div>
 
     {{-- Add subject --}}
+    @if(auth('admin')->user()->canAccess('enrollments.manage'))
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <h2 class="text-sm font-semibold text-slate-700 mb-4">Add Subject</h2>
 
@@ -99,5 +102,6 @@
         </form>
         @endif
     </div>
+    @endif
 </div>
 @endsection

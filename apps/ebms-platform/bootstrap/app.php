@@ -30,8 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role'    => App\Http\Middleware\RequireRole::class,
-            'feature' => App\Http\Middleware\CheckFeatureFlag::class,
+            'role'       => App\Http\Middleware\RequireRole::class,
+            'feature'    => App\Http\Middleware\CheckFeatureFlag::class,
+            'permission' => App\Http\Middleware\RequirePermission::class,
         ]);
 
         $middleware->redirectGuestsTo(function ($request) {

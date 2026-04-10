@@ -41,7 +41,14 @@
       "Bash(sshpass -V)",
       "Bash(bash deploy.sh \\\\\n  resources/views/admin/enrollments/mark-payment.blade.php \\\\\n  resources/views/admin/enrollments/show.blade.php \\\\\n  resources/views/admin/admin-users/index.blade.php \\\\\n  resources/views/student/results/show.blade.php \\\\\n  app/Http/Middleware/SecurityHeadersMiddleware.php 2>&1)",
       "Bash(bash deploy.sh \\\\\n  resources/views/student/results/show.blade.php \\\\\n  app/Http/Middleware/SecurityHeadersMiddleware.php 2>&1)",
-      "Bash(bash deploy.sh resources/views/student/results/show.blade.php 2>&1)"
+      "Bash(bash deploy.sh resources/views/student/results/show.blade.php 2>&1)",
+      "Bash(xargs grep:*)",
+      "Bash(ls C:\\\\source\\\\monoebms\\\\routes\\\\:*)",
+      "Bash(xargs cat:*)",
+      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''exams.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/show.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/fee-rules/index.blade.php)",
+      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''courses.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/courses/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/courses/show.blade.php)",
+      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''papers.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/papers/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/papers/show.blade.php)",
+      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''enrollments.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/show.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/mark-payment.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/subjects.blade.php)"
     ]
   }
 }

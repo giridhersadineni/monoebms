@@ -19,10 +19,12 @@
                 &nbsp;·&nbsp; <x-status-badge :status="$course->is_active ? 'open' : 'closed'" />
             </p>
         </div>
+        @if(auth('admin')->user()->canAccess('courses.manage'))
         <a href="{{ route('admin.courses.edit', $course) }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Edit Course
         </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -66,6 +68,7 @@
                         <x-status-badge :status="$group->is_active ? 'open' : 'closed'" />
                     </td>
                     <td class="px-5 py-3">
+                        @if(auth('admin')->user()->canAccess('courses.manage'))
                         <div class="flex gap-3">
                             <a href="{{ route('admin.courses.groups.edit', [$course, $group]) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">Edit</a>
@@ -77,6 +80,7 @@
                                         class="text-red-500 hover:underline text-xs font-medium">Delete</button>
                             </form>
                         </div>
+                        @endif
                     </td>
                 </tr>
                 @empty
@@ -91,6 +95,7 @@
     </div>
 
     {{-- Add / Edit group form --}}
+    @if(auth('admin')->user()->canAccess('courses.manage'))
     @php $isEditing = $editingGroup !== null; @endphp
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <h2 class="text-sm font-semibold text-slate-700 mb-4">
@@ -174,6 +179,7 @@
             </div>
         </form>
     </div>
+    @endif
 
 </div>
 @endsection

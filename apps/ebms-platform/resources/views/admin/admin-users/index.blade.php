@@ -23,6 +23,7 @@
                     <th class="px-5 py-2.5 text-left">Login ID</th>
                     <th class="px-5 py-2.5 text-left">Role</th>
                     <th class="px-5 py-2.5 text-left">Status</th>
+                    <th class="px-5 py-2.5 text-left">Permissions</th>
                     <th class="px-5 py-2.5 text-left">Actions</th>
                 </tr>
             </thead>
@@ -51,6 +52,20 @@
                     </td>
                     <td class="px-5 py-3">
                         <x-status-badge :status="$user->is_active ? 'active' : 'inactive'" />
+                    </td>
+                    <td class="px-5 py-3">
+                        @if($user->role->value !== 'superadmin')
+                            @php $grantCount = count($user->permissions ?? []); @endphp
+                            <a href="{{ route('admin.admin-users.permissions', $user) }}"
+                               class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                @if($grantCount > 0)
+                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">{{ $grantCount }}</span>
+                                @endif
+                                Manage
+                            </a>
+                        @else
+                            <span class="text-xs text-slate-400">Full access</span>
+                        @endif
                     </td>
                     <td class="px-5 py-3">
                         @if(! $isSelf)

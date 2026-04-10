@@ -8,10 +8,12 @@
             <h1 class="text-xl font-semibold text-slate-800">Exams</h1>
             <p class="text-sm text-slate-500 mt-0.5">Manage exams, status and fee configuration</p>
         </div>
+        @if(auth('admin')->user()->canAccess('exams.edit'))
         <a href="{{ route('admin.exams.create') }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             + New Exam
         </a>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -86,8 +88,10 @@
                         <div class="flex gap-3">
                             <a href="{{ route('admin.exams.show', $exam) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">View</a>
+                            @if(auth('admin')->user()->canAccess('exams.edit'))
                             <a href="{{ route('admin.exams.edit', $exam) }}"
                                class="text-slate-500 hover:underline text-xs font-medium">Edit</a>
+                            @endif
                         </div>
                     </td>
                 </tr>

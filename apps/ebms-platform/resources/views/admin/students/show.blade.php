@@ -9,6 +9,7 @@
             <p class="text-sm text-gray-500">Hall Ticket: {{ $student->hall_ticket }} | Course: {{ $student->course_name ?? $student->course }}</p>
         </div>
         <div class="flex items-center gap-2">
+            @if(auth('admin')->user()->canAccess('students.manage'))
             <form method="POST" action="{{ route('admin.students.login-as', $student->hall_ticket) }}">
                 @csrf
                 <button type="submit"
@@ -20,6 +21,7 @@
                class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors">
                 Edit
             </a>
+            @endif
             <a href="{{ route('admin.gradesheets.show', $student) }}" class="border border-gray-300 px-3 py-1.5 rounded text-sm text-gray-700 hover:bg-gray-50">
                 Grade Sheet
             </a>

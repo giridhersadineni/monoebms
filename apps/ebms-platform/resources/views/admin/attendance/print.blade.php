@@ -59,31 +59,33 @@
 
         table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         th, td {
             border: 1px solid #000;
-            padding: 5px 8px;
+            padding: 4px 6px;
             vertical-align: middle;
+            overflow: hidden;
         }
 
         th {
             background: #f0f0f0;
             font-weight: bold;
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
 
-        td.serial { text-align: center; width: 36px; }
-        td.ht     { font-family: 'Courier New', monospace; font-weight: bold; width: 120px; }
-        td.name   { width: 200px; }
-        td.photo  { width: 70px; text-align: center; }
-        td.sig    { width: 110px; }
-        td.booklet { width: 110px; }
+        td.serial  { text-align: center; width: 28px; }
+        td.ht      { font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; width: 88px; }
+        td.name    { width: 140px; }
+        td.photo   { width: 58px; text-align: center; padding: 2px; height: 70px; }
+        td.sig     { width: 90px; }
+        td.booklet { width: 90px; }
 
         tfoot td {
             padding: 10px 8px;
@@ -103,7 +105,7 @@
         @media print {
             body { padding: 10px; }
             .no-print { display: none; }
-            @page { margin: 1.5cm; size: A4 landscape; }
+            @page { margin: 1.5cm; size: A4 portrait; }
         }
     </style>
 </head>
@@ -161,7 +163,7 @@
             <th>Photo</th>
             <th>Student Signature</th>
             <th>Booklet Number</th>
-            <th>Invigilator Signature</th>
+            <th>Student Signature</th>
         </tr>
     </thead>
     <tbody>
@@ -170,8 +172,16 @@
             <td class="serial">{{ $i + 1 }}</td>
             <td class="ht">{{ $enrollment->hall_ticket }}</td>
             <td class="name">{{ $enrollment->student?->name }}</td>
-            <td class="photo" style="height:55px;"></td>
-            <td class="sig"></td>
+            <td class="photo">
+                @if($enrollment->student?->photo_url)
+                    <img src="{{ $enrollment->student->photo_url }}" style="height:100%;width:100%;object-fit:contain;display:block;" alt="">
+                @endif
+            </td>
+            <td class="sig">
+                @if($enrollment->student?->signature_url)
+                    <img src="{{ $enrollment->student->signature_url }}" style="max-height:40px;max-width:100px;object-fit:contain;" alt="">
+                @endif
+            </td>
             <td class="booklet"></td>
             <td class="sig"></td>
         </tr>

@@ -20,11 +20,10 @@
     @foreach($enrollments as $enrollment)
     @php $paid = $enrollment->isFeePaid(); @endphp
     <div class="card" style="padding:16px 20px;">
-        {{-- Top row: exam name + badge --}}
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
             <div style="flex:1;min-width:0;">
                 <p style="font-size:15px;font-weight:700;color:var(--navy);margin:0 0 3px;line-height:1.3;">
-                    {{ $enrollment->exam?->name ?? '—' }}
+                    {{ $enrollment->exam?->name ?? '-' }}
                 </p>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     @if($enrollment->exam?->semester)
@@ -38,14 +37,17 @@
                 {{ $paid ? 'Paid' : 'Unpaid' }}
             </span>
         </div>
-        {{-- Bottom row: fee + actions --}}
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);">
-            <span style="font-size:15px;font-weight:700;color:var(--navy);">₹{{ number_format($enrollment->fee_amount) }}</span>
-            <div style="display:flex;gap:16px;align-items:center;">
-                <a href="{{ route('student.enrollments.application', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;" target="_blank">Application →</a>
-                <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan →</a>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);gap:12px;flex-wrap:wrap;">
+            <span style="font-size:15px;font-weight:700;color:var(--navy);">Rs.{{ number_format($enrollment->fee_amount) }}</span>
+            <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                <a href="{{ route('student.enrollments.application', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;" target="_blank">Application -></a>
+                <a href="{{ route('student.challan.show', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--amber);text-decoration:none;">Challan -></a>
+                @if($paid && \App\Models\FeatureFlag::isEnabled('hall_ticket') && $enrollment->exam?->canDownloadHallTicket())
+                <a href="{{ route('student.enrollments.hall-ticket', $enrollment) }}" style="font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;" target="_blank">Hall Ticket -></a>
+                @endif
                 @if($paid)
-                <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results →</a>
+                <a href="{{ route('student.results.show', $enrollment->exam) }}" style="font-size:13px;font-weight:700;color:var(--teal);text-decoration:none;">Results -></a>
                 @endif
             </div>
         </div>
