@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ExamFeeRuleController;
 use App\Http\Controllers\Admin\FeatureFlagController;
 use App\Http\Controllers\Admin\GradeSheetController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +25,11 @@ Route::middleware('guest:admin')->group(function () {
 Route::middleware('auth:admin')->group(function () {
     Route::match(['GET', 'POST'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
+
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     Route::middleware('permission:students.view')->group(function () {
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
@@ -39,15 +44,19 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::middleware('permission:enrollments.view')->group(function () {
         Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
-        Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     });
     Route::middleware('permission:enrollments.edit')->group(function () {
+        // Specific routes before wildcard
         Route::get('/enrollments/mark-payment', [EnrollmentController::class, 'markPaymentPage'])->name('enrollments.mark-payment');
         Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
+        Route::delete('/enrollments/{id}/fee', [EnrollmentController::class, 'clearPayment'])->name('enrollments.fee.clear');
         Route::get('/enrollments/{id}/subjects', [EnrollmentController::class, 'manageSubjects'])->name('enrollments.subjects');
         Route::post('/enrollments/{id}/subjects', [EnrollmentController::class, 'addSubject'])->name('enrollments.subjects.store');
         Route::delete('/enrollments/{id}/subjects/{subjectId}', [EnrollmentController::class, 'removeSubject'])->name('enrollments.subjects.destroy');
-        Route::delete('/enrollments/{id}/fee', [EnrollmentController::class, 'clearPayment'])->name('enrollments.fee.clear');
+    });
+    // Wildcard after all specific routes
+    Route::middleware('permission:enrollments.view')->group(function () {
+        Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     });
     Route::middleware('permission:enrollments.delete')->group(function () {
         Route::delete('/enrollments/{id}', [EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
@@ -55,6 +64,7 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::middleware('permission:exams.view')->group(function () {
         Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
+        Route::get('/exams/{exam}/planning', [ExamController::class, 'planning'])->name('exams.planning');
         Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
         Route::get('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'index'])->name('exams.fee-rules.index');
     });

@@ -71,7 +71,12 @@ class AdminUser extends Authenticatable
         if ($this->role === AdminRole::Superadmin) {
             return true;
         }
-        return $this->roleAllows($feature) || $this->hasPermission($feature);
+        // If permissions have been explicitly configured for this user, only the saved list applies.
+        // If not yet configured (null), fall back to role defaults.
+        if ($this->permissions !== null) {
+            return $this->hasPermission($feature);
+        }
+        return $this->roleAllows($feature);
     }
 
     public function canAccessAny(array $features): bool

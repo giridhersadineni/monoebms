@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum AdminFeature: string
 {
+    case DashboardView       = 'dashboard.view';
     case StudentsView        = 'students.view';
     case StudentsEdit        = 'students.edit';
     case StudentsDelete      = 'students.delete';
@@ -27,6 +28,7 @@ enum AdminFeature: string
     public function label(): string
     {
         return match($this) {
+            self::DashboardView       => 'Dashboard',
             self::StudentsView        => 'View Students',
             self::StudentsEdit        => 'Edit Students',
             self::StudentsDelete      => 'Delete Students',
@@ -52,6 +54,7 @@ enum AdminFeature: string
     public function group(): string
     {
         return match($this) {
+            self::DashboardView       => 'General',
             self::StudentsView,
             self::StudentsEdit,
             self::StudentsDelete      => 'Students',
@@ -78,6 +81,7 @@ enum AdminFeature: string
     public function defaultRoles(): array
     {
         return match($this) {
+            self::DashboardView,
             self::StudentsView,
             self::EnrollmentsView,
             self::ExamsView,

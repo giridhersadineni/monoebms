@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Portal') — UASC Exams</title>
+    <script nonce="{{ $csp_nonce ?? '' }}">
+        (function(){var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,400&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -25,7 +28,16 @@
             <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Admin Portal</span>
         </div>
         <div class="flex items-center gap-3 text-xs text-slate-300">
-            <span class="font-medium text-white">{{ auth('admin')->user()?->name }}</span>
+            <button id="dark-toggle" title="Toggle dark mode"
+                    class="text-slate-400 hover:text-white hover:bg-slate-700 p-1.5 rounded transition-colors">
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                </svg>
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z"/>
+                </svg>
+            </button>
+            <a href="{{ route('admin.profile') }}" class="font-medium text-white hover:text-blue-300 transition-colors">{{ auth('admin')->user()?->name }}</a>
             <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-medium uppercase tracking-wider text-[10px]">
                 {{ auth('admin')->user()?->role?->value }}
             </span>
@@ -49,7 +61,7 @@
                             'route' => 'admin.dashboard',
                             'label' => 'Dashboard',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
-                            'permission' => null,
+                            'permission' => 'dashboard.view',
                         ],
                         [
                             'route' => 'admin.students.index',
@@ -217,5 +229,21 @@
         </main>
     </div>
     @stack('scripts')
+    <script nonce="{{ $csp_nonce ?? '' }}">
+        (function () {
+            var moon = document.getElementById('icon-moon');
+            var sun  = document.getElementById('icon-sun');
+            var btn  = document.getElementById('dark-toggle');
+            var dark = document.documentElement.classList.contains('dark');
+            if (moon) moon.classList.toggle('hidden', !dark);
+            if (sun)  sun.classList.toggle('hidden', dark);
+            if (btn) btn.addEventListener('click', function () {
+                dark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', dark ? 'dark' : 'light');
+                if (moon) moon.classList.toggle('hidden', !dark);
+                if (sun)  sun.classList.toggle('hidden', dark);
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -7,8 +7,10 @@ use App\Http\Requests\Admin\ExamRequest;
 use App\Models\Course;
 use App\Models\CourseGroup;
 use App\Models\Exam;
+use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ExamController extends Controller
@@ -39,9 +41,68 @@ class ExamController extends Controller
     {
         $exam->loadCount('enrollments');
         $exam->load('feeRules');
-        $recentEnrollments = $exam->enrollments()->with('student')->latest()->limit(10)->get();
 
-        return view('admin.exams.show', compact('exam', 'recentEnrollments'));
+        $feeStats = $exam->enrollments()
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN fee_paid_at IS NOT NULL THEN 1 ELSE 0 END) as paid_count,
+                SUM(CASE WHEN fee_paid_at IS NULL     THEN 1 ELSE 0 END) as unpaid_count,
+                SUM(CASE WHEN fee_paid_at IS NOT NULL THEN fee_amount ELSE 0 END) as collected,
+                SUM(CASE WHEN fee_paid_at IS NULL     THEN fee_amount ELSE 0 END) as outstanding,
+                SUM(fee_amount) as total_amount
+            ')
+            ->first();
+
+        $typeBreakdown = $exam->enrollments()
+            ->selectRaw('exam_type, COUNT(*) as count')
+            ->groupBy('exam_type')
+            ->pluck('count', 'exam_type');
+
+        $courseBreakdown = $exam->enrollments()
+            ->join('students', 'students.id', '=', 'exam_enrollments.student_id')
+            ->selectRaw('
+                students.course,
+                COUNT(*) as total,
+                SUM(CASE WHEN fee_paid_at IS NOT NULL THEN 1 ELSE 0 END) as paid,
+                SUM(CASE WHEN fee_paid_at IS NULL THEN 1 ELSE 0 END) as unpaid,
+                SUM(CASE WHEN fee_paid_at IS NOT NULL THEN fee_amount ELSE 0 END) as collected
+            ')
+            ->groupBy('students.course')
+            ->orderBy('students.course')
+            ->get();
+
+        $recentEnrollments = $exam->enrollments()
+            ->with('student:id,hall_ticket,name')
+            ->latest('enrolled_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.exams.show', compact('exam', 'recentEnrollments', 'feeStats', 'typeBreakdown', 'courseBreakdown'));
+    }
+
+    public function planning(Exam $exam): View
+    {
+        // All subject codes that have at least one fee-paid enrollment in this exam
+        $papers = DB::table('exam_enrollment_subjects')
+            ->join('exam_enrollments', 'exam_enrollments.id', '=', 'exam_enrollment_subjects.enrollment_id')
+            ->leftJoin('subjects', 'subjects.code', '=', 'exam_enrollment_subjects.subject_code')
+            ->where('exam_enrollments.exam_id', $exam->id)
+            ->whereNotNull('exam_enrollments.fee_paid_at')
+            ->groupBy('exam_enrollment_subjects.subject_code', 'subjects.name', 'subjects.course', 'subjects.semester', 'subjects.scheme')
+            ->select([
+                'exam_enrollment_subjects.subject_code',
+                'subjects.name',
+                'subjects.course',
+                'subjects.semester',
+                'subjects.scheme',
+                DB::raw('COUNT(*) as total'),
+            ])
+            ->orderBy('exam_enrollment_subjects.subject_code')
+            ->get();
+
+        $totalPaidEnrollments = $exam->enrollments()->whereNotNull('fee_paid_at')->count();
+
+        return view('admin.exams.planning', compact('exam', 'papers', 'totalPaidEnrollments'));
     }
 
     public function create(): View

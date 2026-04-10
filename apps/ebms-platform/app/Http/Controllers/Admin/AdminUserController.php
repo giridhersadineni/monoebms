@@ -76,14 +76,21 @@ class AdminUserController extends Controller
     {
         $validSlugs = collect(AdminFeature::cases())->map(fn($f) => $f->value)->all();
 
+        if ($request->input('_reset')) {
+            $adminUser->update(['permissions' => null]);
+            return redirect()->route('admin.admin-users.permissions', $adminUser)
+                ->with('success', "Permissions reset to role defaults for {$adminUser->name}.");
+        }
+
+        // Save exactly what was checked — switches user to explicit mode (role defaults no longer apply)
         $permissions = collect($request->input('permissions', []))
             ->filter(fn($v) => in_array($v, $validSlugs, true))
             ->values()
             ->all();
 
-        $adminUser->update(['permissions' => $permissions ?: null]);
+        $adminUser->update(['permissions' => $permissions]);
 
-        return redirect()->route('admin.admin-users.index')
+        return redirect()->route('admin.admin-users.permissions', $adminUser)
             ->with('success', "Permissions updated for {$adminUser->name}.");
     }
 }

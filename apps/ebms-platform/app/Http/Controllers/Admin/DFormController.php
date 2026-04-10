@@ -16,7 +16,7 @@ class DFormController extends Controller
     {
         return [
             'subjects' => Subject::select('code', 'name')->orderBy('code')->distinct()->get(),
-            'exams'    => Exam::orderByDesc('id')->get(),
+            'exams'    => Exam::whereIn('status', [Exam::STATUS_RUNNING, Exam::STATUS_NOTIFY])->orderByDesc('id')->get(),
         ];
     }
 

@@ -24,6 +24,88 @@
     }
 }
 
+/* ─── Dark Mode ─────────────────────────────────────────────────── */
+html.dark { color-scheme: dark; }
+
+html.dark body { background-color: #0f172a; }
+
+/* Surfaces */
+html.dark .bg-white        { background-color: #1e293b !important; }
+html.dark .bg-slate-50     { background-color: #0f172a !important; }
+html.dark .bg-slate-100    { background-color: #334155 !important; }
+html.dark .bg-gray-50      { background-color: #0f172a !important; }
+html.dark .bg-gray-100     { background-color: #334155 !important; }
+
+/* Borders */
+html.dark .border-slate-50,
+html.dark .border-slate-100 { border-color: #1e293b !important; }
+html.dark .border-slate-200,
+html.dark .border-gray-100,
+html.dark .border-gray-200  { border-color: #334155 !important; }
+html.dark .border-slate-300,
+html.dark .border-gray-300  { border-color: #475569 !important; }
+
+/* Dividers */
+html.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-100  > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
+
+/* Text — slate */
+html.dark .text-slate-800 { color: #e2e8f0 !important; }
+html.dark .text-slate-700 { color: #cbd5e1 !important; }
+html.dark .text-slate-600 { color: #94a3b8 !important; }
+html.dark .text-slate-500 { color: #64748b !important; }
+html.dark .text-slate-400 { color: #94a3b8 !important; }
+html.dark .text-slate-300 { color: #cbd5e1 !important; }
+
+/* Text — gray (older views) */
+html.dark .text-gray-800 { color: #e2e8f0 !important; }
+html.dark .text-gray-700 { color: #cbd5e1 !important; }
+html.dark .text-gray-600 { color: #94a3b8 !important; }
+html.dark .text-gray-500 { color: #64748b !important; }
+html.dark .text-gray-400 { color: #94a3b8 !important; }
+html.dark .text-gray-300 { color: #cbd5e1 !important; }
+
+/* Links */
+html.dark .text-blue-600  { color: #60a5fa !important; }
+html.dark .text-blue-800  { color: #93c5fd !important; }
+
+/* Status & accent colours */
+html.dark .bg-blue-50     { background-color: #172554 !important; }
+html.dark .bg-emerald-50  { background-color: #052e16 !important; }
+html.dark .border-emerald-200 { border-color: #166534 !important; }
+html.dark .text-emerald-800   { color: #6ee7b7 !important; }
+html.dark .bg-amber-50    { background-color: #431407 !important; }
+html.dark .text-amber-800 { color: #fcd34d !important; }
+html.dark .bg-red-50      { background-color: #450a0a !important; }
+
+/* Hover backgrounds */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-gray-50:hover   { background-color: #334155 !important; }
+
+/* Code / mono badges */
+html.dark code,
+html.dark .bg-slate-100 { background-color: #334155 !important; }
+
+/* Form elements */
+html.dark input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=submit]):not([type=button]),
+html.dark select,
+html.dark textarea {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #64748b !important; }
+
+html.dark input:disabled,
+html.dark select:disabled { background-color: #0f172a !important; color: #475569 !important; }
+
+/* Shadows */
+html.dark .shadow-sm { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4) !important; }
+
 @keyframes ebms-enter {
     from {
         opacity: 0;

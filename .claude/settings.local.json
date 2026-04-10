@@ -48,7 +48,14 @@
       "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''exams.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/show.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/exams/fee-rules/index.blade.php)",
       "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''courses.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/courses/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/courses/show.blade.php)",
       "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''papers.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/papers/index.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/papers/show.blade.php)",
-      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''enrollments.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/show.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/mark-payment.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/subjects.blade.php)"
+      "Bash(sed -i 's/!auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->isStaff\\(\\)/auth\\('\\\\''admin'\\\\''\\)->user\\(\\)->canAccess\\('\\\\''enrollments.manage'\\\\''\\)/g' C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/show.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/mark-payment.blade.php C:/source/monoebms/apps/ebms-platform/resources/views/admin/enrollments/subjects.blade.php)",
+      "Bash(npm run:*)",
+      "Bash(C:/source/monoebms/apps/ebms-platform)",
+      "Read(//c/Users/girid/.ssh/**)",
+      "Read(//tmp/**)",
+      "Bash(cat)",
+      "Bash(chmod +x /tmp/deploy.sh)",
+      "Bash(bash /tmp/deploy.sh)"
     ]
   }
 }

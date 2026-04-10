@@ -15,14 +15,23 @@
         <p class="text-sm text-slate-500 mt-0.5">{{ $adminUser->name }} - {{ ucfirst($adminUser->role->value) }}</p>
     </div>
 
-    <div class="mb-5 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600">
-        <span class="font-medium">Role defaults:</span>
-        @if($adminUser->role->value === 'admin')
-            Admin role already grants default view, edit, and delete access for core modules, plus view access for pre-exam and grade sheet screens.
-        @elseif($adminUser->role->value === 'staff')
-            Staff role has default view-only access. Use explicit grants below to add edit, delete, or generate capabilities.
-        @else
+    @if(session('success'))
+    <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+        {{ session('success') }}
+    </div>
+    @endif
+
+    @php $isExplicitMode = $adminUser->permissions !== null; @endphp
+    <div class="mb-5 px-4 py-3 border rounded-xl text-sm
+        {{ $isExplicitMode ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-slate-50 border-slate-200 text-slate-600' }}">
+        @if($adminUser->role->value === 'superadmin')
             Superadmin always has full access. Explicit grants are not applicable.
+        @elseif($isExplicitMode)
+            <span class="font-medium">Explicit mode:</span> This user's access is controlled entirely by what is checked below. Role defaults do not apply.
+        @else
+            <span class="font-medium">Role defaults active:</span>
+            {{ $adminUser->role->value === 'admin' ? 'Admin role grants view, edit, and delete on all modules.' : 'Staff role grants view-only access to all modules.' }}
+            Saving this form will switch to explicit mode.
         @endif
     </div>
 
@@ -37,24 +46,18 @@
             <div class="px-5 py-4 space-y-3">
                 @foreach($features as $feature)
                 @php
-                    $byRole = $adminUser->roleAllows($feature);
-                    $explicit = $adminUser->hasPermission($feature);
-                    $checked = $byRole || $explicit;
+                    $checked = $isExplicitMode
+                        ? $adminUser->hasPermission($feature)
+                        : $adminUser->roleAllows($feature);
                 @endphp
-                <label class="flex items-start gap-3 cursor-pointer {{ $byRole ? 'opacity-60' : '' }}">
+                <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox"
                            name="permissions[]"
                            value="{{ $feature->value }}"
                            {{ $checked ? 'checked' : '' }}
-                           {{ $byRole ? 'disabled' : '' }}
                            class="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <div>
                         <p class="text-sm font-medium text-slate-800">{{ $feature->label() }}</p>
-                        @if($byRole)
-                            <p class="text-xs text-slate-400 mt-0.5">Granted by role defaults and cannot be removed here.</p>
-                        @elseif($explicit)
-                            <p class="text-xs text-slate-400 mt-0.5">Explicitly granted to this user.</p>
-                        @endif
                     </div>
                 </label>
                 @endforeach
@@ -67,9 +70,24 @@
                     class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                 Save Permissions
             </button>
+            @if($isExplicitMode)
+            <button type="button"
+                    onclick="if(confirm('Reset to role defaults? All explicit grants will be removed.')) { document.getElementById('reset-form').submit(); }"
+                    class="border border-slate-300 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm transition-colors">
+                Reset to Role Defaults
+            </button>
+            @endif
             <a href="{{ route('admin.admin-users.index') }}"
                class="text-slate-500 hover:text-slate-700 text-sm hover:underline">Cancel</a>
         </div>
     </form>
+
+    @if($isExplicitMode)
+    <form id="reset-form" method="POST" action="{{ route('admin.admin-users.permissions.save', $adminUser) }}">
+        @csrf
+        {{-- Submit with no permissions[] → saves null, restoring role defaults --}}
+        <input type="hidden" name="_reset" value="1">
+    </form>
+    @endif
 </div>
 @endsection
