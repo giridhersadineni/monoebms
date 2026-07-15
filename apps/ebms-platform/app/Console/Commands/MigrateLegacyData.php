@@ -14,7 +14,7 @@ class MigrateLegacyData extends Command
     protected $signature = 'ebms:migrate-legacy
                             {--dry-run : Preview changes without writing to DB}
                             {--chunk=500 : Rows per chunk for large tables}
-                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|gpas|grades|photos)}
+                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|floatation_results|gpas|grades|photos)}
                             {--exam-id= : Restrict results migration to a single legacy EXAMID}';
 
     protected $description = 'Migrate legacy EBMS data from the legacy database to the new schema';
@@ -41,15 +41,16 @@ class MigrateLegacyData extends Command
         }
 
         $steps = [
-            'subjects'    => fn () => $this->migrateSubjects(),
-            'exams'       => fn () => $this->migrateExams(),
-            'students'    => fn () => $this->migrateStudents(),
-            'admin_users' => fn () => $this->migrateAdminUsers(),
-            'enrollments' => fn () => $this->migrateEnrollments(),
-            'results'     => fn () => $this->migrateResults(),
-            'gpas'        => fn () => $this->migrateGpas(),
-            'grades'      => fn () => $this->migrateGrades(),
-            'photos'      => fn () => $this->migratePhotos(),
+            'subjects'           => fn () => $this->migrateSubjects(),
+            'exams'              => fn () => $this->migrateExams(),
+            'students'           => fn () => $this->migrateStudents(),
+            'admin_users'        => fn () => $this->migrateAdminUsers(),
+            'enrollments'        => fn () => $this->migrateEnrollments(),
+            'results'            => fn () => $this->migrateResults(),
+            'floatation_results' => fn () => $this->migrateFloatationResults(),
+            'gpas'               => fn () => $this->migrateGpas(),
+            'grades'             => fn () => $this->migrateGrades(),
+            'photos'             => fn () => $this->migratePhotos(),
         ];
 
         if ($this->table !== 'all' && ! array_key_exists($this->table, $steps)) {
@@ -365,15 +366,25 @@ class MigrateLegacyData extends Command
 
     private function migrateResults(): void
     {
+        $this->migrateResultsFromTable('RESULTS');
+    }
+
+    private function migrateFloatationResults(): void
+    {
+        $this->migrateResultsFromTable('RESULTS_FLOATATION25');
+    }
+
+    private function migrateResultsFromTable(string $sourceTable): void
+    {
         $this->refreshMaps();
 
         $inserted = 0;
         $skipped  = 0;
-        $seen     = []; // dedup (enrollment_id, subject_id) within this run
+        $seen     = [];
 
         $examIdFilter = $this->option('exam-id') ? (int) $this->option('exam-id') : null;
 
-        $query = $this->legacy()->table('RESULTS')->orderBy('RHID');
+        $query = $this->legacy()->table($sourceTable)->orderBy('RHID');
         if ($examIdFilter !== null) {
             $query->where('EXAMID', $examIdFilter);
             $this->line("  (filtering EXAMID = {$examIdFilter})");
@@ -383,13 +394,11 @@ class MigrateLegacyData extends Command
             $batch = [];
 
             foreach ($rows as $row) {
-                // Must have a valid hall ticket and paper code
                 if (! $row->HALLTICKET || ! $row->PAPERCODE) {
                     $skipped++;
                     continue;
                 }
 
-                // Resolve exam
                 $examId = $this->examMap[$row->EXAMID] ?? null;
                 if (! $examId && $row->EXAMID) {
                     $examId = $this->ensureExam($row->EXAMID);
@@ -402,7 +411,6 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                // Resolve subject — create from RESULTS if missing
                 $subjectId = $this->subjectMap[$row->PAPERCODE] ?? null;
                 if (! $subjectId) {
                     $subjectId = $this->ensureSubject($row->PAPERCODE, $row->PAPERNAME, $row->SEMESTER, $row->PART);
@@ -415,7 +423,6 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                // Resolve enrollment — create if missing
                 $eKey = "{$row->HALLTICKET}_{$examId}";
                 $enrollmentId = $this->enrollmentMap[$eKey] ?? null;
                 if (! $enrollmentId) {
@@ -437,7 +444,6 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                // Deduplicate
                 $dedupKey = "{$enrollmentId}_{$subjectId}";
                 if (isset($seen[$dedupKey])) {
                     continue;
@@ -504,7 +510,7 @@ class MigrateLegacyData extends Command
             }
         });
 
-        $this->line("  results: {$inserted} inserted, {$skipped} skipped (null hallticket/papercode or unmappable examid)");
+        $this->line("  {$sourceTable}: {$inserted} inserted, {$skipped} skipped (null hallticket/papercode or unmappable examid)");
     }
 
     // ─── GPAs ────────────────────────────────────────────────────────────────
