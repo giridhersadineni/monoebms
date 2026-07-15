@@ -37,6 +37,12 @@ class ResultController extends Controller
             abort(403, 'Results are available only after fee payment is confirmed.');
         }
 
-        return view('student.results.show', compact('student', 'exam', 'enrollment'));
+        // Test mode: allow viewing unpublished results with ?test=1
+        $isTestMode = request()->boolean('test');
+        if (! $isTestMode && ! $exam->results_visible) {
+            abort(403, 'Results for this exam are not yet published.');
+        }
+
+        return view('student.results.show', compact('student', 'exam', 'enrollment', 'isTestMode'));
     }
 }

@@ -3,6 +3,14 @@
 
 @section('content')
 
+{{-- Test mode banner --}}
+@if($isTestMode && !$exam->results_visible)
+<div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span style="font-size:13px;color:#92400E;font-weight:500;">Test Mode: Viewing unpublished results</span>
+</div>
+@endif
+
 {{-- Back + title --}}
 <div class="animate-in no-print" style="margin-bottom:24px;">
     <a href="{{ route('student.results.index') }}" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:16px;">
