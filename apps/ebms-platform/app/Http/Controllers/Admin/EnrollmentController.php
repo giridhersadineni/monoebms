@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FeeMarkRequest;
 use App\Models\ExamEnrollment;
+use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,6 +39,27 @@ class EnrollmentController extends Controller
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
 
         return view('admin.enrollments.index', compact('enrollments'));
+    }
+
+    public function markPaymentPage(Request $request): View
+    {
+        $enrollment = null;
+        $subjectNames = [];
+
+        if ($q = $request->input('q')) {
+            $enrollment = ExamEnrollment::with(['student', 'exam', 'enrollmentSubjects.subject'])
+                ->where(is_numeric($q) ? 'id' : 'hall_ticket', $q)
+                ->first();
+
+            if ($enrollment) {
+                $codes = $enrollment->enrollmentSubjects->pluck('subject_code')->unique()->all();
+                $subjectNames = Subject::whereIn('code', $codes)
+                    ->pluck('name', 'code')
+                    ->all();
+            }
+        }
+
+        return view('admin.enrollments.mark-payment', compact('enrollment', 'subjectNames'));
     }
 
     public function show(int $id): View

@@ -40,6 +40,7 @@ Route::middleware('auth:admin')->group(function () {
 
     // Enrollments
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
+    Route::get('/enrollments/mark-payment', [EnrollmentController::class, 'markPaymentPage'])->name('enrollments.mark-payment');
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
 
