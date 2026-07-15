@@ -371,10 +371,10 @@ class MigrateLegacyData extends Command
 
     private function migrateFloatationResults(): void
     {
-        $this->migrateResultsFromTable('RESULTS_FLOATATION25');
+        $this->migrateResultsFromTable('RESULTS_FLOATATION25', direct: true);
     }
 
-    private function migrateResultsFromTable(string $sourceTable): void
+    private function migrateResultsFromTable(string $sourceTable, bool $direct = false): void
     {
         $this->refreshMaps();
 
@@ -390,7 +390,7 @@ class MigrateLegacyData extends Command
             $this->line("  (filtering EXAMID = {$examIdFilter})");
         }
 
-        $query->chunk($this->chunk, function ($rows) use (&$inserted, &$skipped, &$seen) {
+        $query->chunk($this->chunk, function ($rows) use (&$inserted, &$skipped, &$seen, $direct) {
             $batch = [];
 
             foreach ($rows as $row) {
@@ -399,13 +399,19 @@ class MigrateLegacyData extends Command
                     continue;
                 }
 
-                $examId = $this->examMap[$row->EXAMID] ?? null;
-                if (! $examId && $row->EXAMID) {
-                    $examId = $this->ensureExam($row->EXAMID);
-                    if ($examId) {
-                        $this->examMap[$row->EXAMID] = $examId;
+                // For RESULTS_FLOATATION25, use EXAMID directly (already matches new DB)
+                if ($direct) {
+                    $examId = (int) $row->EXAMID;
+                } else {
+                    $examId = $this->examMap[$row->EXAMID] ?? null;
+                    if (! $examId && $row->EXAMID) {
+                        $examId = $this->ensureExam($row->EXAMID);
+                        if ($examId) {
+                            $this->examMap[$row->EXAMID] = $examId;
+                        }
                     }
                 }
+
                 if (! $examId) {
                     $skipped++;
                     continue;
