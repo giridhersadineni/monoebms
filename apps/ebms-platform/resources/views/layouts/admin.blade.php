@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Portal') — UASC Exams</title>
+    <script nonce="{{ $csp_nonce ?? '' }}">
+        (function(){var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,400&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -25,9 +28,18 @@
             <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Admin Portal</span>
         </div>
         <div class="flex items-center gap-3 text-xs text-slate-300">
+            <button id="dark-toggle" title="Toggle dark mode"
+                    class="text-slate-400 hover:text-white hover:bg-slate-700 p-1.5 rounded transition-colors">
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                </svg>
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z"/>
+                </svg>
+            </button>
             <span class="font-medium text-white">{{ auth('admin')->user()?->name }}</span>
             <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-medium uppercase tracking-wider text-[10px]">
-                {{ auth('admin')->user()?->role?->value }}
+                {{ auth('admin')->user()?->role?->value ?? 'admin' }}
             </span>
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
@@ -43,21 +55,31 @@
         <aside class="w-56 bg-white border-r border-slate-200 pt-5 pb-4 shrink-0 flex flex-col">
             <nav class="flex flex-col gap-0.5 px-3 flex-1">
                 @php
+                    $adminUser = Auth::guard('admin')->user();
                     $links = [
                         [
                             'route' => 'admin.dashboard',
                             'label' => 'Dashboard',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+                            'permission' => 'dashboard.view',
                         ],
                         [
                             'route' => 'admin.students.index',
                             'label' => 'Students',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>',
+                            'permission' => 'students.view',
                         ],
                         [
                             'route' => 'admin.enrollments.index',
                             'label' => 'Enrollments',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>',
+                            'permission' => 'enrollments.view',
+                        ],
+                        [
+                            'route' => 'admin.enrollments.mark-payment',
+                            'label' => 'Mark Payment',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>',
+                            'permission' => 'enrollments.edit',
                         ],
                     ];
 
@@ -66,16 +88,34 @@
                             'route' => 'admin.exams.index',
                             'label' => 'Exams',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
+                            'permission' => 'exams.view',
                         ],
                         [
                             'route' => 'admin.courses.index',
                             'label' => 'Courses',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>',
+                            'permission' => 'courses.view',
                         ],
                         [
                             'route' => 'admin.papers.index',
                             'label' => 'Papers',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+                            'permission' => 'papers.view',
+                        ],
+                    ];
+
+                    $settingsLinks = [
+                        [
+                            'route' => 'admin.admin-users.index',
+                            'label' => 'Admin Users',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>',
+                            'permission' => null,
+                        ],
+                        [
+                            'route' => 'admin.feature-flags.index',
+                            'label' => 'Feature Flags',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+                            'permission' => null,
                         ],
                     ];
 
@@ -84,15 +124,30 @@
                             'route' => 'admin.dform.index',
                             'label' => 'D-Form',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>',
+                            'permission' => 'dform.view',
                         ],
                         [
                             'route' => 'admin.attendance.index',
                             'label' => 'Attendance',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
+                            'permission' => 'attendance.view',
+                        ],
+                        [
+                            'route' => 'admin.script-coding.index',
+                            'label' => 'Script Coding',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>',
+                            'permission' => 'scriptcoding.view',
+                        ],
+                        [
+                            'route' => 'admin.exam-halls.index',
+                            'label' => 'Hall Seating',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
+                            'permission' => 'seating.view',
                         ],
                     ];
                 @endphp
                 @foreach($links as $link)
+                    @continue($link['permission'] && ! $adminUser?->canAccess($link['permission']))
                     @php $active = request()->routeIs($link['route'].'*'); @endphp
                     <a href="{{ route($link['route']) }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
@@ -110,6 +165,7 @@
 
                 <p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Masters</p>
                 @foreach($masterLinks as $link)
+                    @continue($link['permission'] && ! $adminUser?->canAccess($link['permission']))
                     @php $active = request()->routeIs($link['route'].'*'); @endphp
                     <a href="{{ route($link['route']) }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
@@ -125,8 +181,29 @@
                     </a>
                 @endforeach
 
+                @if($adminUser?->hasRole('superadmin'))
+                <p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Settings</p>
+                @foreach($settingsLinks as $link)
+                    @continue($link['permission'] && ! $adminUser?->canAccess($link['permission']))
+                    @php $active = request()->routeIs($link['route'].'*'); @endphp
+                    <a href="{{ route($link['route']) }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+                              {{ $active
+                                  ? 'bg-blue-50 text-blue-800 font-semibold'
+                                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="w-4 h-4 shrink-0 {{ $active ? 'text-blue-600' : 'text-slate-400' }}"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            {!! $link['icon'] !!}
+                        </svg>
+                        {{ $link['label'] }}
+                    </a>
+                @endforeach
+                @endif
+
                 <p class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Pre Exam</p>
                 @foreach($preExamLinks as $link)
+                    @continue($link['permission'] && ! $adminUser?->canAccess($link['permission']))
                     @php $active = request()->routeIs($link['route'].'*'); @endphp
                     <a href="{{ route($link['route']) }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
@@ -164,5 +241,21 @@
         </main>
     </div>
     @stack('scripts')
+    <script nonce="{{ $csp_nonce ?? '' }}">
+        (function () {
+            var moon = document.getElementById('icon-moon');
+            var sun  = document.getElementById('icon-sun');
+            var btn  = document.getElementById('dark-toggle');
+            var dark = document.documentElement.classList.contains('dark');
+            if (moon) moon.classList.toggle('hidden', !dark);
+            if (sun)  sun.classList.toggle('hidden', dark);
+            if (btn) btn.addEventListener('click', function () {
+                dark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', dark ? 'dark' : 'light');
+                if (moon) moon.classList.toggle('hidden', !dark);
+                if (sun)  sun.classList.toggle('hidden', dark);
+            });
+        })();
+    </script>
 </body>
 </html>
