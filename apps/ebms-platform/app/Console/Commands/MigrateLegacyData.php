@@ -14,8 +14,8 @@ class MigrateLegacyData extends Command
     protected $signature = 'ebms:migrate-legacy
                             {--dry-run : Preview changes without writing to DB}
                             {--chunk=500 : Rows per chunk for large tables}
-                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|floatation_results|gpas|grades|photos)}
-                            {--exam-id= : Restrict results migration to a single legacy EXAMID}';
+                            {--table=all : Which table to migrate (all|subjects|exams|students|admin_users|enrollments|results|floatation_results|gpas|gpas_batch|grades|photos)}
+                            {--exam-id= : Restrict results/gpas migration to a single legacy EXAMID}';
 
     protected $description = 'Migrate legacy EBMS data from the legacy database to the new schema';
 
@@ -49,6 +49,7 @@ class MigrateLegacyData extends Command
             'results'            => fn () => $this->migrateResults(),
             'floatation_results' => fn () => $this->migrateFloatationResults(),
             'gpas'               => fn () => $this->migrateGpas(),
+            'gpas_batch'         => fn () => $this->migrateGpasBatch(),
             'grades'             => fn () => $this->migrateGrades(),
             'photos'             => fn () => $this->migratePhotos(),
         ];
@@ -523,20 +524,44 @@ class MigrateLegacyData extends Command
 
     private function migrateGpas(): void
     {
+        $this->migrateGpasFromTable('gpas');
+    }
+
+    private function migrateGpasBatch(): void
+    {
+        $this->migrateGpasFromTable('gpas_2025_batch', direct: true);
+    }
+
+    private function migrateGpasFromTable(string $sourceTable, bool $direct = false): void
+    {
         $this->refreshMaps();
 
         $upserted = 0;
         $skipped  = 0;
 
-        $this->legacy()->table('gpas')->orderBy('GPAID')->chunk($this->chunk, function ($rows) use (&$upserted, &$skipped) {
+        $examIdFilter = $this->option('exam-id') ? (int) $this->option('exam-id') : null;
+
+        $query = $this->legacy()->table($sourceTable)->orderBy('GPAID');
+        if ($examIdFilter !== null) {
+            $query->where('EXAMID', $examIdFilter);
+            $this->line("  (filtering EXAMID = {$examIdFilter})");
+        }
+
+        $query->chunk($this->chunk, function ($rows) use (&$upserted, &$skipped, $direct) {
             foreach ($rows as $row) {
-                $examId = $this->examMap[$row->EXAMID] ?? null;
-                if (! $examId && $row->EXAMID) {
-                    $examId = $this->ensureExam($row->EXAMID);
-                    if ($examId) {
-                        $this->examMap[$row->EXAMID] = $examId;
+                // For gpas_2025_batch, use EXAMID directly
+                if ($direct) {
+                    $examId = (int) $row->EXAMID;
+                } else {
+                    $examId = $this->examMap[$row->EXAMID] ?? null;
+                    if (! $examId && $row->EXAMID) {
+                        $examId = $this->ensureExam($row->EXAMID);
+                        if ($examId) {
+                            $this->examMap[$row->EXAMID] = $examId;
+                        }
                     }
                 }
+
                 if (! $examId) {
                     $skipped++;
                     continue;
@@ -582,7 +607,7 @@ class MigrateLegacyData extends Command
             }
         });
 
-        $this->line("  gpas: {$upserted} upserted, {$skipped} skipped (examid=0 or truly unmappable)");
+        $this->line("  {$sourceTable}: {$upserted} upserted, {$skipped} skipped (examid=0 or truly unmappable)");
     }
 
     // ─── Grades ──────────────────────────────────────────────────────────────
