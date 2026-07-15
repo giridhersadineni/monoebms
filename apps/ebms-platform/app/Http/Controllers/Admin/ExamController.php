@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\ExamRequest;
 use App\Models\Course;
 use App\Models\CourseGroup;
 use App\Models\Exam;
+use App\Models\ExamEnrollment;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -82,5 +84,17 @@ class ExamController extends Controller
         $exam->update(['revaluation_open' => ! $exam->revaluation_open]);
 
         return back()->with('success', 'Revaluation ' . ($exam->revaluation_open ? 'opened' : 'closed') . '.');
+    }
+
+    public function previewResults(Exam $exam, Student $student): View
+    {
+        $enrollment = ExamEnrollment::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->with(['results.subject', 'gpa'])
+            ->firstOrFail();
+
+        $isAdminPreview = true;
+
+        return view('admin.exams.preview-results', compact('student', 'exam', 'enrollment', 'isAdminPreview'));
     }
 }
