@@ -93,6 +93,11 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/admin-users/{adminUser}/reset-password', [AdminUserController::class, 'resetPassword'])->name('admin-users.reset-password');
     });
 
+    // Placeholder routes for UI
+    Route::get('/feature-flags', fn () => redirect()->route('admin.dashboard'))->name('feature-flags.index');
+    Route::get('/script-coding', fn () => redirect()->route('admin.dashboard'))->name('script-coding.index');
+    Route::get('/exam-halls/seating', fn () => redirect()->route('admin.dashboard'))->name('exam-halls.index');
+
     // Grade Sheets
     Route::get('/gradesheets/{student}', [GradeSheetController::class, 'show'])->name('gradesheets.show');
     Route::post('/gradesheets/{student}/generate', [GradeSheetController::class, 'generate'])
