@@ -86,6 +86,8 @@ class EnrollmentController extends Controller
 
     public function manageSubjects(int $id): View
     {
+        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
+
         $enrollment = ExamEnrollment::with(['student', 'exam', 'enrollmentSubjects.subject'])
             ->findOrFail($id);
 
@@ -105,13 +107,24 @@ class EnrollmentController extends Controller
 
     public function storeSubject(Request $request, int $id): RedirectResponse
     {
-        $enrollment = ExamEnrollment::findOrFail($id);
-        $subject = Subject::findOrFail($request->subject_id);
+        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
+
+        $data = $request->validate([
+            'subject_id' => 'required|integer|exists:subjects,id',
+            'subject_type' => 'required|in:regular,improvement,elective',
+        ]);
+
+        $enrollment = ExamEnrollment::with(['student', 'exam'])->findOrFail($id);
+
+        $subject = Subject::where('id', $data['subject_id'])
+            ->where('course', $enrollment->student->course)
+            ->where('semester', $enrollment->exam->semester)
+            ->firstOrFail();
 
         $enrollment->enrollmentSubjects()->create([
             'subject_id' => $subject->id,
             'subject_code' => $subject->code,
-            'subject_type' => $request->subject_type,
+            'subject_type' => $data['subject_type'],
         ]);
 
         return back()->with('success', "Subject {$subject->code} added to enrollment.");
@@ -119,6 +132,8 @@ class EnrollmentController extends Controller
 
     public function destroySubject(int $enrollmentId, int $subjectId): RedirectResponse
     {
+        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
+
         $enrollment = ExamEnrollment::findOrFail($enrollmentId);
         $subject = $enrollment->enrollmentSubjects()->findOrFail($subjectId);
 
