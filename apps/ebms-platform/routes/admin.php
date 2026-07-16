@@ -31,6 +31,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
     Route::get('/students/{hallTicket}', [StudentController::class, 'show'])->name('students.show');
+    Route::get('/students/{hallTicket}/edit', fn () => redirect()->route('admin.students.show', ['hallTicket' => request()->route('hallTicket')]))->name('students.edit');
     Route::put('/students/{id}', [StudentController::class, 'update'])
         ->middleware('role:admin,superadmin')
         ->name('students.update');
