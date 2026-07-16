@@ -89,6 +89,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/admin-users', [AdminUserController::class, 'index'])->name('admin-users.index');
         Route::get('/admin-users/create', [AdminUserController::class, 'create'])->name('admin-users.create');
         Route::post('/admin-users', [AdminUserController::class, 'store'])->name('admin-users.store');
+        Route::get('/admin-users/permissions', fn () => redirect()->route('admin.admin-users.index'))->name('admin-users.permissions');
         Route::patch('/admin-users/{adminUser}/toggle-active', [AdminUserController::class, 'toggleActive'])->name('admin-users.toggle-active');
         Route::post('/admin-users/{adminUser}/reset-password', [AdminUserController::class, 'resetPassword'])->name('admin-users.reset-password');
     });
