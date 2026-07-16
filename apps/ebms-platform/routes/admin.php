@@ -42,7 +42,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
     Route::get('/enrollments/mark-payment', [EnrollmentController::class, 'markPaymentPage'])->name('enrollments.mark-payment');
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
-    Route::get('/enrollments/{id}/subjects', fn ($id) => redirect()->route('admin.enrollments.show', $id)->with('info', 'Subject management coming soon'))->name('enrollments.subjects');
+    Route::get('/enrollments/{id}/subjects', [EnrollmentController::class, 'manageSubjects'])->name('enrollments.subjects');
+    Route::post('/enrollments/{id}/subjects', [EnrollmentController::class, 'storeSubject'])->name('enrollments.subjects.store');
+    Route::delete('/enrollments/{enrollmentId}/subjects/{subjectId}', [EnrollmentController::class, 'destroySubject'])->name('enrollments.subjects.destroy');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
     Route::post('/enrollments/{id}/fee/clear', fn ($id) => back()->with('info', 'Clear fee feature not yet implemented'))->name('enrollments.fee.clear');
     Route::delete('/enrollments/{id}', fn ($id) => back()->with('info', 'Delete enrollment feature not yet implemented'))->name('enrollments.destroy')->middleware('role:superadmin');
