@@ -42,6 +42,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
     Route::get('/enrollments/mark-payment', [EnrollmentController::class, 'markPaymentPage'])->name('enrollments.mark-payment');
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
+    Route::get('/enrollments/{id}/subjects', fn () => redirect()->route('admin.enrollments.index'))->name('enrollments.subjects');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
 
     // Exams
