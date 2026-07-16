@@ -40,7 +40,13 @@ class ExamController extends Controller
         $exam->load('feeRules');
         $recentEnrollments = $exam->enrollments()->with('student')->latest()->limit(10)->get();
 
-        return view('admin.exams.show', compact('exam', 'recentEnrollments'));
+        $typeBreakdown = $exam->enrollments()
+            ->select('exam_type')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('exam_type')
+            ->pluck('count', 'exam_type');
+
+        return view('admin.exams.show', compact('exam', 'recentEnrollments', 'typeBreakdown'));
     }
 
     public function create(): View
