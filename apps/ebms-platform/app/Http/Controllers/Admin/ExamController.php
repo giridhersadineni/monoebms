@@ -86,6 +86,13 @@ class ExamController extends Controller
         return back()->with('success', 'Revaluation ' . ($exam->revaluation_open ? 'opened' : 'closed') . '.');
     }
 
+    public function toggleResults(Exam $exam): RedirectResponse
+    {
+        $exam->update(['results_visible' => ! $exam->results_visible]);
+
+        return back()->with('success', 'Results ' . ($exam->results_visible ? 'published' : 'hidden') . '.');
+    }
+
     public function previewResults(Exam $exam, Student $student): View
     {
         $enrollment = ExamEnrollment::where('exam_id', $exam->id)

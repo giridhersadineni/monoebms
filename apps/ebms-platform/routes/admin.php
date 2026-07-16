@@ -53,6 +53,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
     Route::patch('/exams/{exam}/status', [ExamController::class, 'toggleStatus'])->name('exams.toggle-status');
     Route::patch('/exams/{exam}/revaluation', [ExamController::class, 'toggleRevaluation'])->name('exams.toggle-revaluation');
+    Route::patch('/exams/{exam}/results', [ExamController::class, 'toggleResults'])->name('exams.toggle-results');
     Route::get('/exams/{exam}/preview-results/{student}', [ExamController::class, 'previewResults'])->name('exams.preview-results');
     Route::get('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'index'])->name('exams.fee-rules.index');
     Route::post('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'store'])->name('exams.fee-rules.store');
