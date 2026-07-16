@@ -44,6 +44,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show'])->name('enrollments.show');
     Route::get('/enrollments/{id}/subjects', fn () => redirect()->route('admin.enrollments.index'))->name('enrollments.subjects');
     Route::post('/enrollments/{id}/fee', [EnrollmentController::class, 'markFeePaid'])->name('enrollments.fee');
+    Route::post('/enrollments/{id}/fee/clear', fn () => back()->with('error', 'Feature not yet implemented'))->name('enrollments.fee.clear');
+    Route::delete('/enrollments/{id}', fn () => back()->with('error', 'Feature not yet implemented'))->name('enrollments.destroy')->middleware('role:superadmin');
 
     // Exams
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
