@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FeeMarkRequest;
+use App\Models\Exam;
 use App\Models\ExamEnrollment;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,10 @@ class EnrollmentController extends Controller
 
         if ($examId = $request->integer('exam_id')) {
             $query->forExam($examId);
+        }
+
+        if ($year = $request->integer('year')) {
+            $query->whereHas('exam', fn ($q) => $q->where('year', $year));
         }
 
         if ($request->filled('fee_status')) {
@@ -38,7 +43,10 @@ class EnrollmentController extends Controller
 
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
 
-        return view('admin.enrollments.index', compact('enrollments'));
+        $years = Exam::query()->distinct()->orderByDesc('year')->pluck('year');
+        $exams = Exam::query()->orderByDesc('year')->orderBy('semester')->pluck('name', 'id');
+
+        return view('admin.enrollments.index', compact('enrollments', 'years', 'exams'));
     }
 
     public function markPaymentPage(Request $request): View
