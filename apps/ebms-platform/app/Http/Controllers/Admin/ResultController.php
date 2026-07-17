@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ResultEntryRequest;
+use App\Enums\AdminFeature;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
 use App\Models\Result;
@@ -37,6 +38,8 @@ class ResultController extends Controller
 
     public function store(ResultEntryRequest $request): RedirectResponse
     {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+
         DB::transaction(function () use ($request) {
             foreach ($request->results as $enrollmentId => $subjectResults) {
                 $enrollment = ExamEnrollment::findOrFail($enrollmentId);
@@ -73,6 +76,8 @@ class ResultController extends Controller
 
     public function processGpa(Exam $exam): RedirectResponse
     {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+
         $this->gpaCalculator->calculateBatch($exam->id);
 
         return back()->with('success', "GPA calculated for all enrollments in {$exam->name}.");

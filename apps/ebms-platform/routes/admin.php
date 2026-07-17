@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ExamFeeRuleController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\GradeSheetController;
+use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +67,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/exams/{exam}/fee-rules/{rule}/edit', [ExamFeeRuleController::class, 'edit'])->name('exams.fee-rules.edit');
     Route::put('/exams/{exam}/fee-rules/{rule}', [ExamFeeRuleController::class, 'update'])->name('exams.fee-rules.update');
     Route::delete('/exams/{exam}/fee-rules/{rule}', [ExamFeeRuleController::class, 'destroy'])->name('exams.fee-rules.destroy');
+
+    // Results
+    Route::get('/results', [ResultController::class, 'index'])->name('results.index');
+    Route::get('/results/enrollment/{enrollment}', [ResultController::class, 'show'])->name('results.show');
+    Route::get('/results/{exam}', [ResultController::class, 'entryForm'])->name('results.entry');
+    Route::post('/results', [ResultController::class, 'store'])->name('results.store');
+    Route::post('/results/{exam}/process-gpa', [ResultController::class, 'processGpa'])->name('results.process');
 
     // Courses & Groups
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
