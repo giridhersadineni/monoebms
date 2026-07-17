@@ -89,4 +89,33 @@ class ResultController extends Controller
 
         return view('admin.results.show', compact('enrollment'));
     }
+
+    public function records(Request $request, Exam $exam): View
+    {
+        $sortable = ['hall_ticket', 'subject_code', 'ext_marks', 'int_marks', 'total_marks', 'grade', 'result', 'credits'];
+        $sort = in_array($request->get('sort'), $sortable, true) ? $request->get('sort') : 'hall_ticket';
+        $dir  = $request->get('dir') === 'desc' ? 'desc' : 'asc';
+
+        $query = Result::where('exam_id', $exam->id)->with(['enrollment.student', 'subject']);
+
+        if ($q = $request->get('q')) {
+            $query->where(function ($w) use ($q) {
+                $w->where('hall_ticket', 'like', "%{$q}%")
+                    ->orWhereHas('enrollment.student', fn ($s) => $s->where('name', 'like', "%{$q}%"))
+                    ->orWhereHas('subject', fn ($s) => $s->where('code', 'like', "%{$q}%")->orWhere('name', 'like', "%{$q}%"));
+            });
+        }
+
+        if ($sort === 'subject_code') {
+            $query->join('subjects', 'subjects.id', '=', 'results.subject_id')
+                ->orderBy('subjects.code', $dir)
+                ->select('results.*');
+        } else {
+            $query->orderBy($sort, $dir);
+        }
+
+        $results = $query->paginate(50)->withQueryString();
+
+        return view('admin.results.records', compact('exam', 'results', 'sort', 'dir'));
+    }
 }
