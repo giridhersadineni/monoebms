@@ -17,6 +17,10 @@
             <p style="font-size:12px;color:var(--muted);margin:0;">Semester {{ $enrollment->exam?->semester }}</p>
         </div>
         <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+            @php
+                $resultsEligible = $enrollment->exam?->results_visible && $enrollment->exam?->isResultsEligibleStatus();
+            @endphp
+            @if($resultsEligible)
             @if($enrollment->gpa)
             @if($enrollment->gpa->result !== 'R')
             <div style="text-align:right;">
@@ -37,6 +41,9 @@
             @endif
             @endif
             <a href="{{ route('student.results.show', $enrollment->exam) }}" class="btn-primary btn-sm">View →</a>
+            @else
+            <span style="font-size:12px;color:var(--muted);">Not yet published</span>
+            @endif
         </div>
     </div>
     @endforeach

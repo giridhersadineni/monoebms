@@ -37,7 +37,7 @@ class ResultController extends Controller
             abort(403, 'Results are available only after fee payment is confirmed.');
         }
 
-        if (! $exam->results_visible) {
+        if (! $exam->results_visible || ! $exam->isResultsEligibleStatus()) {
             abort(403, 'Results for this exam are not yet published.');
         }
 
