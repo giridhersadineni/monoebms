@@ -86,7 +86,7 @@
                             <a href="{{ route('admin.enrollments.show', $e) }}" class="text-blue-600 hover:underline text-xs font-medium">View</a>
                             @if(! $e->isFeePaid())
                                 <button type="button"
-                                        onclick="openFeeModal({{ $e->id }}, '{{ addslashes($e->student?->name) }}', '{{ $e->hall_ticket }}', {{ $e->fee_amount }})"
+                                        onclick="openFeeModal({{ $e->id }}, '{{ addslashes($e->student?->name) }}', '{{ addslashes($e->hall_ticket) }}', {{ $e->fee_amount }})"
                                         class="text-emerald-600 hover:underline text-xs font-medium">Mark Paid</button>
                             @else
                                 <span class="text-emerald-600 text-xs">&#10003; Paid</span>
