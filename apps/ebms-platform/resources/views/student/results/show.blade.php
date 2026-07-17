@@ -175,30 +175,6 @@
 </div>
 @endif
 
-{{-- Grade Scale Legend --}}
-<div class="animate-in delay-4" style="background:#F7F6F3;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;">
-    <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Grade Scale</p>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        @foreach([
-            ['O', '≥ 85', 'var(--teal)', 'rgba(13,148,136,.1)', 'rgba(13,148,136,.25)'],
-            ['A', '≥ 70', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['B', '≥ 60', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['C', '≥ 55', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['D', '≥ 50', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['E', '≥ 40', 'var(--amber)', '#FFFBEB', '#FCD34D'],
-            ['F', 'FAIL', '#DC2626', '#FEF2F2', '#FECACA'],
-        ] as [$grade, $range, $color, $bg, $border])
-        <div style="display:flex;align-items:center;gap:6px;background:{{ $bg }};border:1px solid {{ $border }};border-radius:8px;padding:4px 10px;">
-            <span style="font-size:14px;font-weight:700;color:{{ $color }};font-family:'Fraunces',serif;">{{ $grade }}</span>
-            <span style="font-size:11px;color:var(--muted);">{{ $range }}</span>
-        </div>
-        @endforeach
-    </div>
-    <p style="font-size:11px;color:var(--muted);margin:10px 0 0;">
-        Division: ≥7.00 First with Distinction · ≥6.00 First · ≥5.00 Second · ≥4.00 Pass
-    </p>
-</div>
-
 <style>
     @media(max-width:640px) {
         .result-mobile { display:block !important; }
