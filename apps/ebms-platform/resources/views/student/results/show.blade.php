@@ -39,10 +39,12 @@
     </div>
     @if($enrollment->gpa)
     <div style="display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap;">
+        @if($enrollment->gpa->result !== 'R')
         <div style="text-align:center;padding:12px 18px;background:linear-gradient(135deg,#F0FDFA 0%,#fff 100%);border:1px solid rgba(13,148,136,.2);border-radius:12px;">
             <p class="font-display" style="font-size:28px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
             <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">SGPA</p>
         </div>
+        @endif
         @php
             $res = strtoupper($enrollment->gpa->result ?? '');
             $resBg  = match(true) {
@@ -121,10 +123,12 @@
         <p style="font-size:13px;font-weight:700;color:var(--navy);margin:0;letter-spacing:.3px;text-transform:uppercase;">GPA Summary</p>
     </div>
     <div style="padding:20px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;">
+        @if($enrollment->gpa->result !== 'R')
         <div style="text-align:center;">
             <p class="font-display" style="font-size:26px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
             <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:6px 0 0;">SGPA</p>
         </div>
+        @endif
         @if($enrollment->gpa->cgpa_part1)
         <div style="text-align:center;">
             <p class="font-display" style="font-size:26px;font-weight:700;color:var(--navy);margin:0;line-height:1;">{{ $enrollment->gpa->cgpa_part1 }}</p>

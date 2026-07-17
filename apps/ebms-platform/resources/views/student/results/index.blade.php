@@ -18,10 +18,12 @@
         </div>
         <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
             @if($enrollment->gpa)
+            @if($enrollment->gpa->result !== 'R')
             <div style="text-align:right;">
                 <p class="font-display" style="font-size:22px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
                 <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:2px 0 0;">SGPA</p>
             </div>
+            @endif
             @php
                 $res = strtoupper($enrollment->gpa->result ?? '');
                 $resBadge = match(true) {
