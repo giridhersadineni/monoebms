@@ -175,6 +175,13 @@
 </div>
 @endif
 
+{{-- Result code legend --}}
+<div class="animate-in delay-4" style="background:#F7F6F3;border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:24px;">
+    <p style="font-size:11px;color:var(--muted);margin:0;">
+        Result: <strong style="color:var(--navy);">R</strong> = Promoted · <strong style="color:var(--navy);">P</strong> = Passed
+    </p>
+</div>
+
 <style>
     @media(max-width:640px) {
         .result-mobile { display:block !important; }
