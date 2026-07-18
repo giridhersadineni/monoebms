@@ -165,6 +165,11 @@
 @if($enrollment->gpa && $enrollment->gpa->result)
 @php
     $res = strtoupper($enrollment->gpa->result ?? '');
+    $resLabel = match(true) {
+        $res === 'R' => 'Promoted',
+        $res === 'P' => 'Passed',
+        default      => $enrollment->gpa->result,
+    };
     $resBg = match(true) {
         str_contains($res, 'PASS') || $res === 'PROMOTED' || $res === 'P' || $res === 'R' => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
         str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
@@ -177,7 +182,7 @@
     </div>
     <div style="padding:20px 22px;display:flex;align-items:center;justify-content:center;">
         <div style="text-align:center;padding:14px 26px;{{ $resBg }}border:1px solid;border-radius:12px;">
-            <p class="font-display" style="font-size:22px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
+            <p class="font-display" style="font-size:22px;font-weight:700;margin:0;line-height:1;">{{ $resLabel }}</p>
             <p style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin:5px 0 0;">Result</p>
         </div>
     </div>
