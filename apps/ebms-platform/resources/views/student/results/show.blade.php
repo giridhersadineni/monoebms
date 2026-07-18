@@ -171,8 +171,8 @@
         default      => $enrollment->gpa->result,
     };
     $resBg = match(true) {
-        str_contains($res, 'PASS') || $res === 'PROMOTED' || $res === 'P' || $res === 'R' => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
-        str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
+        $res === 'R' || $res === 'PROMOTED' || str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
+        $res === 'P' || str_contains($res, 'PASS') => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
         default => 'background:#EEF0F3;border-color:var(--border);color:var(--muted);'
     };
 @endphp
