@@ -45,20 +45,6 @@
             <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">SGPA</p>
         </div>
         @endif
-        @php
-            $res = strtoupper($enrollment->gpa->result ?? '');
-            $resBg  = match(true) {
-                str_contains($res, 'PASS') || $res === 'PROMOTED' => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
-                str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
-                default => 'background:#EEF0F3;border-color:var(--border);color:var(--muted);'
-            };
-        @endphp
-        @if($enrollment->gpa->result)
-        <div style="text-align:center;padding:12px 18px;{{ $resBg }}border:1px solid;border-radius:12px;">
-            <p class="font-display" style="font-size:18px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
-            <p style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">Result</p>
-        </div>
-        @endif
     </div>
     @endif
 </div>
@@ -172,6 +158,29 @@
     </div>
     @endif
     @endif
+</div>
+@endif
+
+{{-- Result --}}
+@if($enrollment->gpa && $enrollment->gpa->result)
+@php
+    $res = strtoupper($enrollment->gpa->result ?? '');
+    $resBg = match(true) {
+        str_contains($res, 'PASS') || $res === 'PROMOTED' || $res === 'P' || $res === 'R' => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
+        str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
+        default => 'background:#EEF0F3;border-color:var(--border);color:var(--muted);'
+    };
+@endphp
+<div class="card animate-in delay-4" style="overflow:hidden;margin-bottom:14px;">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
+        <p style="font-size:13px;font-weight:700;color:var(--navy);margin:0;letter-spacing:.3px;text-transform:uppercase;">Result</p>
+    </div>
+    <div style="padding:20px 22px;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;padding:14px 26px;{{ $resBg }}border:1px solid;border-radius:12px;">
+            <p class="font-display" style="font-size:22px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
+            <p style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin:5px 0 0;">Result</p>
+        </div>
+    </div>
 </div>
 @endif
 
