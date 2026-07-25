@@ -31,7 +31,7 @@
                 <p style="font-size:12px;color:var(--muted);margin:0;font-family:'JetBrains Mono',monospace;">{{ $result->subject?->code }}</p>
             </div>
             <div style="text-align:right;flex-shrink:0;">
-                <p style="font-size:12px;color:var(--muted);margin:0;">Marks: {{ $result->total_marks }} · Grade: <strong style="color:#DC2626;">{{ $result->grade }}</strong></p>
+                <p style="font-size:12px;color:var(--muted);margin:0;">Grade: <strong style="color:#DC2626;">{{ $result->grade }}</strong></p>
             </div>
         </label>
         @endforeach
