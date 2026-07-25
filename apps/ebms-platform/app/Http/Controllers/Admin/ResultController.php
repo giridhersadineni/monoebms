@@ -132,6 +132,37 @@ class ResultController extends Controller
         return view('admin.results.show', compact('enrollment'));
     }
 
+    public function updateResult(Request $request, ExamEnrollment $enrollment, Result $result): RedirectResponse
+    {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+        abort_unless($result->enrollment_id === $enrollment->id, 404);
+
+        $validated = $request->validate([
+            'ext' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+            'int' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+        ]);
+
+        $isAbsentExt = strtoupper($validated['ext']) === 'AB';
+        $isAbsentInt = strtoupper($validated['int']) === 'AB';
+        $extMarks    = $isAbsentExt ? null : (int) $validated['ext'];
+        $intMarks    = $isAbsentInt ? null : (int) $validated['int'];
+
+        if (($extMarks ?? 0) > 100 || ($intMarks ?? 0) > 20) {
+            return back()->with('error', 'Ext marks must be ≤ 100 and Int marks ≤ 20.');
+        }
+
+        $computed = $this->gpaCalculator->gradeFromMarks($extMarks, $intMarks, $isAbsentExt, $isAbsentInt);
+
+        $result->update(array_merge($computed, [
+            'ext_marks'     => $extMarks,
+            'int_marks'     => $intMarks,
+            'is_absent_ext' => $isAbsentExt,
+            'is_absent_int' => $isAbsentInt,
+        ]));
+
+        return back()->with('success', "Marks updated for {$result->subject?->code}. Re-process GPA to refresh SGPA/CGPA.");
+    }
+
     public function records(Request $request, Exam $exam): View
     {
         $sortable = ['hall_ticket', 'subject_code', 'ext_marks', 'int_marks', 'total_marks', 'grade', 'result', 'credits'];

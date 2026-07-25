@@ -43,12 +43,12 @@ class RevaluationController extends Controller
             abort(404, 'Revaluation is not open for this exam.');
         }
 
-        $failedResults = $enrollment->results()
+        // Revaluation is available for all papers the student sat, including passed ones.
+        $eligibleResults = $enrollment->results()
             ->with('subject')
-            ->whereIn('result', ['F', 'R'])
             ->get();
 
-        return view('student.revaluation.apply', compact('student', 'enrollment', 'failedResults'));
+        return view('student.revaluation.apply', compact('student', 'enrollment', 'eligibleResults'));
     }
 
     public function store(RevaluationRequest $request): RedirectResponse
