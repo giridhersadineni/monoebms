@@ -55,4 +55,5 @@ Route::middleware('auth:student')->group(function () {
     Route::get('/revaluation', [RevaluationController::class, 'index'])->name('revaluation.index');
     Route::get('/revaluation/{enrollment}', [RevaluationController::class, 'show'])->name('revaluation.show');
     Route::post('/revaluation', [RevaluationController::class, 'store'])->name('revaluation.store');
+    Route::get('/revaluation/{revaluation}/challan', [ChallanController::class, 'showRevaluation'])->name('revaluation.challan');
 });

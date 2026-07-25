@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ExamFeeRuleController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\GradeSheetController;
 use App\Http\Controllers\Admin\ResultController;
+use App\Http\Controllers\Admin\RevaluationController;
 use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,11 +71,16 @@ Route::middleware('auth:admin')->group(function () {
 
     // Results
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
+    Route::get('/results/lookup', [ResultController::class, 'lookup'])->name('results.lookup');
     Route::get('/results/enrollment/{enrollment}', [ResultController::class, 'show'])->name('results.show');
     Route::get('/results/{exam}/records', [ResultController::class, 'records'])->name('results.records');
     Route::get('/results/{exam}', [ResultController::class, 'entryForm'])->name('results.entry');
     Route::post('/results', [ResultController::class, 'store'])->name('results.store');
     Route::post('/results/{exam}/process-gpa', [ResultController::class, 'processGpa'])->name('results.process');
+
+    // Revaluations
+    Route::get('/revaluations', [RevaluationController::class, 'index'])->name('revaluations.index');
+    Route::post('/revaluations/{id}/fee', [RevaluationController::class, 'markFeePaid'])->name('revaluations.fee');
 
     // Courses & Groups
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

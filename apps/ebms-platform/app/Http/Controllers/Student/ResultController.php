@@ -16,7 +16,7 @@ class ResultController extends Controller
         $student = Auth::guard('student')->user();
 
         $enrollments = $student->enrollments()
-            ->with(['exam', 'gpa'])
+            ->with(['exam', 'gpa', 'results', 'revaluation'])
             ->feePaid()
             ->latest('enrolled_at')
             ->get();
@@ -30,7 +30,7 @@ class ResultController extends Controller
 
         $enrollment = ExamEnrollment::where('exam_id', $exam->id)
             ->where('student_id', $student->id)
-            ->with(['results.subject', 'gpa'])
+            ->with(['results.subject', 'gpa', 'revaluation'])
             ->firstOrFail();
 
         if (! $enrollment->isFeePaid()) {

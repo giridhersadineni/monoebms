@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamEnrollment;
+use App\Models\RevaluationEnrollment;
 use App\Services\ChallanPdfService;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,5 +24,18 @@ class ChallanController extends Controller
         $enrollment->load(['exam', 'enrollmentSubjects.subject']);
 
         return $this->challanService->generate($enrollment);
+    }
+
+    public function showRevaluation(RevaluationEnrollment $revaluation): Response
+    {
+        $student = Auth::guard('student')->user();
+
+        if ((int) $revaluation->student_id !== (int) $student->id) {
+            abort(403);
+        }
+
+        $revaluation->load(['exam', 'subjects.subject']);
+
+        return $this->challanService->generateForRevaluation($revaluation);
     }
 }

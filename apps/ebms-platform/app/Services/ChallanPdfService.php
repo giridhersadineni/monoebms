@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ExamEnrollment;
+use App\Models\RevaluationEnrollment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,6 +36,31 @@ class ChallanPdfService
             ->setOption('defaultMediaType', 'print');
 
         return $pdf->download("challan-{$enrollment->id}.pdf");
+    }
+
+    public function generateForRevaluation(RevaluationEnrollment $revaluation): Response
+    {
+        $revaluation->load(['student', 'exam', 'subjects.subject']);
+
+        $data = [
+            'enrollment'   => $revaluation,
+            'student'      => $revaluation->student,
+            'exam'         => $revaluation->exam,
+            'subjects'     => $revaluation->subjects,
+            'challan_no'   => 'REV-' . $revaluation->id,
+            'sbi_account'  => self::SBI_ACCOUNT,
+            'sbi_ifsc'     => self::SBI_IFSC,
+            'sbi_branch'   => self::SBI_BRANCH,
+            'fee_in_words' => $this->amountInWords($revaluation->fee_amount ?? 0),
+        ];
+
+        $pdf = Pdf::loadView('student.challan.pdf', $data)
+            ->setPaper('a4', 'landscape')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('defaultMediaType', 'print');
+
+        return $pdf->download("challan-reval-{$revaluation->id}.pdf");
     }
 
     private function amountInWords(int $amount): string

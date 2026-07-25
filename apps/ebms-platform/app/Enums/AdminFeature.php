@@ -26,6 +26,7 @@ enum AdminFeature: string
     case GradesheetsGenerate = 'gradesheets.generate';
     case ResultsView         = 'results.view';
     case ResultsEdit         = 'results.edit';
+    case RevaluationsView    = 'revaluations.view';
 
     public function label(): string
     {
@@ -52,6 +53,7 @@ enum AdminFeature: string
             self::GradesheetsGenerate => 'Generate Grade Sheets',
             self::ResultsView         => 'View Results',
             self::ResultsEdit         => 'Enter/Edit Results',
+            self::RevaluationsView    => 'View Revaluations',
         };
     }
 
@@ -79,7 +81,8 @@ enum AdminFeature: string
             self::GradesheetsView,
             self::GradesheetsGenerate => 'Academic Records',
             self::ResultsView,
-            self::ResultsEdit         => 'Academic Records',
+            self::ResultsEdit,
+            self::RevaluationsView    => 'Academic Records',
         };
     }
 
@@ -96,7 +99,8 @@ enum AdminFeature: string
             self::DFormView,
             self::AttendanceView,
             self::GradesheetsView,
-            self::ResultsView         => ['admin', 'staff'],
+            self::ResultsView,
+            self::RevaluationsView    => ['admin', 'staff'],
             self::StudentsEdit,
             self::StudentsDelete,
             self::EnrollmentsEdit,

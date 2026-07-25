@@ -23,7 +23,49 @@ class ResultController extends Controller
     {
         $exams = Exam::orderByDesc('id')->get();
 
-        return view('admin.results.index', compact('exams'));
+        return view('admin.results.index', [
+            'exams' => $exams,
+            'matches' => collect(),
+            'hallTicket' => null,
+        ]);
+    }
+
+    public function lookup(Request $request): View|RedirectResponse
+    {
+        $examId = $request->get('exam_id');
+        $hallTicket = trim((string) $request->get('hall_ticket'));
+
+        if ($hallTicket !== '') {
+            $enrollments = ExamEnrollment::where('hall_ticket', $hallTicket)
+                ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+                ->with('exam')
+                ->latest('enrolled_at')
+                ->get();
+
+            if ($enrollments->count() === 1) {
+                return redirect()->route('admin.results.show', $enrollments->first());
+            }
+
+            if ($enrollments->count() > 1) {
+                $exams = Exam::orderByDesc('id')->get();
+
+                return view('admin.results.index', [
+                    'exams' => $exams,
+                    'matches' => $enrollments,
+                    'hallTicket' => $hallTicket,
+                ]);
+            }
+
+            return back()->withErrors(['hall_ticket' => "No enrollment found for hall ticket {$hallTicket}."]);
+        }
+
+        if ($examId) {
+            $exam = Exam::findOrFail($examId);
+
+            return redirect()->route('admin.results.records', $exam);
+        }
+
+        return back()->withErrors(['lookup' => 'Select an exam or enter a hall ticket.']);
     }
 
     public function entryForm(Exam $exam): View

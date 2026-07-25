@@ -28,6 +28,28 @@
     <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
 </div>
 
+@php
+    $revalEligible = $exam->revaluation_open
+        && $enrollment->results->contains(fn ($r) => in_array($r->result, ['F', 'R'], true));
+@endphp
+@if($revalEligible)
+<div class="card animate-in delay-1 no-print" style="padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#FFFBEB;border:1px solid #FCD34D;border-left:4px solid var(--amber);">
+    <div>
+        <p style="font-size:14px;font-weight:700;color:#92400E;margin:0 0 2px;">Revaluation is open for this exam</p>
+        <p style="font-size:12px;color:#78350F;margin:0;">
+            @if($enrollment->revaluation)
+                You applied for revaluation on {{ $enrollment->revaluation->created_at->format('d M Y') }} — status: {{ ucfirst($enrollment->revaluation->status) }}.
+            @else
+                You have failed/withheld papers eligible for revaluation.
+            @endif
+        </p>
+    </div>
+    @unless($enrollment->revaluation)
+    <a href="{{ route('student.revaluation.show', $enrollment) }}" class="btn-primary btn-sm">Apply for Revaluation →</a>
+    @endunless
+</div>
+@endif
+
 {{-- Student info header --}}
 <div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;">
     <div style="flex:1;min-width:0;">
