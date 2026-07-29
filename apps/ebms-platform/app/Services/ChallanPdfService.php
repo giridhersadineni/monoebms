@@ -47,7 +47,7 @@ class ChallanPdfService
             'student'      => $revaluation->student,
             'exam'         => $revaluation->exam,
             'subjects'     => $revaluation->subjects,
-            'challan_no'   => 'REV-' . $revaluation->id,
+            'challan_no'   => $revaluation->id,
             'sbi_account'  => self::SBI_ACCOUNT,
             'sbi_ifsc'     => self::SBI_IFSC,
             'sbi_branch'   => self::SBI_BRANCH,

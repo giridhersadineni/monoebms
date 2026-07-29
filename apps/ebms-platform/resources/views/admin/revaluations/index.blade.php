@@ -2,6 +2,22 @@
 @section('title', 'Revaluations')
 
 @section('content')
+{{-- Force light form controls: DataTables search/length inputs render with a
+     dark UA background (invisible text) under a dark color-scheme otherwise. --}}
+<style>
+    #revaluations-table_wrapper { color-scheme: light; }
+    #revaluations-table_wrapper .dt-search input,
+    #revaluations-table_wrapper .dt-length select,
+    #revaluations-table_wrapper .dataTables_filter input,
+    #revaluations-table_wrapper .dataTables_length select {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.6rem;
+    }
+    #revaluations-table_wrapper .dt-search input::placeholder { color: #94a3b8; }
+</style>
 <div class="max-w-6xl">
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-slate-800">Revaluations</h1>
@@ -41,6 +57,8 @@
                 <tr>
                     <th class="no-export">Actions</th>
                     <th>App ID</th>
+                    <th>Reference</th>
+                    <th>Bank Challan</th>
                     <th>Hall Ticket</th>
                     <th>Student</th>
                     <th>Exam</th>
@@ -76,6 +94,8 @@
                         @endif
                     </td>
                     <td class="font-mono text-xs text-slate-400">{{ $r->id }}</td>
+                    <td class="font-mono text-xs text-slate-600">REV-{{ $r->id }}</td>
+                    <td class="font-mono text-xs text-slate-700">{{ $r->challan_number ?? '—' }}</td>
                     <td class="font-mono text-xs text-slate-700">{{ $r->hall_ticket }}</td>
                     <td class="font-medium text-slate-800">{{ $r->student?->name }}</td>
                     <td class="text-slate-700">{{ $r->exam?->name }}</td>
@@ -101,7 +121,7 @@
 
 {{-- Fee Payment Modal --}}
 <div id="fee-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-black/40" onclick="closeFeeModal()"></div>
+    <div id="fee-modal-backdrop" class="absolute inset-0 bg-black/40"></div>
     <div class="relative bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md mx-4 p-6">
         <div class="mb-5">
             <h2 class="text-base font-semibold text-slate-800">Mark Revaluation Fee Payment</h2>
@@ -136,7 +156,7 @@
                         class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                     Confirm Payment
                 </button>
-                <button type="button" onclick="closeFeeModal()"
+                <button type="button" id="fee-modal-cancel"
                         class="text-slate-500 hover:text-slate-700 text-sm py-2 hover:underline">Cancel</button>
             </div>
         </form>
@@ -174,6 +194,10 @@ function closeFeeModal() {
     modal.classList.remove('flex');
 }
 
+// Bind close handlers here (not via inline onclick) — the CSP blocks inline
+// event-handler attributes, so onclick="closeFeeModal()" never fires.
+document.getElementById('fee-modal-backdrop').addEventListener('click', closeFeeModal);
+document.getElementById('fee-modal-cancel').addEventListener('click', closeFeeModal);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFeeModal(); });
 </script>
 @endpush

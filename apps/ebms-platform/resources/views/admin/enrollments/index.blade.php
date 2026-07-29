@@ -86,8 +86,11 @@
                             <a href="{{ route('admin.enrollments.show', $e) }}" class="text-blue-600 hover:underline text-xs font-medium">View</a>
                             @if(! $e->isFeePaid())
                                 <button type="button"
-                                        onclick="openFeeModal({{ $e->id }}, '{{ addslashes($e->student?->name) }}', '{{ addslashes($e->hall_ticket) }}', {{ $e->fee_amount }})"
-                                        class="text-emerald-600 hover:underline text-xs font-medium">Mark Paid</button>
+                                        class="js-mark-paid text-emerald-600 hover:underline text-xs font-medium"
+                                        data-id="{{ $e->id }}"
+                                        data-name="{{ $e->student?->name }}"
+                                        data-hall-ticket="{{ $e->hall_ticket }}"
+                                        data-fee="{{ $e->fee_amount }}">Mark Paid</button>
                             @else
                                 <span class="text-emerald-600 text-xs">&#10003; Paid</span>
                                 <form method="POST" action="{{ route('admin.enrollments.fee.clear', $e->id) }}"
@@ -114,7 +117,7 @@
 </div>
 {{-- Fee Payment Modal --}}
 <div id="fee-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-black/40" onclick="closeFeeModal()"></div>
+    <div id="fee-modal-backdrop" class="absolute inset-0 bg-black/40"></div>
     <div class="relative bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md mx-4 p-6">
         <div class="mb-5">
             <h2 class="text-base font-semibold text-slate-800">Mark Fee Payment</h2>
@@ -149,7 +152,7 @@
                         class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                     Confirm Payment
                 </button>
-                <button type="button" onclick="closeFeeModal()"
+                <button type="button" id="fee-modal-cancel"
                         class="text-slate-500 hover:text-slate-700 text-sm py-2 hover:underline">Cancel</button>
             </div>
         </form>
@@ -179,6 +182,15 @@ function closeFeeModal() {
     modal.classList.remove('flex');
 }
 
+// Bind handlers here (not via inline onclick) — the CSP blocks inline
+// event-handler attributes, so onclick="..." never fires.
+document.querySelectorAll('.js-mark-paid').forEach(btn => {
+    btn.addEventListener('click', () => {
+        openFeeModal(btn.dataset.id, btn.dataset.name, btn.dataset.hallTicket, Number(btn.dataset.fee));
+    });
+});
+document.getElementById('fee-modal-backdrop').addEventListener('click', closeFeeModal);
+document.getElementById('fee-modal-cancel').addEventListener('click', closeFeeModal);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFeeModal(); });
 </script>
 @endsection

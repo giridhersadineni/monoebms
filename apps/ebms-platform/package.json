@@ -10,7 +10,13 @@
         "@tailwindcss/vite": "^4.2.1",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
+        "datatables.net-buttons": "^3.2.0",
+        "datatables.net-buttons-dt": "^3.2.0",
+        "datatables.net-dt": "^2.1.8",
+        "jquery": "^3.7.1",
+        "jszip": "^3.10.1",
         "laravel-vite-plugin": "^2.0.0",
+        "pdfmake": "^0.2.12",
         "tailwindcss": "^4.2.1",
         "vite": "^7.0.7"
     },
