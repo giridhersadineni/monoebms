@@ -81,6 +81,7 @@ Route::middleware('auth:admin')->group(function () {
 
     // Revaluations
     Route::get('/revaluations', [RevaluationController::class, 'index'])->name('revaluations.index');
+    Route::get('/revaluations/mark-payment', [RevaluationController::class, 'markPaymentPage'])->name('revaluations.mark-payment');
     Route::post('/revaluations/{id}/fee', [RevaluationController::class, 'markFeePaid'])->name('revaluations.fee');
 
     // Courses & Groups

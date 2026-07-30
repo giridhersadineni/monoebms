@@ -114,6 +114,12 @@
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
                             'permission' => 'revaluations.view',
                         ],
+                        [
+                            'route' => 'admin.revaluations.mark-payment',
+                            'label' => 'Reval Payment',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>',
+                            'permission' => 'revaluations.view',
+                        ],
                     ];
 
                     $settingsLinks = [

@@ -61,6 +61,19 @@ class RevaluationController extends Controller
         return view('admin.revaluations.index', compact('rows', 'exams'));
     }
 
+    public function markPaymentPage(Request $request): View
+    {
+        $revaluation = null;
+
+        if ($q = $request->input('q')) {
+            $revaluation = RevaluationEnrollment::with(['student', 'exam', 'subjects.subject'])
+                ->where(is_numeric($q) ? 'id' : 'hall_ticket', $q)
+                ->first();
+        }
+
+        return view('admin.revaluations.mark-payment', compact('revaluation'));
+    }
+
     public function markFeePaid(FeeMarkRequest $request, int $id): RedirectResponse
     {
         $revaluation = RevaluationEnrollment::findOrFail($id);
