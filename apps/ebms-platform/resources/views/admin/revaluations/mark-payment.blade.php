@@ -90,7 +90,7 @@
                         Challan Number <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="challan_number" required autocomplete="off"
-                           value="{{ old('challan_number') }}"
+                           value="{{ old('challan_number', $revaluation->id) }}"
                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
                     <x-form-error field="challan_number" />
