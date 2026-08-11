@@ -1,3 +1,13 @@
+<?php 
+
+session_start();
+if(!isset($_SESSION['userid'])){
+ setcookie(PHPSESSID,"expired",time()+0);  
+ header("location:index.php?invalid-session");   
+ 
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,17 +21,25 @@
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
     <title>University Arts & Science College EBMS</title>
-    <!-- Bootstrap Core CSS -->
+    
     <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-
     <link href="css/lib/calendar2/semantic.ui.min.css" rel="stylesheet">
     <link href="css/lib/calendar2/pignose.calendar.min.css" rel="stylesheet">
     <link href="css/lib/owl.carousel.min.css" rel="stylesheet" />
     <link href="css/lib/owl.theme.default.min.css" rel="stylesheet" />
     <link href="css/helper.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <link href="../css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/lib/calendar2/semantic.ui.min.css" rel="stylesheet">
+    <link href="../css/lib/calendar2/pignose.calendar.min.css" rel="stylesheet">
+    <link href="../css/lib/owl.carousel.min.css" rel="stylesheet" />
+    <link href="../css/lib/owl.theme.default.min.css" rel="stylesheet" />
+    <link href="../css/helper.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    
+    
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:** -->
@@ -29,18 +47,8 @@
     <script src="https:**oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https:**oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-131292962-2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-131292962-2');
-  gtag('set', 'userId', '<?php echo $_COOKIE['name'].":".$_COOKIE['haltckt']; ?>'); // Set the user ID using signed-in user_id.
-</script>
 
 </head>
-
 <body class="fix-header fix-sidebar">
     <!-- Preloader - style you can find in spinners.css -->
     <div class="preloader">
@@ -69,17 +77,18 @@
                     <ul class="navbar-nav mr-auto mt-md-0">
                         <!-- This is  -->
                         <li class="nav-item"> <a class="nav-link nav-toggler hidden-md-up text-muted  " href="javascript:void(0)"><i class="mdi mdi-menu"></i></a> </li>
-                        <li class="nav-item m-l-10"> <a class="nav-link sidebartoggler hidden-sm-down text-muted  " href="javascript:void(0)"><i class="ti-menu text-white"></i>  UNIVERSITY ARTS & SCIENCE COLLEGE EXAM BRANCH</a></li>
+                        <li class="nav-item m-l-10"> <a class="nav-link sidebartoggler hidden-sm-down text-muted  " href="javascript:void(0)"><i class="ti-menu text-white text-center">  UNIVERSITY ARTS & SCIENCE COLLEGE EXAM BRANCH</i></a></li>
                     
                     </ul>
                     <!-- User profile and search -->
                     <ul class="navbar-nav my-lg-0">
 
                         <!-- Search -->
-                        <!--<li class="nav-item hidden-sm-down search-box"> <a class="nav-link hidden-sm-down text-muted  " href="javascript:void(0)"><i class="ti-search"></i></a>-->
-                        <!--    <form class="app-search">-->
-                        <!--        <input type="text" class="form-control" placeholder="Search here"> <a class="srh-btn"><i class="ti-close"></i></a> </form>-->
-                        <!--</li>-->
+                        <li class="nav-item hidden-sm-down search-box"> <a class="nav-link hidden-sm-down text-muted  " href="javascript:void(0)"><i class="ti-search"></i></a>
+                            <form class="app-search" action="viewstudent.php" method="POST">
+                                <input type="text" class="form-control" placeholder="Enter Hallticket Number" name="hallticket"> <a class="srh-btn"><i class="ti-close"></i></a> 
+                                </form>
+                        </li>
                         <!-- Comment -->
        <!--                 <li class="nav-item dropdown">-->
        <!--                     <a class="nav-link dropdown-toggle text-muted text-muted  " href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa fa-bell"></i>-->
@@ -130,74 +139,24 @@
        <!--                 </li>-->
                         <!-- End Comment -->
                         <!-- Messages -->
-       <!--                 <li class="nav-item dropdown">-->
-       <!--                     <a class="nav-link dropdown-toggle text-muted  " href="#" id="2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa fa-envelope"></i>-->
-							<!--	<div class="notify"> <span class="heartbit"></span> <span class="point"></span> </div>-->
-							<!--</a>-->
-							
-                            <!--<div class="dropdown-menu dropdown-menu-right mailbox animated zoomIn" aria-labelledby="2">-->
-                            <!--    <ul>-->
-                            <!--        <li>-->
-                            <!--            <div class="drop-title">You have 4 new messages</div>-->
-                            <!--        </li>-->
-                            <!--        <li>-->
-                            <!--            <div class="message-center">-->
-                                            <!-- Message -->
-                            <!--                <a href="#">-->
-                            <!--                    <div class="user-img"> <img src="images/users/5.jpg" alt="user" class="img-circle"> <span class="profile-status online pull-right"></span> </div>-->
-                            <!--                    <div class="mail-contnet">-->
-                            <!--                        <h5>Michael Qin</h5> <span class="mail-desc">Just see the my admin!</span> <span class="time">9:30 AM</span>-->
-                            <!--                    </div>-->
-                            <!--                </a>-->
-                                            <!-- Message -->
-                            <!--                <a href="#">-->
-                            <!--                    <div class="user-img"> <img src="images/users/2.jpg" alt="user" class="img-circle"> <span class="profile-status busy pull-right"></span> </div>-->
-                            <!--                    <div class="mail-contnet">-->
-                            <!--                        <h5>John Doe</h5> <span class="mail-desc">I've sung a song! See you at</span> <span class="time">9:10 AM</span>-->
-                            <!--                    </div>-->
-                            <!--                </a>-->
-                                            <!-- Message -->
-                            <!--                <a href="#">-->
-                            <!--                    <div class="user-img"> <img src="images/users/3.jpg" alt="user" class="img-circle"> <span class="profile-status away pull-right"></span> </div>-->
-                            <!--                    <div class="mail-contnet">-->
-                            <!--                        <h5>Mr. John</h5> <span class="mail-desc">I am a singer!</span> <span class="time">9:08 AM</span>-->
-                            <!--                    </div>-->
-                            <!--                </a>-->
-                                            <!-- Message -->
-                            <!--                <a href="#">-->
-                            <!--                    <div class="user-img"> <img src="images/users/4.jpg" alt="user" class="img-circle"> <span class="profile-status offline pull-right"></span> </div>-->
-                            <!--                    <div class="mail-contnet">-->
-                            <!--                        <h5>Michael Qin</h5> <span class="mail-desc">Just see the my admin!</span> <span class="time">9:02 AM</span>-->
-                            <!--                    </div>-->
-                            <!--                </a>-->
-                            <!--            </div>-->
-                            <!--        </li>-->
-                            <!--        <li>-->
-                            <!--            <a class="nav-link text-center" href="javascript:void(0);"> <strong>See all e-Mails</strong> <i class="fa fa-angle-right"></i> </a>-->
-                            <!--        </li>-->
-                            <!--    </ul>-->
-                            <!--</div>-->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-muted  " href="#" id="2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa fa-envelope"></i>
+								<div class="notify"> <span class="heartbit"></span> <span class="point"></span> </div>
+							</a>
+                           
                         </li>
                         <!-- End Messages -->
                         <!-- Profile -->
                         <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-muted"
-                        href="#" data-toggle="dropdown" 
-                        aria-haspopup="true" aria-expanded="false">
-                        <img src="<?php echo 'upload/images/' . $_COOKIE['aadhar'] . '.jpg'; ?>" alt="user" class="profile-pic" /></a>
-                        <div class="dropdown-menu dropdown-menu-right animated zoomIn">
-                        <ul class="dropdown-user">
-                            <li><a href="#"><i class="ti-user"></i> <?php echo $_COOKIE['name']; ?></a></li>
-                            <li><a href="#"><i class="ti-wallet"></i> <?php echo $_COOKIE['userid']; ?></a></li>
-                            <!--<li><a href="#"><i class="ti-email"></i> Inbox</a></li>-->
-                            <!--<li><a href="#"><i class="ti-settings"></i> Setting</a></li>-->
-                            <li><a href="/index.php?loggedout=true"><i class="fa fa-power-off"></i> Logout</a></li>
-                            </ul>
-                        </div>
-                    </li>
-                        
+                            <a class="nav-link dropdown-toggle text-muted  " href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="images/users/5.jpg" alt="user" class="profile-pic" /></a>
+                            <div class="dropdown-menu dropdown-menu-right animated zoomIn">
+                                <ul class="dropdown-user">
+                                    <!--<li><a href="#"><i class="ti-user"></i> Profile</a></li>-->
+                                    <li><a href="#"><i class="fa fa-power-off"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
                     </ul>
-                    
                 </div>
             </nav>
         </div>
@@ -210,73 +169,74 @@
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         <li class="nav-divider"></li>
-                        <li class="nav-label">UASKU EBMS</li>
-<li> <a  href="welcome.php" aria-expanded="false"><i class="fa fa-home text-danger"></i><span class="hide-menu">Home</span></a></li>
-<li> <a  href="selectexam.php"  aria-expanded="false"><i class="fa fa-edit"></i><span class="hide-menu">Exam Registration</span></a></li>
-<li> <a  href="enrollments.php" aria-expanded="false"><i class="fa fa-address-book"></i><span class="hide-menu">Registered Exams</span></a></li>
-<li> <a  href="transactions.php" aria-expanded="false"><i class=" fa fa-book"></i><span class="hide-menu">Transcations Details</span></a></li>
-<li> <a  href="newimageupload.php" aria-expanded="false"><i class="fa fa-user"></i><span class="hide-menu">Change Photo And Signature</span></a></li>
-<li><a href="index.php?loggedout=true" aria-expanded="false"><i class="fa fa-angle-double-right"></i><span class="hide-menu"><font color="black"> Logout </font></span></a></li>      
-                    
-                        
-                        <!--<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-table"></i><span class="hide-menu">Tables</span></a>-->
+                        <li class="nav-label">UASCKU EBMS</li>
+                        <li> <a class="has-arrow  " href="/dashboard.php" aria-expanded="false"><i class="fa fa-home text-danger"></i><span class="hide-menu">Dashboard </span></a>
                         <!--    <ul aria-expanded="false" class="collapse">-->
-                        <!--        <li><a href="table-bootstrap.html">Basic Tables</a></li>-->
-                        <!--        <li><a href="table-datatable.html">Data Tables</a></li>-->
+                        <!--        <li><a href="index.html">Ecommerce </a></li>-->
+                        <!--        <li><a href="index1.html">Analytics </a></li>-->
                         <!--    </ul>-->
                         <!--</li>-->
-                        <!--<li class="nav-label">Layout</li>-->
-                        <!--<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-columns"></i><span class="hide-menu">Layout</span></a>-->
-                        <!--    <ul aria-expanded="false" class="collapse">-->
-                        <!--        <li><a href="layout-blank.html">Blank</a></li>-->
-                        <!--        <li><a href="layout-boxed.html">Boxed</a></li>-->
-                        <!--        <li><a href="layout-fix-header.html">Fix Header</a></li>-->
-                        <!--        <li><a href="layout-fix-sidebar.html">Fix Sidebar</a></li>-->
-                        <!--    </ul>-->
-                        <!--</li>-->
-                        <!--<li class="nav-label">EXTRA</li>-->
-                        <!--<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-book"></i><span class="hide-menu">Pages <span class="label label-rouded label-success pull-right">8</span></span></a>-->
-                        <!--    <ul aria-expanded="false" class="collapse">-->
+<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-envelope text-primary"></i><span class="hide-menu">Nominal Rolls</span></a>
+    <ul aria-expanded="false" class="collapse">
+         <!--<li><a href="revaluationview.php">Revaluation Students</a></li>-->
+        <li><a href="/examapplications.php">Regular Applications</a></li>
+        <li><a href="/revenrollments.php">Revalution Enrollments</a></li>
+        <li><a href="/gendform.php">Generate D-Form</a></li>
+        <li><a href="/genattend.php">Attendance Sheet</a></li>
+        <li><a href="/scriptcoding.php">Answer Script Coding</a></li>
+        <li><a href="/viewresult.php">Result Processing</a></li>
+    </ul>
+    </li>
+    <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-bar-chart text-success"></i><span class="hide-menu">Fee Payments</span></a>
+        <ul aria-expanded="false" class="collapse">
+            <li><a href="/markpayment.php">Mark Fee Payment</a></li>
+            <li><a href="/revaluationmpayment.php">Mark Revaluation Payment</a></li>
+            <li><a href="/transcation.php"> Transcations Details</a></li>
+        </ul>
+    </li>
+                        <!--<li class="nav-label">Reports</li>-->
+    <li> 
+    <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-scroll text-primary"></i><span class="hide-menu">Reports</span></a>
+    <ul aria-expanded="false" class="collapse">
+        <li><a href="/newshortmemos.php"> <i class="fa fa-table"></i>   Short Memo  2020 Batch </a></li>
+        <li><a href="/viewenrolled.php"> <i class="fa fa-file"></i>   Print Memo </a></li>
+        <li><a href="/printofflinememo.php"> <i class="fa fa-file"></i>   Print Offline Memo </a></li>
+        <li><a href="/consolidatedmemo.php"> <i class="fa fa-table"></i>   Consolidated Memo </a></li>
+        <li><a href="/studentmemos.php"> <i class="fa fa-table"></i>  Print Memo (Student Search) </a></li>
+        <li><a href="/tabulation.php"> <i class="fa fa-table"></i>   Tabulation Report </a></li>
+        <li><a href="/oldtabreport.php" target="blank"> <i class="fa fa-table"></i>   Old Tabulation Report </a></li>
+        <li><a href="/revresult.php"> <i class="fa fa-table"></i>  Revaluation Result </a></li>
+        <li><a href="/oldmemogen.php"> <i class="fa fa-table"></i>  Print Old memo </a></li>
+        <li><a href="/addgrades.php"> <i class="fa fa-table"></i>  Generate CMM </a></li>
+        <li><a href="/student_credits.php"> <i class="fa fa-table"></i> Student Credits Status </a></li>
+        <li><a href="/detainedlist.php"> <i class="fa fa-user-times"></i> Detained List </a></li>
 
-                        <!--        <li><a href="#" class="has-arrow">Authentication <span class="label label-rounded label-success">6</span></a>-->
-                        <!--            <ul aria-expanded="false" class="collapse">-->
-                        <!--                <li><a href="page-login.html">Login</a></li>-->
-                        <!--                <li><a href="page-register.html">Register</a></li>-->
-                        <!--                <li><a href="page-invoice.html">Invoice</a></li>-->
-                        <!--            </ul>-->
-                        <!--        </li>-->
-                        <!--        <li><a href="#" class="has-arrow">Error Pages</a>-->
-                        <!--            <ul aria-expanded="false" class="collapse">-->
-                        <!--                <li><a href="page-error-400.html">400</a></li>-->
-                        <!--                <li><a href="page-error-403.html">403</a></li>-->
-                        <!--                <li><a href="page-error-404.html">404</a></li>-->
-                        <!--                <li><a href="page-error-500.html">500</a></li>-->
-                        <!--                <li><a href="page-error-503.html">503</a></li>-->
-                        <!--            </ul>-->
-                        <!--        </li>-->
-                        <!--    </ul>-->
-                        <!--</li>-->
-                        <!--<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-map-marker"></i><span class="hide-menu">Maps</span></a>-->
-                        <!--    <ul aria-expanded="false" class="collapse">-->
-                        <!--        <li><a href="map-google.html">Google</a></li>-->
-                        <!--        <li><a href="map-vector.html">Vector</a></li>-->
-                        <!--    </ul>-->
-                        <!--</li>-->
-                        <!--<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-level-down"></i><span class="hide-menu">Multi level dd</span></a>-->
-                        <!--    <ul aria-expanded="false" class="collapse">-->
-                        <!--        <li><a href="#">item 1.1</a></li>-->
-                        <!--        <li><a href="#">item 1.2</a></li>-->
-                        <!--        <li> <a class="has-arrow" href="#" aria-expanded="false">Menu 1.3</a>-->
-                        <!--            <ul aria-expanded="false" class="collapse">-->
-                        <!--                <li><a href="#">item 1.3.1</a></li>-->
-                        <!--                <li><a href="#">item 1.3.2</a></li>-->
-                        <!--                <li><a href="#">item 1.3.3</a></li>-->
-                        <!--                <li><a href="#">item 1.3.4</a></li>-->
-                        <!--            </ul>-->
-                        <!--        </li>-->
-                        <!--        <li><a href="#">item 1.4</a></li>-->
-                        <!--    </ul>-->
-                        <!--</li>-->
+        <!--<li><a href="cmmreport.php">Cmm Report</a></li>-->
+        <!--<li><a href="managemarks.php">Manage Marks</a></li>-->
+        
+    </ul>
+</li>
+
+
+<li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-asterisk "></i><span class="hide-menu">Masters</span></a>
+<ul aria-expanded="false" class="collapse">
+    <li><a href="/papers.php">View Paper</a></li>
+    <li><a href="/examtable.php">View Exam</a></li>
+    <li><a href="/studentsdata.php">View all Students Data</a></li>
+     <li>
+         <!--<a href="addholder.php"> Add Subject Marks</a>-->
+     </li>
+     <li><a href="registerstudent.php">Register Student</a></li>
+     
+    
+</ul>
+</li>
+                        
+                        
+<li> <a class="has-arrow  " href="index.php?loggedout=true" aria-expanded="false"><i class="fa fa-angle-double-right"></i><span class="hide-menu">LogOut</span></a>
+
+</li>
+                    
                     </ul>
                 </nav>
                 <!-- End Sidebar navigation -->
