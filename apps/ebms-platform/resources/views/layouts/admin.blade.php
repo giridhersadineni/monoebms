@@ -37,7 +37,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z"/>
                 </svg>
             </button>
-            <span class="font-medium text-white">{{ auth('admin')->user()?->name }}</span>
+            <a href="{{ route('admin.profile') }}" class="font-medium text-white hover:text-blue-300 transition-colors">{{ auth('admin')->user()?->name }}</a>
             <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-medium uppercase tracking-wider text-[10px]">
                 {{ auth('admin')->user()?->role?->value ?? 'admin' }}
             </span>
@@ -102,24 +102,6 @@
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
                             'permission' => 'papers.view',
                         ],
-                        [
-                            'route' => 'admin.results.index',
-                            'label' => 'Results',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M4 12a8 8 0 1016 0 8 8 0 00-16 0z"/>',
-                            'permission' => 'results.view',
-                        ],
-                        [
-                            'route' => 'admin.revaluations.index',
-                            'label' => 'Revaluations',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
-                            'permission' => 'revaluations.view',
-                        ],
-                        [
-                            'route' => 'admin.revaluations.mark-payment',
-                            'label' => 'Reval Payment',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>',
-                            'permission' => 'revaluations.view',
-                        ],
                     ];
 
                     $settingsLinks = [
@@ -149,18 +131,6 @@
                             'label' => 'Attendance',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
                             'permission' => 'attendance.view',
-                        ],
-                        [
-                            'route' => 'admin.script-coding.index',
-                            'label' => 'Script Coding',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>',
-                            'permission' => 'scriptcoding.view',
-                        ],
-                        [
-                            'route' => 'admin.exam-halls.index',
-                            'label' => 'Hall Seating',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
-                            'permission' => 'seating.view',
                         ],
                     ];
                 @endphp

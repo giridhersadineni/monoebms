@@ -148,6 +148,15 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - After every deploy run: `php artisan optimize:clear` to flush route/view/config caches
 - Deploys happen off the `release` branch, which multiple people push to — `git push origin release` frequently rejects; `git pull --rebase origin release` before pushing, and expect the occasional same-file conflict to resolve
 - Frontend: run `npm run build` locally and scp `public/build/` to server — Node.js is not available on the server
+- **SSH key is passphrase-protected.** Direct `ssh`/`scp` fails without loading the key first. Use ssh-agent in the same shell context:
+
+```bash
+eval $(ssh-agent -s) && \
+printf '#!/bin/sh\necho "PASSPHRASE"' > /tmp/askpass.sh && chmod +x /tmp/askpass.sh && \
+DISPLAY=fake SSH_ASKPASS=/tmp/askpass.sh ssh-add ~/.ssh/ebmsnova 2>/dev/null && \
+# scp / ssh commands here
+rm /tmp/askpass.sh
+```
 
 ### Known Open Issues (production)
 

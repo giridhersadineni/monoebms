@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <style>
-@page { size: A4 landscape; margin: 6mm 5mm; }
+@page { size: A4 landscape; margin: 1in; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

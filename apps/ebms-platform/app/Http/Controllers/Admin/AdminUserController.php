@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AdminFeature;
 use App\Enums\AdminRole;
 use App\Http\Controllers\Controller;
 use App\Models\AdminUser;
@@ -63,5 +64,33 @@ class AdminUserController extends Controller
         $adminUser->update(['password' => Hash::make($validated['password'])]);
 
         return back()->with('success', 'Password reset successfully.');
+    }
+
+    public function permissions(AdminUser $adminUser): View
+    {
+        $grouped = AdminFeature::grouped();
+        return view('admin.admin-users.permissions', compact('adminUser', 'grouped'));
+    }
+
+    public function savePermissions(Request $request, AdminUser $adminUser): RedirectResponse
+    {
+        $validSlugs = collect(AdminFeature::cases())->map(fn($f) => $f->value)->all();
+
+        if ($request->input('_reset')) {
+            $adminUser->update(['permissions' => null]);
+            return redirect()->route('admin.admin-users.permissions', $adminUser)
+                ->with('success', "Permissions reset to role defaults for {$adminUser->name}.");
+        }
+
+        // Save exactly what was checked — switches user to explicit mode (role defaults no longer apply)
+        $permissions = collect($request->input('permissions', []))
+            ->filter(fn($v) => in_array($v, $validSlugs, true))
+            ->values()
+            ->all();
+
+        $adminUser->update(['permissions' => $permissions]);
+
+        return redirect()->route('admin.admin-users.permissions', $adminUser)
+            ->with('success', "Permissions updated for {$adminUser->name}.");
     }
 }

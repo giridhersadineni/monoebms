@@ -8,10 +8,12 @@
             <h1 class="text-xl font-semibold text-slate-800">Exams</h1>
             <p class="text-sm text-slate-500 mt-0.5">Manage exams, status and fee configuration</p>
         </div>
+        @if(auth('admin')->user()->canAccess('exams.edit'))
         <a href="{{ route('admin.exams.create') }}"
            class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             + New Exam
         </a>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -29,6 +31,14 @@
                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-40 bg-white
                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
                       font-mono placeholder:font-sans placeholder:text-slate-400">
+        <select name="exam_type"
+                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-slate-700">
+            <option value="">All Types</option>
+            <option value="regular"       {{ request('exam_type') === 'regular'       ? 'selected' : '' }}>Regular</option>
+            <option value="supplementary" {{ request('exam_type') === 'supplementary' ? 'selected' : '' }}>Supply</option>
+            <option value="improvement"   {{ request('exam_type') === 'improvement'   ? 'selected' : '' }}>Instant</option>
+        </select>
         <input type="number" name="year" value="{{ request('year') }}"
                placeholder="Year"
                class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-28 bg-white
@@ -38,7 +48,7 @@
                 class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Filter
         </button>
-        @if(request('status') || request('course') || request('year'))
+        @if(request('status') || request('course') || request('year') || request('exam_type'))
             <a href="{{ route('admin.exams.index') }}"
                class="text-slate-500 hover:text-slate-700 text-sm py-2 hover:underline">Clear</a>
         @endif
@@ -78,8 +88,10 @@
                         <div class="flex gap-3">
                             <a href="{{ route('admin.exams.show', $exam) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">View</a>
+                            @if(auth('admin')->user()->canAccess('exams.edit'))
                             <a href="{{ route('admin.exams.edit', $exam) }}"
                                class="text-slate-500 hover:underline text-xs font-medium">Edit</a>
+                            @endif
                         </div>
                     </td>
                 </tr>

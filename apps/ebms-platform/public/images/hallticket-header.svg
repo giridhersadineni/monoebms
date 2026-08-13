@@ -1,0 +1,20 @@
+<svg width="790" height="135" viewBox="0 0 790 135" xmlns="http://www.w3.org/2000/svg">
+  <rect width="790" height="135" fill="white"/>
+  <g transform="translate(6,6)">
+    <circle cx="58" cy="58" r="56" fill="#f6de3d" stroke="#1b5e20" stroke-width="2"/>
+    <circle cx="58" cy="58" r="45" fill="#d8d8d8" stroke="#1b5e20" stroke-width="2"/>
+    <circle cx="58" cy="58" r="18" fill="#b0b0b0" stroke="#2f2f2f" stroke-width="1.5"/>
+    <path d="M58 18 L64 34 L81 34 L67 44 L72 60 L58 50 L44 60 L49 44 L35 34 L52 34 Z" fill="#c62828"/>
+    <path d="M58 98 C42 90 34 74 34 58 C34 42 44 30 58 24 C72 30 82 42 82 58 C82 74 74 90 58 98 Z" fill="none" stroke="#455a64" stroke-width="4"/>
+    <circle cx="58" cy="58" r="52" fill="none" stroke="#0d47a1" stroke-width="2" stroke-dasharray="3 4"/>
+  </g>
+  <text x="116" y="48" font-family="Times New Roman, serif" font-size="28" fill="#1e63b6" letter-spacing="0.5">
+    UNIVERSITY ARTS &amp; SCIENCE COLLEGE
+  </text>
+  <text x="370" y="78" text-anchor="middle" font-family="Georgia, serif" font-size="25" fill="black">
+    (Autonomous)
+  </text>
+  <text x="420" y="110" text-anchor="middle" font-family="Georgia, serif" font-size="25" fill="black">
+    KAKATIYA UNIVERSITY, Subedari, Warangal (T.S.)
+  </text>
+</svg>

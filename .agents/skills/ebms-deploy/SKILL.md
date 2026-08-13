@@ -11,11 +11,20 @@ Deploy `apps/ebms-platform/` to the production cPanel server.
 
 When the user says "deploy", "push to production", "deploy to server", or similar for the EBMS platform app.
 
-## Server details (from `apps/ebms-platform/deploy.env`)
+## Server details
 
 - **SSH:** `ssh -i ~/.ssh/ebmsnova -p 21098 uascexams@198.54.114.171`
 - **App path:** `/home/uascexams/ebmsnova.uasckuexams.in`
 - **Node.js is NOT available on the server** — build assets locally and scp `public/build/`
+- **The SSH key (`~/.ssh/ebmsnova`) is passphrase-protected.** Direct `ssh`/`scp` fails without loading the key into ssh-agent first. Always use this pattern at the start of every deploy:
+
+```bash
+eval $(ssh-agent -s) && \
+printf '#!/bin/sh\necho "PASSPHRASE"' > /tmp/askpass.sh && chmod +x /tmp/askpass.sh && \
+DISPLAY=fake SSH_ASKPASS=/tmp/askpass.sh ssh-add ~/.ssh/ebmsnova 2>/dev/null && \
+echo "Key loaded"
+# then run scp/ssh in the same shell — rm /tmp/askpass.sh when done
+```
 
 ## Instructions
 

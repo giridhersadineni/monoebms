@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\Student\AuthController;
+use App\Http\Controllers\Student\SsoController;
 use App\Http\Controllers\Student\ChallanController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\EnrollmentController;
+use App\Http\Controllers\Student\HallTicketController;
 use App\Http\Controllers\Student\PrintApplicationController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\RevaluationController;
 use Illuminate\Support\Facades\Route;
+
+// SSO from legacy portal (no auth required, no CSRF)
+Route::get('/sso', [SsoController::class, 'handle'])->name('sso');
 
 // Guest only
 Route::middleware('guest:student')->group(function () {
@@ -40,6 +45,7 @@ Route::middleware('auth:student')->group(function () {
     Route::get('/enrollments/subjects', [EnrollmentController::class, 'selectSubjects'])->name('enrollments.subjects');
     Route::post('/enrollments/confirm', [EnrollmentController::class, 'confirm'])->name('enrollments.confirm');
     Route::post('/enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store');
+    Route::get('/enrollments/{enrollment}/success', [EnrollmentController::class, 'success'])->name('enrollments.success');
 
     // Results
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
@@ -50,6 +56,9 @@ Route::middleware('auth:student')->group(function () {
 
     // Print Application
     Route::get('/enrollments/{enrollment}/application', [PrintApplicationController::class, 'show'])->name('enrollments.application');
+    Route::get('/enrollments/{enrollment}/hall-ticket', [HallTicketController::class, 'show'])
+        ->middleware('feature:hall_ticket')
+        ->name('enrollments.hall-ticket');
 
     // Revaluation
     Route::get('/revaluation', [RevaluationController::class, 'index'])->name('revaluation.index');

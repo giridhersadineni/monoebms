@@ -79,7 +79,7 @@
                         @foreach($availableSubjects as $subject)
                         <option value="{{ $subject->id }}">
                             {{ $subject->code }} — {{ $subject->name }}
-                            ({{ $subject->course }}, {{ strtoupper($subject->medium) }}, Sem {{ $subject->semester }})
+                            ({{ strtoupper($subject->medium) }}, Sem {{ $subject->semester }})
                         </option>
                         @endforeach
                     </select>

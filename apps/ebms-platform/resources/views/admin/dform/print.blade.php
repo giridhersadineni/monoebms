@@ -64,15 +64,15 @@
         }
 
         .ht-cell {
-            width: 20%;
+            width: 25%;
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
-            padding: 8px 4px;
+            padding: 14px 8px;
             text-align: center;
             font-family: 'Courier New', monospace;
-            font-size: 13px;
+            font-size: 22px;
             font-weight: bold;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .footer {
@@ -166,10 +166,10 @@
             @foreach($hallTickets as $ht)
                 <div class="ht-cell">{{ $ht }}</div>
             @endforeach
-            {{-- pad to complete the last row (5 columns) --}}
-            @php $rem = $hallTickets->count() % 5; @endphp
+            {{-- pad to complete the last row (4 columns) --}}
+            @php $rem = $hallTickets->count() % 4; @endphp
             @if($rem > 0)
-                @for($i = 0; $i < 5 - $rem; $i++)
+                @for($i = 0; $i < 4 - $rem; $i++)
                     <div class="ht-cell" style="color:transparent;">—</div>
                 @endfor
             @endif
