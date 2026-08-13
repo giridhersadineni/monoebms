@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ebms-deploy": {
+      "source": "/Users/giridher/source/monoebms/ebms-deploy",
+      "sourceType": "local",
+      "computedHash": "58f930fce19c5ee29e607077ac2181fc5cab3e89e77bc822c3e279733b1b4cc0"
+    }
+  }
+}

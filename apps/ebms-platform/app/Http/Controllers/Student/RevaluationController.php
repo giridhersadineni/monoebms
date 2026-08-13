@@ -35,7 +35,7 @@ class RevaluationController extends Controller
     {
         $student = Auth::guard('student')->user();
 
-        if ($enrollment->student_id !== $student->id) {
+        if ((int) $enrollment->student_id !== (int) $student->id) {
             abort(403);
         }
 
@@ -43,12 +43,12 @@ class RevaluationController extends Controller
             abort(404, 'Revaluation is not open for this exam.');
         }
 
-        $failedResults = $enrollment->results()
+        // Revaluation is available for all papers the student sat, including passed ones.
+        $eligibleResults = $enrollment->results()
             ->with('subject')
-            ->whereIn('result', ['F', 'R'])
             ->get();
 
-        return view('student.revaluation.apply', compact('student', 'enrollment', 'failedResults'));
+        return view('student.revaluation.apply', compact('student', 'enrollment', 'eligibleResults'));
     }
 
     public function store(RevaluationRequest $request): RedirectResponse
@@ -56,7 +56,7 @@ class RevaluationController extends Controller
         $student = Auth::guard('student')->user();
         $enrollment = ExamEnrollment::findOrFail($request->enrollment_id);
 
-        if ($enrollment->student_id !== $student->id) {
+        if ((int) $enrollment->student_id !== (int) $student->id) {
             abort(403);
         }
 
@@ -64,7 +64,7 @@ class RevaluationController extends Controller
         $fee = count($subjectIds) * self::FEE_PER_PAPER;
 
         try {
-            DB::transaction(function () use ($student, $enrollment, $subjectIds, $fee) {
+            $revaluation = DB::transaction(function () use ($student, $enrollment, $subjectIds, $fee) {
                 $revaluation = RevaluationEnrollment::create([
                     'original_enrollment_id' => $enrollment->id,
                     'exam_id'    => $enrollment->exam_id,
@@ -83,12 +83,14 @@ class RevaluationController extends Controller
                         'subject_code' => $subject->code,
                     ]);
                 }
+
+                return $revaluation;
             });
         } catch (UniqueConstraintViolationException) {
             return back()->withErrors(['error' => 'You have already applied for revaluation in this exam.']);
         }
 
-        return redirect()->route('student.revaluation.index')
-            ->with('success', "Revaluation application submitted. Fee: ₹{$fee}. Please pay via challan.");
+        return redirect()->route('student.revaluation.challan', $revaluation)
+            ->with('success', "Revaluation application submitted. Fee: ₹{$fee}.");
     }
 }

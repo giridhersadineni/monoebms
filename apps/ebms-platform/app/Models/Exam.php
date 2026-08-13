@@ -66,6 +66,12 @@ class Exam extends Model
         return $this->status === self::STATUS_RUNNING;
     }
 
+    /** True when the exam has reached a stage where results may be shown to students */
+    public function isResultsEligibleStatus(): bool
+    {
+        return in_array($this->status, [self::STATUS_CLOSED, self::STATUS_REVALOPEN], true);
+    }
+
     public function scopeForCourse($query, string $course)
     {
         return $query->where('course', $course);

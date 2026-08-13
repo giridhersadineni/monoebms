@@ -4,6 +4,8 @@
         'paid'              => ['bg-emerald-50', 'text-emerald-800', 'ring-emerald-200'],
         'challan_submitted' => ['bg-amber-50',   'text-amber-800',   'ring-amber-200'],
         'pending'           => ['bg-stone-100',  'text-stone-600',   'ring-stone-200'],
+        'confirmed'         => ['bg-blue-50',    'text-blue-800',    'ring-blue-200'],
+        'processed'         => ['bg-emerald-50', 'text-emerald-800', 'ring-emerald-200'],
         'open'              => ['bg-blue-50',    'text-blue-800',    'ring-blue-200'],
         'closed'            => ['bg-red-50',     'text-red-700',     'ring-red-200'],
         'NOTIFY'            => ['bg-amber-50',   'text-amber-800',   'ring-amber-200'],

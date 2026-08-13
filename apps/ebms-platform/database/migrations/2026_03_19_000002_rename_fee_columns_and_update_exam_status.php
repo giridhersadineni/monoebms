@@ -9,21 +9,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Rename fee_per_subject → fee_supply_upto2 and drop fee_mode
-        Schema::table('exams', function (Blueprint $table) {
-            $table->renameColumn('fee_per_subject', 'fee_supply_upto2');
-        });
+        // Guard: skip if base migration already has the correct column names
+        if (Schema::hasColumn('exams', 'fee_per_subject')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->renameColumn('fee_per_subject', 'fee_supply_upto2');
+            });
+        }
 
-        Schema::table('exams', function (Blueprint $table) {
-            $table->dropColumn('fee_mode');
-        });
+        if (Schema::hasColumn('exams', 'fee_mode')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->dropColumn('fee_mode');
+            });
+        }
 
-        // Migrate existing status values before changing the enum
+        // Migrate existing status values (safe no-op on fresh SQLite)
         DB::table('exams')->where('status', 'open')->update(['status' => 'RUNNING']);
         DB::table('exams')->whereIn('status', ['closed', 'cancelled'])->update(['status' => 'CLOSED']);
 
-        // Change the status enum to the new set of values
-        DB::statement("ALTER TABLE exams MODIFY COLUMN status ENUM('NOTIFY','RUNNING','REVALOPEN','CLOSED') NOT NULL DEFAULT 'NOTIFY'");
+        // Change the status enum — only on MariaDB/MySQL
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE exams MODIFY COLUMN status ENUM('NOTIFY','RUNNING','REVALOPEN','CLOSED') NOT NULL DEFAULT 'NOTIFY'");
+        }
     }
 
     public function down(): void

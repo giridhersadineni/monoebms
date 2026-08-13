@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ResultEntryRequest;
+use App\Enums\AdminFeature;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
 use App\Models\Result;
@@ -22,7 +23,49 @@ class ResultController extends Controller
     {
         $exams = Exam::orderByDesc('id')->get();
 
-        return view('admin.results.index', compact('exams'));
+        return view('admin.results.index', [
+            'exams' => $exams,
+            'matches' => collect(),
+            'hallTicket' => null,
+        ]);
+    }
+
+    public function lookup(Request $request): View|RedirectResponse
+    {
+        $examId = $request->get('exam_id');
+        $hallTicket = trim((string) $request->get('hall_ticket'));
+
+        if ($hallTicket !== '') {
+            $enrollments = ExamEnrollment::where('hall_ticket', $hallTicket)
+                ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+                ->with('exam')
+                ->latest('enrolled_at')
+                ->get();
+
+            if ($enrollments->count() === 1) {
+                return redirect()->route('admin.results.show', $enrollments->first());
+            }
+
+            if ($enrollments->count() > 1) {
+                $exams = Exam::orderByDesc('id')->get();
+
+                return view('admin.results.index', [
+                    'exams' => $exams,
+                    'matches' => $enrollments,
+                    'hallTicket' => $hallTicket,
+                ]);
+            }
+
+            return back()->withErrors(['hall_ticket' => "No enrollment found for hall ticket {$hallTicket}."]);
+        }
+
+        if ($examId) {
+            $exam = Exam::findOrFail($examId);
+
+            return redirect()->route('admin.results.records', $exam);
+        }
+
+        return back()->withErrors(['lookup' => 'Select an exam or enter a hall ticket.']);
     }
 
     public function entryForm(Exam $exam): View
@@ -37,6 +80,8 @@ class ResultController extends Controller
 
     public function store(ResultEntryRequest $request): RedirectResponse
     {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+
         DB::transaction(function () use ($request) {
             foreach ($request->results as $enrollmentId => $subjectResults) {
                 $enrollment = ExamEnrollment::findOrFail($enrollmentId);
@@ -73,6 +118,8 @@ class ResultController extends Controller
 
     public function processGpa(Exam $exam): RedirectResponse
     {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+
         $this->gpaCalculator->calculateBatch($exam->id);
 
         return back()->with('success', "GPA calculated for all enrollments in {$exam->name}.");
@@ -83,5 +130,65 @@ class ResultController extends Controller
         $enrollment->load(['student', 'exam', 'results.subject', 'gpa']);
 
         return view('admin.results.show', compact('enrollment'));
+    }
+
+    public function updateResult(Request $request, ExamEnrollment $enrollment, Result $result): RedirectResponse
+    {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+        abort_unless($result->enrollment_id === $enrollment->id, 404);
+
+        $validated = $request->validate([
+            'ext' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+            'int' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+        ]);
+
+        $isAbsentExt = strtoupper($validated['ext']) === 'AB';
+        $isAbsentInt = strtoupper($validated['int']) === 'AB';
+        $extMarks    = $isAbsentExt ? null : (int) $validated['ext'];
+        $intMarks    = $isAbsentInt ? null : (int) $validated['int'];
+
+        if (($extMarks ?? 0) > 100 || ($intMarks ?? 0) > 20) {
+            return back()->with('error', 'Ext marks must be ≤ 100 and Int marks ≤ 20.');
+        }
+
+        $computed = $this->gpaCalculator->gradeFromMarks($extMarks, $intMarks, $isAbsentExt, $isAbsentInt);
+
+        $result->update(array_merge($computed, [
+            'ext_marks'     => $extMarks,
+            'int_marks'     => $intMarks,
+            'is_absent_ext' => $isAbsentExt,
+            'is_absent_int' => $isAbsentInt,
+        ]));
+
+        return back()->with('success', "Marks updated for {$result->subject?->code}. Re-process GPA to refresh SGPA/CGPA.");
+    }
+
+    public function records(Request $request, Exam $exam): View
+    {
+        $sortable = ['hall_ticket', 'subject_code', 'ext_marks', 'int_marks', 'total_marks', 'grade', 'result', 'credits'];
+        $sort = in_array($request->get('sort'), $sortable, true) ? $request->get('sort') : 'hall_ticket';
+        $dir  = $request->get('dir') === 'desc' ? 'desc' : 'asc';
+
+        $query = Result::where('exam_id', $exam->id)->with(['enrollment.student', 'subject']);
+
+        if ($q = $request->get('q')) {
+            $query->where(function ($w) use ($q) {
+                $w->where('hall_ticket', 'like', "%{$q}%")
+                    ->orWhereHas('enrollment.student', fn ($s) => $s->where('name', 'like', "%{$q}%"))
+                    ->orWhereHas('subject', fn ($s) => $s->where('code', 'like', "%{$q}%")->orWhere('name', 'like', "%{$q}%"));
+            });
+        }
+
+        if ($sort === 'subject_code') {
+            $query->join('subjects', 'subjects.id', '=', 'results.subject_id')
+                ->orderBy('subjects.code', $dir)
+                ->select('results.*');
+        } else {
+            $query->orderBy($sort, $dir);
+        }
+
+        $results = $query->paginate(50)->withQueryString();
+
+        return view('admin.results.records', compact('exam', 'results', 'sort', 'dir'));
     }
 }

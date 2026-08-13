@@ -28,6 +28,36 @@
     <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
 </div>
 
+{{-- Print header (only visible when printing) --}}
+<div class="print-only" style="display:none;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:14px;text-align:center;">
+    <img src="{{ asset('images/college-header.jpg') }}" alt="University Arts &amp; Science College" style="max-width:100%;height:auto;max-height:60px;display:block;margin:0 auto 4px;">
+    <p style="font-size:10px;font-weight:700;color:#333;margin:0 0 10px;letter-spacing:.2px;">An Autonomous Institute under Kakatiya University, Subedari, Hanamkonda, Warangal, Telangana State-506001</p>
+    <p style="font-size:13px;font-weight:700;color:#000;margin:0 0 2px;">{{ $exam->name }} — Semester {{ $exam->semester }}</p>
+    <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
+</div>
+
+@php
+    $revalEligible = $exam->revaluation_open
+        && $enrollment->results->contains(fn ($r) => in_array($r->result, ['F', 'R'], true));
+@endphp
+@if($revalEligible)
+<div class="card animate-in delay-1 no-print" style="padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#FFFBEB;border:1px solid #FCD34D;border-left:4px solid var(--amber);">
+    <div>
+        <p style="font-size:14px;font-weight:700;color:#92400E;margin:0 0 2px;">Revaluation is open for this exam</p>
+        <p style="font-size:12px;color:#78350F;margin:0;">
+            @if($enrollment->revaluation)
+                You applied for revaluation on {{ $enrollment->revaluation->created_at->format('d M Y') }} — status: {{ ucfirst($enrollment->revaluation->status) }}.
+            @else
+                You have failed/withheld papers eligible for revaluation.
+            @endif
+        </p>
+    </div>
+    @unless($enrollment->revaluation)
+    <a href="{{ route('student.revaluation.show', $enrollment) }}" class="btn-primary btn-sm">Apply for Revaluation →</a>
+    @endunless
+</div>
+@endif
+
 {{-- Student info header --}}
 <div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;">
     <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $student->name }}</p>
@@ -161,27 +191,38 @@
 </div>
 @endif
 
-{{-- Grade Scale Legend --}}
-<div class="animate-in delay-4" style="background:#F7F6F3;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;">
-    <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Grade Scale</p>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        @foreach([
-            ['O', '≥ 85', 'var(--teal)', 'rgba(13,148,136,.1)', 'rgba(13,148,136,.25)'],
-            ['A', '≥ 70', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['B', '≥ 60', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['C', '≥ 55', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['D', '≥ 50', 'var(--navy)', '#EEF0F3', 'var(--border)'],
-            ['E', '≥ 40', 'var(--amber)', '#FFFBEB', '#FCD34D'],
-            ['F', 'FAIL', '#DC2626', '#FEF2F2', '#FECACA'],
-        ] as [$grade, $range, $color, $bg, $border])
-        <div style="display:flex;align-items:center;gap:6px;background:{{ $bg }};border:1px solid {{ $border }};border-radius:8px;padding:4px 10px;">
-            <span style="font-size:14px;font-weight:700;color:{{ $color }};font-family:'Fraunces',serif;">{{ $grade }}</span>
-            <span style="font-size:11px;color:var(--muted);">{{ $range }}</span>
-        </div>
-        @endforeach
+{{-- Result --}}
+@if($enrollment->gpa && $enrollment->gpa->result)
+@php
+    $res = strtoupper($enrollment->gpa->result ?? '');
+    $resLabel = match(true) {
+        $res === 'R' => 'Promoted',
+        $res === 'P' => 'Passed',
+        default      => $enrollment->gpa->result,
+    };
+    $resBg = match(true) {
+        $res === 'R' || $res === 'PROMOTED' || str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border-color:#FECACA;color:#DC2626;',
+        $res === 'P' || str_contains($res, 'PASS') => 'background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25);color:var(--teal);',
+        default => 'background:#EEF0F3;border-color:var(--border);color:var(--muted);'
+    };
+@endphp
+<div class="card animate-in delay-4" style="overflow:hidden;margin-bottom:14px;">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
+        <p style="font-size:13px;font-weight:700;color:var(--navy);margin:0;letter-spacing:.3px;text-transform:uppercase;">Result</p>
     </div>
-    <p style="font-size:11px;color:var(--muted);margin:10px 0 0;">
-        Division: ≥7.00 First with Distinction · ≥6.00 First · ≥5.00 Second · ≥4.00 Pass
+    <div style="padding:20px 22px;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;padding:14px 26px;{{ $resBg }}border:1px solid;border-radius:12px;">
+            <p class="font-display" style="font-size:22px;font-weight:700;margin:0;line-height:1;">{{ $resLabel }}</p>
+            <p style="font-size:10px;font-weight:700;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin:5px 0 0;">Result</p>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Result code legend --}}
+<div class="animate-in delay-4" style="background:#F7F6F3;border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:24px;">
+    <p style="font-size:11px;color:var(--muted);margin:0;">
+        Result: <strong style="color:var(--navy);">R</strong> = Promoted · <strong style="color:var(--navy);">P</strong> = Passed
     </p>
 </div>
 

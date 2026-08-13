@@ -16,7 +16,7 @@ class ResultController extends Controller
         $student = Auth::guard('student')->user();
 
         $enrollments = $student->enrollments()
-            ->with(['exam', 'gpa'])
+            ->with(['exam', 'gpa', 'results', 'revaluation'])
             ->feePaid()
             ->whereHas('exam', fn ($q) => $q->where('results_visible', true))
             ->latest('enrolled_at')
@@ -35,11 +35,15 @@ class ResultController extends Controller
 
         $enrollment = ExamEnrollment::where('exam_id', $exam->id)
             ->where('student_id', $student->id)
-            ->with(['results.subject', 'gpa'])
+            ->with(['results.subject', 'gpa', 'revaluation'])
             ->firstOrFail();
 
         if (! $enrollment->isFeePaid()) {
             abort(403, 'Results are available only after fee payment is confirmed.');
+        }
+
+        if (! $exam->results_visible || ! $exam->isResultsEligibleStatus()) {
+            abort(403, 'Results for this exam are not yet published.');
         }
 
         return view('student.results.show', compact('student', 'exam', 'enrollment'));

@@ -10,13 +10,20 @@ class RevaluationEnrollment extends Model
 {
     protected $fillable = [
         'original_enrollment_id', 'exam_id', 'student_id', 'hall_ticket',
-        'fee_amount', 'fee_paid_at', 'challan_number', 'status',
+        'fee_amount', 'fee_paid_at', 'challan_number', 'challan_submitted_on',
+        'challan_received_by', 'status',
     ];
 
     protected $casts = [
-        'fee_paid_at' => 'datetime',
-        'fee_amount'  => 'integer',
+        'fee_paid_at'          => 'datetime',
+        'challan_submitted_on' => 'date',
+        'fee_amount'           => 'integer',
     ];
+
+    public function isFeePaid(): bool
+    {
+        return $this->fee_paid_at !== null;
+    }
 
     public function originalEnrollment(): BelongsTo
     {

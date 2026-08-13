@@ -23,6 +23,10 @@ class EnrollmentController extends Controller
             $query->forExam($examId);
         }
 
+        if ($year = $request->integer('year')) {
+            $query->whereHas('exam', fn ($q) => $q->where('year', $year));
+        }
+
         if ($request->filled('fee_status')) {
             match ($request->fee_status) {
                 'paid'   => $query->feePaid(),

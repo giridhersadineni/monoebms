@@ -85,4 +85,94 @@ class AuthTest extends TestCase
         $this->post('/student/logout')->assertRedirect('/student/login');
         $this->assertGuest('student');
     }
+
+    // ── Legacy SSO Tests ────────────────────────────────────────────
+
+    private function generateSsoUrl(string $ht, ?int $ts = null, ?string $secret = null): string
+    {
+        $ts     = $ts ?? time();
+        $secret = $secret ?? config('auth.sso_secret');
+        $sig    = hash_hmac('sha256', $ht . '|' . $ts, $secret);
+
+        return '/student/sso?' . http_build_query([
+            'ht'  => $ht,
+            'ts'  => $ts,
+            'sig' => $sig,
+        ]);
+    }
+
+    #[Test]
+    public function sso_login_succeeds_with_valid_token(): void
+    {
+        $student = Student::factory()->create([
+            'hall_ticket' => 'SSO1234567',
+            'dob'         => '2004-03-15',
+            'scheme'      => '2026',
+        ]);
+
+        $url      = $this->generateSsoUrl('SSO1234567');
+        $response = $this->get($url);
+
+        $response->assertRedirect('/student/dashboard');
+        $this->assertAuthenticatedAs($student, 'student');
+    }
+
+    #[Test]
+    public function sso_login_rejects_expired_token(): void
+    {
+        Student::factory()->create([
+            'hall_ticket' => 'SSO1234567',
+            'scheme'      => '2026',
+        ]);
+
+        $url      = $this->generateSsoUrl('SSO1234567', time() - 120);
+        $response = $this->get($url);
+
+        $response->assertRedirect('/student/login');
+        $response->assertSessionHasErrors('hall_ticket');
+        $this->assertGuest('student');
+    }
+
+    #[Test]
+    public function sso_login_rejects_tampered_signature(): void
+    {
+        Student::factory()->create([
+            'hall_ticket' => 'SSO1234567',
+            'scheme'      => '2026',
+        ]);
+
+        $ts  = time();
+        $url = '/student/sso?' . http_build_query([
+            'ht'  => 'SSO1234567',
+            'ts'  => $ts,
+            'sig' => 'tampered_signature_value',
+        ]);
+
+        $response = $this->get($url);
+
+        $response->assertRedirect('/student/login');
+        $response->assertSessionHasErrors('hall_ticket');
+        $this->assertGuest('student');
+    }
+
+    #[Test]
+    public function sso_login_rejects_missing_parameters(): void
+    {
+        $response = $this->get('/student/sso');
+
+        $response->assertRedirect('/student/login');
+        $response->assertSessionHasErrors('hall_ticket');
+        $this->assertGuest('student');
+    }
+
+    #[Test]
+    public function sso_login_fails_for_nonexistent_student(): void
+    {
+        $url      = $this->generateSsoUrl('DOESNOTEXIST');
+        $response = $this->get($url);
+
+        $response->assertRedirect('/student/login');
+        $response->assertSessionHasErrors('hall_ticket');
+        $this->assertGuest('student');
+    }
 }

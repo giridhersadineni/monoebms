@@ -8,12 +8,18 @@
             <h1 class="text-xl font-bold text-gray-800">Result Entry</h1>
             <p class="text-sm text-gray-500">{{ $exam->name }}</p>
         </div>
-        <form method="POST" action="{{ route('admin.results.process', $exam) }}">
-            @csrf
-            <button class="bg-blue-700 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
-                Calculate GPA for All
-            </button>
-        </form>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.results.records', $exam) }}"
+               class="border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50">
+                View Results
+            </a>
+            <form method="POST" action="{{ route('admin.results.process', $exam) }}">
+                @csrf
+                <button class="bg-blue-700 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
+                    Calculate GPA for All
+                </button>
+            </form>
+        </div>
     </div>
 
     <form method="POST" action="{{ route('admin.results.store') }}">

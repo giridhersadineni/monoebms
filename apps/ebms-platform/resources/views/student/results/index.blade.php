@@ -17,11 +17,17 @@
             <p style="font-size:12px;color:var(--muted);margin:0;">Semester {{ $enrollment->exam?->semester }}</p>
         </div>
         <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+            @php
+                $resultsEligible = $enrollment->exam?->results_visible && $enrollment->exam?->isResultsEligibleStatus();
+            @endphp
+            @if($resultsEligible)
             @if($enrollment->gpa)
+            @if($enrollment->gpa->result !== 'R')
             <div style="text-align:right;">
                 <p class="font-display" style="font-size:22px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
                 <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:2px 0 0;">SGPA</p>
             </div>
+            @endif
             @php
                 $res = strtoupper($enrollment->gpa->result ?? '');
                 $resBadge = match(true) {
@@ -34,7 +40,20 @@
             <span class="badge {{ $resBadge }}" style="font-size:11px;">{{ $enrollment->gpa->result }}</span>
             @endif
             @endif
+            @php
+                $revalEligible = $enrollment->exam?->revaluation_open
+                    && $enrollment->results->contains(fn ($r) => in_array($r->result, ['F', 'R'], true));
+            @endphp
+            @if($revalEligible && ! $enrollment->revaluation)
+            <a href="{{ route('student.revaluation.show', $enrollment) }}" class="btn-sm" style="display:inline-flex;align-items:center;padding:8px 14px;border:1px solid #FCD34D;background:#FFFBEB;color:#92400E;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">Apply for Revaluation</a>
+            @elseif($revalEligible && $enrollment->revaluation)
+            <span class="badge" style="font-size:11px;">Reval: {{ ucfirst($enrollment->revaluation->status) }}</span>
+            <a href="{{ route('student.revaluation.challan', $enrollment->revaluation) }}" class="btn-sm" style="display:inline-flex;align-items:center;padding:8px 14px;border:1px solid var(--border);background:#fff;color:var(--navy);border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">Print Challan</a>
+            @endif
             <a href="{{ route('student.results.show', $enrollment->exam) }}" class="btn-primary btn-sm">View →</a>
+            @else
+            <span style="font-size:12px;color:var(--muted);">Not yet published</span>
+            @endif
         </div>
     </div>
     @endforeach

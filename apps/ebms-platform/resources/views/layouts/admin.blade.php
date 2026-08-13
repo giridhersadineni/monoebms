@@ -39,7 +39,7 @@
             </button>
             <a href="{{ route('admin.profile') }}" class="font-medium text-white hover:text-blue-300 transition-colors">{{ auth('admin')->user()?->name }}</a>
             <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-medium uppercase tracking-wider text-[10px]">
-                {{ auth('admin')->user()?->role?->value }}
+                {{ auth('admin')->user()?->role?->value ?? 'admin' }}
             </span>
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf

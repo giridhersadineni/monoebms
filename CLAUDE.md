@@ -123,6 +123,8 @@ Student → hasOne(Grade)  ← cumulative CGPA/division
 
 Blade templates with inline styles (CSS variables from `resources/css/app.css`). No JS framework — vanilla JS only where needed, using `nonce="{{ $csp_nonce ?? '' }}"` on all `<script>` tags for CSP compliance. Tailwind CSS 4.0 utility classes used for responsive breakpoints (`sm:`, `hidden sm:block`, etc.).
 
+**Student results page** (`resources/views/student/results/show.blade.php`, route `student.results.show`): reads `$enrollment->gpa->result` which holds a status code — `R` = Promoted, `P` = Passed (plus `PASS`/`FAIL`/`MALP`/`WITH…` variants that drive the badge color). When `result === 'R'` the SGPA tile is hidden (SGPA is withheld for promoted-but-withheld cases). Layout order: student info card (SGPA tile) → paper-wise results → GPA summary → dedicated **Result** card → R/P legend. The grade-scale legend was intentionally removed (do not re-add it).
+
 ### Legacy Data Migration (`ebms:migrate-legacy`)
 
 `app/Console/Commands/MigrateLegacyData.php` — migrates from legacy `uascexams_ebms` DB:
@@ -140,9 +142,11 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - Server credentials: `apps/ebms-platform/deploy.env`
 - SSH: `ssh -i ~/.ssh/ebmsnova -p 21098 uascexams@198.54.114.171`
 - App path: `/home/uascexams/ebmsnova.uasckuexams.in`
+- **The deploy key is passphrase-protected.** `scp`/`ssh` will fail with `Permission denied (publickey)` in a non-interactive shell because it can't prompt for the passphrase. Workaround: copy the key to a temp file, strip the passphrase (`ssh-keygen -p -f <tmpkey> -P "<passphrase>" -N ""`), use the temp key for the transfer, then delete it. The passphrase is NOT stored in the repo — get it from the repo owner. Single-view deploys (Blade only, no routes/PHP/migrations) are just: scp the file + `php artisan optimize:clear`.
 - Pass `--force` to `php artisan migrate` on production only when running non-interactively (e.g. via SSH one-liner); confirm manually when possible
 - **Deploy order matters**: upload route files BEFORE uploading layout/view files that reference those routes. A layout referencing an unregistered route causes ERR_TOO_MANY_REDIRECTS across the entire admin portal.
 - After every deploy run: `php artisan optimize:clear` to flush route/view/config caches
+- Deploys happen off the `release` branch, which multiple people push to — `git push origin release` frequently rejects; `git pull --rebase origin release` before pushing, and expect the occasional same-file conflict to resolve
 - Frontend: run `npm run build` locally and scp `public/build/` to server — Node.js is not available on the server
 - **SSH key is passphrase-protected.** Direct `ssh`/`scp` fails without loading the key first. Use ssh-agent in the same shell context:
 
@@ -158,26 +162,6 @@ rm /tmp/askpass.sh
 
 - `Route [login] not defined` — the `Authenticate` middleware redirects unauthenticated requests to `route('login')`, but under the `admin.` prefix the correct route is `admin.login`. Needs a custom `redirectTo` in the auth middleware or a `withExceptions` redirect override.
 - `getMonthNameAttribute(): Argument #1 must be of type string, null given` — legacy-migrated exams have a numeric `month` stored as a string but some rows have null. Seen on `admin/exams/index`. Pre-existing.
-
-### Troubleshooting: Student sees no papers during enrollment
-
-`EnrollmentController::selectSubjects()` chains 4–5 exact-match filters. Any mismatch silently returns empty. Check in order:
-
-1. `course` — student's `course` must match `subjects.course`
-2. `medium` — must match `subjects.medium` (TM / EM / BM)
-3. `scheme` — must match `subjects.scheme` (integer year, e.g. 2019)
-4. `group_code` — if set on student, only subjects with that `group_code` are returned
-5. Supplementary exams only — student must have `result != 'P'` rows in `results` for a regular exam in the same semester
-
-Fix mismatches via **Admin → Students → \[student\] → Edit** (`/admin/students/{hallTicket}/edit`, requires `admin` or `superadmin` role). Diagnostic tinker query:
-
-```php
-$s = App\Models\Student::where('hall_ticket', 'XXXX')->first();
-$e = App\Models\Exam::find(ID);
-App\Models\Subject::forCourse($s->course)->forSemester($e->semester)
-    ->selectRaw('medium, scheme, group_code, count(*) as cnt')
-    ->groupBy('medium','scheme','group_code')->get();
-```
 
 ## AI Agent Skills
 

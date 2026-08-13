@@ -11,7 +11,7 @@
     <p style="font-size:14px;color:var(--muted);margin:0;">{{ $enrollment->exam?->name }} · ₹275 per paper</p>
 </div>
 
-@if($failedResults->count())
+@if($eligibleResults->count())
 <form method="POST" action="{{ route('student.revaluation.store') }}">
     @csrf
     <input type="hidden" name="enrollment_id" value="{{ $enrollment->id }}">
@@ -21,7 +21,7 @@
             <span style="width:8px;height:8px;background:#DC2626;border-radius:50%;flex-shrink:0;"></span>
             <p style="font-size:14px;font-weight:700;color:var(--navy);margin:0;">Select Papers for Revaluation</p>
         </div>
-        @foreach($failedResults as $result)
+        @foreach($eligibleResults as $result)
         <label style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;" onmouseover="this.style.background='#FAFAF8'" onmouseout="this.style.background='transparent'">
             <input type="checkbox" name="subject_ids[]" value="{{ $result->subject_id }}"
                    style="width:18px;height:18px;border-radius:5px;accent-color:var(--navy);flex-shrink:0;"
@@ -31,7 +31,7 @@
                 <p style="font-size:12px;color:var(--muted);margin:0;font-family:'JetBrains Mono',monospace;">{{ $result->subject?->code }}</p>
             </div>
             <div style="text-align:right;flex-shrink:0;">
-                <p style="font-size:12px;color:var(--muted);margin:0;">Marks: {{ $result->total_marks }} · Grade: <strong style="color:#DC2626;">{{ $result->grade }}</strong></p>
+                <p style="font-size:12px;color:var(--muted);margin:0;">Grade: <strong style="color:var(--navy);">{{ $result->grade }}</strong></p>
             </div>
         </label>
         @endforeach
@@ -79,7 +79,7 @@
         </svg>
     </div>
     <p style="font-size:15px;font-weight:600;color:var(--navy);margin:0 0 6px;">No eligible papers</p>
-    <p style="font-size:13px;color:var(--muted);margin:0;">No failed papers found for revaluation.</p>
+    <p style="font-size:13px;color:var(--muted);margin:0;">No papers found for revaluation.</p>
 </div>
 @endif
 

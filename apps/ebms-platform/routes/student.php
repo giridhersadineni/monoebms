@@ -21,6 +21,11 @@ Route::middleware('guest:student')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('login.submit');
+
+    // Legacy SSO: signed HMAC redirect from students.uasckuexams.in
+    Route::get('/sso', [AuthController::class, 'ssoLogin'])
+        ->middleware('throttle:10,1')
+        ->name('sso');
 });
 
 // Authenticated students
@@ -59,4 +64,5 @@ Route::middleware('auth:student')->group(function () {
     Route::get('/revaluation', [RevaluationController::class, 'index'])->name('revaluation.index');
     Route::get('/revaluation/{enrollment}', [RevaluationController::class, 'show'])->name('revaluation.show');
     Route::post('/revaluation', [RevaluationController::class, 'store'])->name('revaluation.store');
+    Route::get('/revaluation/{revaluation}/challan', [ChallanController::class, 'showRevaluation'])->name('revaluation.challan');
 });
