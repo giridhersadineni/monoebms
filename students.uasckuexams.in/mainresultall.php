@@ -1,5 +1,6 @@
 
 
+
 <html>
     <head>
         <head>
@@ -86,7 +87,7 @@ $hallticket=$_POST['hallticket'];
 $examid=$row['EXAMID'];
 $examtype=$_POST['examtype'];
 $sem=$_POST['SEM'];
-
+echo $sem;
 }
 ?>
   
@@ -141,7 +142,7 @@ if ($conn->connect_error){
     die("connection failed:".mysqli_connect_error());
 }
 else{
-$sql = "select * from  RESULTS where EID=" . $_POST['enrollmentid'];
+$sql = "select * from  rholdernew where EID=" . $_POST['enrollmentid'];
 $nq="select * from enrolledview where haltckt=".$_POST['hallticket'];
 $gpt=0;
  $totalcredit=0;
@@ -286,7 +287,7 @@ $gpa=mysqli_fetch_assoc($gpares);
     <tfoot>
         
         <tr> 
-  <td align="center" colspan='5'><button onclick="print()"><strong>Print<strong></button>
+  <td align="center" colspan='5'><button onclick="myFunction()"><strong>Print<strong></button>
     <!--<a href="enrollments.php" type='button' class="btn btn-default">Back</a>--></td>
   </tr>
     </tfoot>
@@ -295,20 +296,19 @@ $gpa=mysqli_fetch_assoc($gpares);
 
 
       <script>
-            function print() {
-                window.print();
-            }
-        </script>
+function myFunction() {
+    window.print();
+}
+</script>
 <br>
 <div class='tab1'>
-     <!--<h4  align="center" class="text-info">Applications for Revaluation will be Accepted from <strong>10-07-2019</strong> to <strong>18-07-2019</strong> </h4>-->
+     <h4  align="center" class="text-info">Applications for Revaluation will be Accepted from <strong>10-07-2019</strong> to <strong>18-07-2019</strong> </h4>
  
     
 
  <h3 align="center" style='color:CC3300'>O: &gt;=85 to 100;  A: &gt;=70 to &lt;85;   B: &gt;=60 to &lt;70:   
                    C:&gt;=55 to &lt;60;   D:&gt;=50 to &lt;55;   E: &gt;=40 to &lt;50; F:FAIL.
       </h3>
-      <h5>Division :  CGPA 7.00-10.00 (First With Distinction) - CGPA 6.00-6.99 First Division - CGPA 5.00-5.99 Second CGPA 4.00-4.99 Pass</h5>
       <h4  align="center">This information is provided to the candidate on his/her online request and is only a prototype list.<br>
       If any discrepancies in the marks you may be brought to the notice
  of Controller of Examinations University Arts & Science College - Subedari-Warangal</h4>
@@ -322,4 +322,15 @@ $gpa=mysqli_fetch_assoc($gpares);
     <td  align="left" bgcolor="#33b5e5"width="30%"><font color="#FFFFFF">&nbsp;&nbsp;© Copyrights Reserved.2018 all rights reserved @ SYS Technology</td>   
 </tr>
 
-<?php include ("datatablefooter.php"); ?>
+</table>
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({
+          google_ad_client: "ca-pub-5755477602321907",
+          enable_page_level_ads: true
+     });
+</script>
+   
+</body>
+</html>
+

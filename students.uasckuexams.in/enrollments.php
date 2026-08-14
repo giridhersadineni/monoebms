@@ -66,7 +66,7 @@ if ($result->num_rows > 0) {
             //echo '<style="text-align:right;"><a href="getrevchallan.php?studentid='. $row["stid"].'&examid='.$row["EXAMID"].'" class="btn btn-info">Generatechallan</a></p>';
             //print_r($row);
             if($row['REVALOPEN']==1){
-             echo '<a href="applyrevaluation.php?id=' . $row["ID"] . '&examid=' . $row["EXAMID"] . '&hallticket=' . $_COOKIE['userid'] . '" class="btn btn-info">Apply for Revaluation</a>';
+             echo '<a href="applyrevaluation.php?id=' . $row["ID"] . '" class="btn btn-info">Apply for Revaluation</a>';
              }
              echo '</p>';
         }
