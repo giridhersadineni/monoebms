@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ResultEntryRequest;
+use App\Domain\Results\PaperCalculator;
+use App\Domain\Results\PaperMarks;
 use App\Enums\AdminFeature;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
@@ -17,7 +19,10 @@ use Illuminate\View\View;
 
 class ResultController extends Controller
 {
-    public function __construct(private GpaCalculatorService $gpaCalculator) {}
+    public function __construct(
+        private GpaCalculatorService $gpaCalculator,
+        private PaperCalculator $paperCalculator,
+    ) {}
 
     public function index(): View
     {
@@ -138,20 +143,28 @@ class ResultController extends Controller
         abort_unless($result->enrollment_id === $enrollment->id, 404);
 
         $validated = $request->validate([
-            'ext' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
-            'int' => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+            'ext'     => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+            'int'     => ['required', 'string', 'regex:/^(AB|\d{1,3})$/i'],
+            'credits' => ['required', 'numeric', 'min:0', 'max:20'],
         ]);
 
         $isAbsentExt = strtoupper($validated['ext']) === 'AB';
         $isAbsentInt = strtoupper($validated['int']) === 'AB';
         $extMarks    = $isAbsentExt ? null : (int) $validated['ext'];
         $intMarks    = $isAbsentInt ? null : (int) $validated['int'];
+        $credits     = (float) $validated['credits'];
 
         if (($extMarks ?? 0) > 100 || ($intMarks ?? 0) > 20) {
             return back()->with('error', 'Ext marks must be ≤ 100 and Int marks ≤ 20.');
         }
 
-        $computed = $this->gpaCalculator->gradeFromMarks($extMarks, $intMarks, $isAbsentExt, $isAbsentInt);
+        // Preserve the paper's per-subject totals and floatation context so the
+        // recomputed grade matches the migrated result rules.
+        $marks = PaperMarks::fromResult($result)
+            ->withMarks($extMarks, $intMarks, $isAbsentExt, $isAbsentInt)
+            ->withCredits($credits);
+
+        $computed = $this->paperCalculator->calculate($marks)->toArray();
 
         $result->update(array_merge($computed, [
             'ext_marks'     => $extMarks,
@@ -160,7 +173,49 @@ class ResultController extends Controller
             'is_absent_int' => $isAbsentInt,
         ]));
 
-        return back()->with('success', "Marks updated for {$result->subject?->code}. Re-process GPA to refresh SGPA/CGPA.");
+        return back()->with('success', "Marks updated for {$result->subject?->code}. Recalculate GPA to refresh SGPA.");
+    }
+
+    /**
+     * Re-derive one paper's grade from its stored marks and floatation context,
+     * without asking the admin to re-enter anything.
+     */
+    public function recalculateResult(ExamEnrollment $enrollment, Result $result): RedirectResponse
+    {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+        abort_unless($result->enrollment_id === $enrollment->id, 404);
+
+        $before = $result->grade;
+        $this->gpaCalculator->recalculatePaper($result);
+
+        $code    = $result->subject?->code ?? 'paper';
+        $message = $before === $result->grade
+            ? "{$code} recalculated — grade unchanged ({$result->grade})."
+            : "{$code} recalculated — grade {$before} → {$result->grade}.";
+
+        return back()->with('success', $message);
+    }
+
+    /** Recalculate every paper on this enrollment, then its SGPA and overall result. */
+    public function recalculateGpa(ExamEnrollment $enrollment): RedirectResponse
+    {
+        abort_unless(auth('admin')->user()?->canAccess(AdminFeature::ResultsEdit), 403);
+
+        $gpa = DB::transaction(function () use ($enrollment) {
+            $papers = $enrollment->results()->excludeGradeEx()->get();
+
+            foreach ($papers as $paper) {
+                $this->gpaCalculator->recalculatePaper($paper);
+            }
+
+            return $this->gpaCalculator->calculateForEnrollment($enrollment, $papers);
+        });
+
+        if (! $gpa) {
+            return back()->with('error', 'No papers to calculate for this enrollment.');
+        }
+
+        return back()->with('success', "GPA recalculated — SGPA {$gpa->sgpa}, result {$gpa->result}.");
     }
 
     public function records(Request $request, Exam $exam): View

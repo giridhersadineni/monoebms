@@ -73,7 +73,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
     Route::get('/results/lookup', [ResultController::class, 'lookup'])->name('results.lookup');
     Route::get('/results/enrollment/{enrollment}', [ResultController::class, 'show'])->name('results.show');
+    Route::post('/results/enrollment/{enrollment}/subject/{result}/recalculate', [ResultController::class, 'recalculateResult'])->name('results.recalculate-result');
     Route::post('/results/enrollment/{enrollment}/subject/{result}', [ResultController::class, 'updateResult'])->name('results.update-result');
+    Route::post('/results/enrollment/{enrollment}/recalculate-gpa', [ResultController::class, 'recalculateGpa'])->name('results.recalculate-gpa');
     Route::get('/results/{exam}/records', [ResultController::class, 'records'])->name('results.records');
     Route::get('/results/{exam}', [ResultController::class, 'entryForm'])->name('results.entry');
     Route::post('/results', [ResultController::class, 'store'])->name('results.store');
