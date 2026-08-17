@@ -33,11 +33,24 @@ Enter passphrase for /c/Users/girid/.ssh/ebmsnova:
 The agent has no identities.
 ```
 
+**Ask for the passphrase before doing anything else.** Do not start uploading and discover the
+block halfway through a deploy. Open the deploy by asking the user, in chat, one of:
+
+> The deploy key is passphrase-protected. Do you want to (a) run the deploy commands yourself
+> with the `!` prefix so `ssh` prompts you for the passphrase, or (b) give me the passphrase to
+> use for this deploy?
+
+Wait for the answer. (a) is the default and the safer one — the passphrase never leaves their
+terminal. Take (b) only when they choose it; it is per-deploy consent, not standing permission,
+so ask again next time. A passphrase supplied that way is for the commands in that deploy only:
+never echo it back, never put it in a file, a commit, a memory, or this skill.
+
 Two ways forward:
 
 1. **Hand the commands to the user.** Have them run the whole deploy in their own session with
    the `!` prefix, as a single chained block — shell state does not persist between agent tool
-   calls, so an agent loaded in one call is gone by the next.
+   calls, so an agent loaded in one call is gone by the next. `ssh` prompts for the passphrase
+   on their terminal and they type it there.
 2. **Strip the passphrase from a throwaway copy**, only when the user supplies the passphrase:
 
 ```bash
