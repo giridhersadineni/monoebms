@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DetainedListController;
 use App\Http\Controllers\Admin\DFormController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\CourseController;
@@ -80,6 +81,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/results/{exam}', [ResultController::class, 'entryForm'])->name('results.entry');
     Route::post('/results', [ResultController::class, 'store'])->name('results.store');
     Route::post('/results/{exam}/process-gpa', [ResultController::class, 'processGpa'])->name('results.process');
+
+    // Detained List
+    Route::get('/detained', [DetainedListController::class, 'index'])->name('detained.index');
 
     // Revaluations
     Route::get('/revaluations', [RevaluationController::class, 'index'])->name('revaluations.index');

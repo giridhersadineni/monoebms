@@ -109,6 +109,12 @@
                             'permission' => 'results.view',
                         ],
                         [
+                            'route' => 'admin.detained.index',
+                            'label' => 'Detained List',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z"/>',
+                            'permission' => 'results.view',
+                        ],
+                        [
                             'route' => 'admin.revaluations.index',
                             'label' => 'Revaluations',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
