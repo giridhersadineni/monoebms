@@ -9,6 +9,7 @@ use App\Domain\Results\SemesterAggregator;
 use App\Models\ExamEnrollment;
 use App\Models\Gpa;
 use App\Models\Result;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -116,36 +117,18 @@ class GpaCalculatorService
 
     public function calculateDegreeCgpa(int $studentId): array
     {
-        // Get all GPAs for the student grouped by part
-        $part1Gpas = Result::where('hall_ticket', function ($q) use ($studentId) {
-            $q->select('hall_ticket')->from('students')->where('id', $studentId);
-        })
-            ->excludeGradeEx()
-            ->where('part', 1)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->selectRaw('SUM(gp_credits) as total_gpc, SUM(credits) as total_credits')
-            ->first();
+        $papers = $this->bestAttemptPapers(
+            Result::where('results.hall_ticket', function ($q) use ($studentId) {
+                $q->select('hall_ticket')->from('students')->where('id', $studentId);
+            })
+        );
 
-        $part2Gpas = Result::where('hall_ticket', function ($q) use ($studentId) {
-            $q->select('hall_ticket')->from('students')->where('id', $studentId);
-        })
-            ->excludeGradeEx()
-            ->where('part', 2)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->selectRaw('SUM(gp_credits) as total_gpc, SUM(credits) as total_credits')
-            ->first();
+        $part1 = $papers->where('part', 1);
+        $part2 = $papers->where('part', 2);
 
-        $part1Cgpa = ($part1Gpas?->total_credits > 0)
-            ? round($part1Gpas->total_gpc / $part1Gpas->total_credits, 2)
-            : 0.0;
-
-        $part2Cgpa = ($part2Gpas?->total_credits > 0)
-            ? round($part2Gpas->total_gpc / $part2Gpas->total_credits, 2)
-            : 0.0;
-
-        $totalCredits = ($part1Gpas?->total_credits ?? 0) + ($part2Gpas?->total_credits ?? 0);
-        $totalGpc     = ($part1Gpas?->total_gpc ?? 0) + ($part2Gpas?->total_gpc ?? 0);
-        $allCgpa = ($totalCredits > 0) ? round($totalGpc / $totalCredits, 2) : 0.0;
+        $part1Cgpa = $this->cgpaFor($part1);
+        $part2Cgpa = $this->cgpaFor($part2);
+        $allCgpa   = $this->cgpaFor($part1->merge($part2));
 
         return [
             'part1_cgpa'     => $part1Cgpa,
@@ -164,12 +147,45 @@ class GpaCalculatorService
 
     public function hasCoursePassedThreshold(string $hallTicket): bool
     {
-        $totalCredits = Result::forHallTicket($hallTicket)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->excludeGradeEx()
-            ->sum('credits');
+        return $this->bestAttemptPapers(Result::forHallTicket($hallTicket))->sum('credits') >= 164;
+    }
 
-        // Degree pass thresholds
-        return in_array((int) $totalCredits, [164, 181], true) || $totalCredits >= 164;
+    /**
+     * The papers that count toward a degree, one row per paper — the attempt
+     * that earned the most grade points.
+     *
+     * Two things this guards against, both of which inflated the totals:
+     *   - A paper cleared more than once (a re-sit for improvement) used to
+     *     add its credits once per attempt.
+     *   - Papers are matched on the subject *code*, not subject_id. One paper
+     *     has several subjects rows (the unique key is code + group + medium +
+     *     semester + scheme) and separate sittings can point at different
+     *     ones, so subject_id does not identify a paper.
+     *
+     * Only earned passes count: F and AB are not passes, and R (promoted) and
+     * M (malpractice) carry no earned credit either.
+     *
+     * @param  Builder<Result>  $results  Base query, already scoped to one student.
+     * @return Collection<int, Result>
+     */
+    private function bestAttemptPapers(Builder $results): Collection
+    {
+        return $results
+            ->excludeGradeEx()
+            ->whereNotIn('results.result', ['F', 'AB', 'R', 'M'])
+            ->join('subjects', 'subjects.id', '=', 'results.subject_id')
+            // part lives on both tables, so it has to be qualified.
+            ->select('results.part', 'results.credits', 'results.gp_credits', 'subjects.code')
+            ->get()
+            ->groupBy('code')
+            ->map(fn (Collection $attempts) => $attempts->sortByDesc('gp_credits')->first())
+            ->values();
+    }
+
+    private function cgpaFor(Collection $papers): float
+    {
+        $credits = (float) $papers->sum('credits');
+
+        return $credits > 0 ? round((float) $papers->sum('gp_credits') / $credits, 2) : 0.0;
     }
 }

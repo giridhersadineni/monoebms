@@ -83,6 +83,33 @@ class DetainedListTest extends TestCase
     }
 
     #[Test]
+    public function the_same_paper_code_under_two_subject_rows_counts_its_credits_once(): void
+    {
+        $admin   = AdminUser::factory()->admin()->create();
+        $student = Student::factory()->create(['name' => 'Supply Student']);
+
+        // One paper, two subjects rows — same code, different medium. The
+        // regular sitting resolved to one row and the supplementary to the
+        // other, which is how production data ended up double-counted.
+        $regularPaper = Subject::factory()->create(['code' => 'ENG101', 'medium' => 'EM']);
+        $supplyPaper  = Subject::factory()->create(['code' => 'ENG101', 'medium' => 'TM']);
+
+        $regular = ExamEnrollment::factory()->create(['student_id' => $student->id]);
+        $supply  = ExamEnrollment::factory()->create(['student_id' => $student->id]);
+        $this->paper($regular, $regularPaper, 'F', 4.0);
+        $this->paper($supply, $supplyPaper, 'F', 4.0);
+
+        // A passed paper, so the student sits at 4 of 8 credits = 50% and stays
+        // off the list. Counting ENG101 twice would give 4 of 12 = 33.33%.
+        $this->paper($regular, Subject::factory()->create(), 'P', 4.0);
+
+        $response = $this->actingAs($admin, 'admin')->get('/admin/detained?cutoff=50');
+
+        $response->assertOk();
+        $response->assertDontSee('Supply Student');
+    }
+
+    #[Test]
     public function papers_graded_ex_are_left_out_of_the_credit_totals(): void
     {
         $admin   = AdminUser::factory()->admin()->create();

@@ -17,6 +17,8 @@ use Illuminate\View\View;
  * exam selector. Each distinct paper counts its credits once however many
  * attempts it took, and a paper passed on any attempt earns its credits.
  *
+ * "Each distinct paper" means each distinct paper *code* — see detainedRows().
+ *
  * Ported from the legacy backoffice detainedlist.php. Two differences, both
  * forced by this schema:
  *   - Legacy matched RESULTS.HALLTICKET against students.haltckt by string and
@@ -93,15 +95,21 @@ class DetainedListController extends Controller
         // where a whole-numbered credit column otherwise truncates the share.
         $pct = "{$earned} * 100.0 / SUM(t.pcredits)";
 
+        // Collapse on the paper code, not subject_id. The same paper has more
+        // than one subjects row (the unique key is code + group + medium +
+        // semester + scheme), so a regular and a supplementary attempt at one
+        // paper can carry different subject_ids and would otherwise have its
+        // credits counted twice. This is what the legacy report grouped on.
         $perPaper = DB::table('results as r')
             ->join('exam_enrollments as e', 'e.id', '=', 'r.enrollment_id')
-            ->select('e.student_id', 'r.subject_id')
+            ->join('subjects as sub', 'sub.id', '=', 'r.subject_id')
+            ->select('e.student_id', 'sub.code as paper_code')
             ->selectRaw('MAX(COALESCE(r.credits, 0)) as pcredits')
             ->selectRaw("MAX(CASE WHEN r.result = 'P' THEN 1 ELSE 0 END) as passed")
             ->selectRaw('COUNT(*) as attempts')
             // grade is nullable, and `grade <> 'EX'` alone would drop NULL rows.
             ->where(fn ($q) => $q->where('r.grade', '<>', 'EX')->orWhereNull('r.grade'))
-            ->groupBy('e.student_id', 'r.subject_id');
+            ->groupBy('e.student_id', 'sub.code');
 
         if ($course !== '' || $scheme !== '') {
             $perPaper->join('students as sf', 'sf.id', '=', 'e.student_id');
