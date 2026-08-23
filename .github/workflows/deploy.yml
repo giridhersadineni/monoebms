@@ -1,0 +1,183 @@
+name: Deploy
+
+# Fires when a release branch is created (release, release/2026-08, release-v2, …).
+# `create` also fires for tags, so the job guards on ref_type.
+#
+# Note: a `create`-triggered workflow only runs if this file exists on the branch
+# being created. Cut release branches from a base that already has it.
+on:
+  create:
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: 'Run php artisan migrate --force on the server'
+        type: boolean
+        default: true
+      ref:
+        description: 'Branch or tag to deploy (defaults to the triggering ref)'
+        type: string
+        required: false
+
+concurrency:
+  # Never let two deploys touch the server at once. Not cancel-in-progress: a
+  # half-extracted tarball is worse than a queued deploy.
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  # Gate. Deploy is blocked unless the full suite passes.
+  test:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release'))
+    uses: ./.github/workflows/test.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # Add required reviewers to this environment in repo settings to make every
+    # production deploy wait for a human.
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      # Node is not available on the cPanel host, so assets are built here and
+      # shipped as part of the payload.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/ebms-platform/package-lock.json
+
+      - name: Build assets
+        working-directory: apps/ebms-platform
+        run: |
+          npm ci
+          npm run build
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # The project's deploy key is passphrase-protected and ssh cannot prompt
+          # in CI. Strip it on the ephemeral runner only — the secret itself is
+          # untouched.
+          if [ -n "${SSH_PASSPHRASE:-}" ]; then
+            ssh-keygen -p -f ~/.ssh/deploy_key -P "$SSH_PASSPHRASE" -N "" >/dev/null
+          fi
+
+          if [ -n "${KNOWN_HOSTS:-}" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::DEPLOY_KNOWN_HOSTS is not set - falling back to ssh-keyscan (trust on first use)."
+            ssh-keyscan -p "$PORT" -H "$HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Back up current release
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          APP_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" bash -s <<EOF
+          set -euo pipefail
+          cd "$APP_PATH"
+          STAMP=\$(date +%Y%m%d-%H%M%S)
+          mkdir -p storage/deploy-backups
+          tar -czf "storage/deploy-backups/pre-deploy-\$STAMP.tar.gz" \
+            --exclude=storage --exclude=vendor --exclude=node_modules \
+            app routes resources config database public/build 2>/dev/null || true
+          echo "backup: storage/deploy-backups/pre-deploy-\$STAMP.tar.gz"
+          # Keep the last 10 only.
+          ls -1t storage/deploy-backups/pre-deploy-*.tar.gz 2>/dev/null \
+            | tail -n +11 | xargs -r rm -f
+          EOF
+
+      # One streamed tarball rather than sequential scps. This matters: uploading
+      # files one at a time leaves a window where a layout references a route that
+      # has not landed yet, which takes the whole admin portal down with
+      # ERR_TOO_MANY_REDIRECTS. Extracting an archive closes that window.
+      - name: Upload application
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          APP_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          tar -czf - -C apps/ebms-platform \
+            --exclude=.env \
+            --exclude=deploy.env \
+            --exclude=storage \
+            --exclude=vendor \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=tests \
+            --exclude=docker \
+            . \
+          | ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" \
+              "tar -xzf - -C '$APP_PATH'"
+
+      - name: Run migrations
+        if: ${{ github.event_name == 'create' || inputs.run_migrations }}
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          APP_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" \
+            "cd '$APP_PATH' && php artisan migrate --force"
+
+      # Required after every deploy - stale route/view/config caches otherwise
+      # serve the previous release.
+      - name: Clear caches
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          APP_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" \
+            "cd '$APP_PATH' && php artisan optimize:clear"
+
+      - name: Health check
+        env:
+          URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${URL:-}" ]; then
+            echo "::warning::DEPLOY_HEALTHCHECK_URL is not set - skipping health check."
+            exit 0
+          fi
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 15 "$URL" >/dev/null; then
+              echo "Health check passed."
+              exit 0
+            fi
+            echo "Attempt $i failed; retrying..."
+            sleep 5
+          done
+          echo "::error::Health check failed after 5 attempts. Roll back from storage/deploy-backups/."
+          exit 1
+
+      - name: Remove deploy key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
