@@ -128,7 +128,11 @@ class GpaCalculatorService
 
         $part1Cgpa = $this->cgpaFor($part1);
         $part2Cgpa = $this->cgpaFor($part2);
-        $allCgpa   = $this->cgpaFor($part1->merge($part2));
+        // Filter the source collection rather than merging the two halves:
+        // Eloquent\Collection::merge() de-duplicates by primary key, and these
+        // models carry no id (bestAttemptPapers selects four columns), so every
+        // key is null and the merge would collapse to a single paper.
+        $allCgpa   = $this->cgpaFor($papers->whereIn('part', [1, 2]));
 
         return [
             'part1_cgpa'     => $part1Cgpa,
@@ -171,7 +175,12 @@ class GpaCalculatorService
     private function bestAttemptPapers(Builder $results): Collection
     {
         return $results
-            ->excludeGradeEx()
+            // results.grade is nullable, and the excludeGradeEx scope's
+            // `grade != 'EX'` evaluates to NULL — and so filters out — every
+            // ungraded row. A passed paper with no letter grade recorded still
+            // earns its credits, so match the null-safe form used by the
+            // Detained List report.
+            ->where(fn ($q) => $q->where('results.grade', '<>', 'EX')->orWhereNull('results.grade'))
             ->whereNotIn('results.result', ['F', 'AB', 'R', 'M'])
             ->join('subjects', 'subjects.id', '=', 'results.subject_id')
             // part lives on both tables, so it has to be qualified.
