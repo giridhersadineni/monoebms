@@ -1,0 +1,5 @@
+[02-Dec-2023 00:32:46 America/New_York] PHP Warning:  Attempt to read property "num_rows" on bool in /home/uascexams/backoffice.uasckuexams.in/api/exam/getintmarks.php on line 16
+[02-Dec-2023 00:34:48 America/New_York] PHP Warning:  Attempt to read property "num_rows" on bool in /home/uascexams/backoffice.uasckuexams.in/api/exam/getintmarks.php on line 16
+[02-Dec-2023 00:37:08 America/New_York] PHP Warning:  Undefined array key "examid" in /home/uascexams/backoffice.uasckuexams.in/api/exam/getintmarks.php on line 3
+[02-Dec-2023 00:37:22 America/New_York] PHP Warning:  Undefined array key "examid" in /home/uascexams/backoffice.uasckuexams.in/api/exam/getintmarks.php on line 3
+[02-Dec-2023 00:38:02 America/New_York] PHP Warning:  Undefined array key "examid" in /home/uascexams/backoffice.uasckuexams.in/api/exam/getintmarks.php on line 3

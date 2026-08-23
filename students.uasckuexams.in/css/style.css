@@ -9,7 +9,7 @@
 @import url(spinners.css);
 @import url(animate.css);
 /*
-    Template: Ela Admin
+    Template:  Admin
     Author: Zebra Theme
     Developer by: Zebra Theme
 
@@ -70,7 +70,6 @@
 42. responsive
 
 */
-
 .preloader {
   width: 100%;
   height: 100%;
@@ -2261,7 +2260,7 @@ textarea {
   padding: 20px;
   border: 0 solid #e7e7e7;
   border-radius: 5px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 5px 20px 0 rgba(0,0,0,0.15);
 }
 .card-subtitle {
   font-size: 12px;
@@ -6922,3 +6921,16 @@ tbody tr td:last-child {
     display: inline-block !important;
   }
 }
+
+input.form-control,
+select.form-control {
+    border: 1.5px solid #444 !important;
+    box-shadow: none !important;
+}
+
+input.form-control:focus,
+select.form-control:focus {
+    border-color: #0056b3 !important;
+    box-shadow: 0 0 0 0.15rem rgba(0, 86, 179, 0.25) !important;
+}
+

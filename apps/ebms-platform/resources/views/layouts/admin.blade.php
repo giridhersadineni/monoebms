@@ -102,6 +102,30 @@
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
                             'permission' => 'papers.view',
                         ],
+                        [
+                            'route' => 'admin.results.index',
+                            'label' => 'Results',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M4 12a8 8 0 1016 0 8 8 0 00-16 0z"/>',
+                            'permission' => 'results.view',
+                        ],
+                        [
+                            'route' => 'admin.detained.index',
+                            'label' => 'Detained List',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z"/>',
+                            'permission' => 'results.view',
+                        ],
+                        [
+                            'route' => 'admin.revaluations.index',
+                            'label' => 'Revaluations',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
+                            'permission' => 'revaluations.view',
+                        ],
+                        [
+                            'route' => 'admin.revaluations.mark-payment',
+                            'label' => 'Reval Payment',
+                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>',
+                            'permission' => 'revaluations.edit',
+                        ],
                     ];
 
                     $settingsLinks = [

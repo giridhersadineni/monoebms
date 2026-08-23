@@ -76,7 +76,7 @@ td, th {
 <center>
 <h1>University Arts & Science College<h1>
  <h4>(An Autonomous Institute under Kakatiya Universtiy)</h4>
- <h3>APPLICATION FORM FOR REGISTRATION</h3>
+ <h3>APPLICATION FORM FOR EXAM REGISTRATION</h3>
 </center>
 </div>
 
@@ -108,9 +108,9 @@ td, th {
           <td>Name of the Candidate: <strong><?php echo $row['sname'] ?><strong> </td>
           <td rowspan="7" style="vertical-align:top"><img src="" alt="">
           <p align="center">Photograph</p>
-            <img src="../students/upload/images/<?php echo $row['aadhar'] . ".jpg"; ?>" width="176px" style="border-style:solid">
+            <img src="upload/images/<?php echo $row['aadhar'] . ".jpg"; ?>" width="176px" style="border-style:solid">
             <p align="center">Signature</p>
-            <img src="../students/upload/signatures/<?php echo $row['aadhar'] . ".jpg"; ?>" width="176px"  style="border-style:solid"><br>
+            <img src="upload/signatures/<?php echo $row['aadhar'] . ".jpg"; ?>" width="176px"  style="border-style:solid"><br>
 
 
 
@@ -149,12 +149,12 @@ td, th {
 <td></td>
 </tr>
 <tr>
-<td>Semester: <strong><?php echo $row['sem'] ?><strong></td>
+<td>Semester: <strong><strong></td>
 <td></td>
 </tr>
 
 <tr>
-<td>Year: <strong><?php echo $row['curryear'] ?><strong></td>
+<td>Year: <strong><strong></td>
 <td></td>
 </tr>
 
@@ -193,24 +193,29 @@ td, th {
 </table>
 
   <table class="tbl">
-  <h3>Subject appearing for the 3 Year 3 Semester Examination</h3>
+  <h3>Subject appearing for the  <?php echo $row['EXAMNAME'] ?></h3>
 <tr>
 <th>Subjects</th>
 
-       <td>S1:<strong><?php echo $row['S1'] ?></strong></td>
-       <td>S2:<strong><?php echo $row['S2'] ?></strong></td>
-       <td>S3:<strong><?php echo $row['S3'] ?></strong></td>
-       <td>S4:<strong><?php echo $row['S4'] ?></strong></td>
-       <td>S5:<strong><?php echo $row['S5'] ?></strong></td>
-       <td>S6:<strong><?php echo $row['S6'] ?></strong></td>
-       <td>S7:<strong><?php echo $row['S7'] ?></strong></td>
-       <td>S8:<strong><?php echo $row['S8'] ?></strong></td>
-        <td>S9:<strong><?php echo $row['S9'] ?></strong></td>
-       <td>S10:<strong><?php echo $row['S10'] ?></strong></td>
-       <td>E1:<strong><?php echo $row['E1'] ?><strong></td>
-       <td>E2:<strong><?php echo $row['E2'] ?></strong></td>
-       <td>E3:<strong><?php echo $row['E3'] ?></strong></td>
-       <td>E4:<strong><?php echo $row['E4'] ?></strong></td>
+       <td><strong><?php if ($row['S1'] != 'null') {echo $row['S1'];}?></strong></td>
+       <td><strong><?php if ($row['S2'] != 'null') {echo $row['S2'];}?></strong></td>
+       <td><strong><?php if ($row['S3'] != 'null') {echo $row['S3'];}?></strong></td>
+       <td><strong><?php if ($row['S4'] != 'null') {echo $row['S4'];}?></strong></td>
+       <td><strong><?php if ($row['S5'] != 'null') {echo $row['S5'];}?></strong></td>
+       <td><strong><?php if ($row['S6'] != 'null') {echo $row['S6'];}?></strong></td>
+       <td><strong><?php if ($row['S7'] != 'null') {echo $row['S7'];}?></strong></td>
+       <td><strong><?php if ($row['S8'] != 'null') {echo $row['S8'];}?></strong></td>
+        <td><strong><?php if ($row['S9'] != 'null') {echo $row['S9'];}?></strong></td>
+       <td><strong><?php if ($row['S10'] != 'null') {echo $row['S10'];}?></strong></td>
+    <td><strong><?php if ($row['E1'] != 'null') {echo $row['E1'];}?></strong></td>
+    <td><strong><?php if ($row['E2'] != 'null') {echo $row['E2'];}?></strong></td>
+    <td><strong><?php if ($row['E3'] != 'null') {echo $row['E3'];}?></strong></td>
+    <td><strong><?php if ($row['E4'] != 'null') {echo $row['E4'];}?></strong></td>
+
+
+
+
+
 <tr>
 
 </table>
@@ -243,7 +248,7 @@ td, th {
 </tr>
 
 <tr>
-<td colspan="5"><strong>Name of the Candidate:<?php echo $row['sname'] ?><strong> </td>
+<td colspan="5">Name of the Candidate:<strong><?php echo $row['sname'] ?><strong> </td>
 </tr>
 
 <tr>

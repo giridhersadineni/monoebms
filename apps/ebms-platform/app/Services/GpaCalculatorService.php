@@ -2,86 +2,105 @@
 
 namespace App\Services;
 
+use App\Domain\Results\GradeScale;
+use App\Domain\Results\PaperCalculator;
+use App\Domain\Results\PaperMarks;
+use App\Domain\Results\SemesterAggregator;
 use App\Models\ExamEnrollment;
-use App\Models\Grade;
+use App\Models\Gpa;
 use App\Models\Result;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
+/**
+ * Persistence-facing wrapper around the pure calculators in App\Domain\Results.
+ *
+ * The formulas themselves live in PaperCalculator/SemesterAggregator/GradeScale;
+ * this class only decides what to read and what to write.
+ */
 class GpaCalculatorService
 {
-    private const GRADE_SCALE = [
-        ['min' => 85, 'max' => 100, 'grade' => 'O',  'gpv' => 10.0],
-        ['min' => 70, 'max' => 84,  'grade' => 'A',  'gpv' => 9.0],
-        ['min' => 60, 'max' => 69,  'grade' => 'B',  'gpv' => 8.0],
-        ['min' => 55, 'max' => 59,  'grade' => 'C',  'gpv' => 7.0],
-        ['min' => 50, 'max' => 54,  'grade' => 'D',  'gpv' => 6.0],
-        ['min' => 40, 'max' => 49,  'grade' => 'E',  'gpv' => 5.0],
-    ];
+    public function __construct(
+        private readonly PaperCalculator $paperCalculator = new PaperCalculator(),
+        private readonly SemesterAggregator $aggregator = new SemesterAggregator(),
+        private readonly GradeScale $gradeScale = new GradeScale(),
+    ) {}
 
-    private const DIVISION_SCALE = [
-        ['min' => 7.0, 'label' => 'First Class with Distinction'],
-        ['min' => 6.0, 'label' => 'First Class'],
-        ['min' => 5.0, 'label' => 'Second Class'],
-        ['min' => 0.0, 'label' => 'Pass Class'],
-    ];
+    /**
+     * Compute a single paper's result, grade and grade points.
+     *
+     * @return array{grade: string, result: string, total_marks: int, credits: float, gp_value: float, gp_credits: float}
+     */
+    public function gradeFromMarks(
+        ?int $ext,
+        ?int $int,
+        bool $absentExt = false,
+        bool $absentInt = false,
+        int $extTotal = 100,
+        int $intTotal = 20,
+        float $credits = 3.0,
+        int $floatation = 0,
+        int $acMarks = 0,
+        int $floatDeduct = 0,
+        bool $malpractice = false
+    ): array {
+        return $this->paperCalculator->calculate(new PaperMarks(
+            ext: $ext,
+            int: $int,
+            absentExt: $absentExt,
+            absentInt: $absentInt,
+            extTotal: $extTotal,
+            intTotal: $intTotal,
+            credits: $credits,
+            floatation: $floatation,
+            acMarks: $acMarks,
+            floatDeduct: $floatDeduct,
+            malpractice: $malpractice,
+        ))->toArray();
+    }
 
-    public function gradeFromMarks(?int $ext, ?int $int, bool $absentExt = false, bool $absentInt = false): array
+    /**
+     * Re-derive one paper's grade from what is already stored.
+     *
+     * Only the derived columns are written — the marks, absent flags and
+     * floatation context are read, never modified, so this is idempotent.
+     */
+    public function recalculatePaper(Result $result): Result
     {
-        if ($absentExt) {
-            return [
-                'grade'      => 'AB',
-                'result'     => 'AB',
-                'total_marks' => 0,
-                'credits'    => 0,
-                'gp_value'   => 0,
-                'gp_credits' => 0,
-            ];
+        $outcome = $this->paperCalculator->calculate(PaperMarks::fromResult($result));
+
+        $result->update($outcome->toArray());
+
+        return $result;
+    }
+
+    /**
+     * Recompute SGPA and the overall result for one enrollment.
+     *
+     * @param  Collection|null  $papers  Pre-filtered papers, to avoid a query per enrollment in batch runs.
+     */
+    public function calculateForEnrollment(ExamEnrollment $enrollment, ?Collection $papers = null): ?Gpa
+    {
+        $papers ??= $enrollment->results()->excludeGradeEx()->get();
+
+        if ($papers->isEmpty()) {
+            return null;
         }
 
-        $extTotal = 100;
-        $intTotal = 20;
+        $totals = $this->aggregator->aggregate($papers);
 
-        $extMarks = $ext ?? 0;
-        $intMarks = $absentInt ? 0 : ($int ?? 0);
-        $total    = $extMarks + $intMarks;
-        $maxTotal = $extTotal + $intTotal;
-
-        $percentage = ($maxTotal > 0) ? round(($total / $maxTotal) * 100, 2) : 0;
-
-        // Fail if external marks < 40% of external total
-        if ($extMarks < ($extTotal * 0.4)) {
-            return [
-                'grade'      => 'F',
-                'result'     => 'F',
-                'total_marks' => $total,
-                'credits'    => 0,
-                'gp_value'   => 0,
-                'gp_credits' => 0,
-            ];
-        }
-
-        foreach (self::GRADE_SCALE as $scale) {
-            if ($percentage >= $scale['min'] && $percentage <= $scale['max']) {
-                return [
-                    'grade'      => $scale['grade'],
-                    'result'     => 'P',
-                    'total_marks' => $total,
-                    'credits'    => 3.0, // Default credits; overridden by subject.credits if available
-                    'gp_value'   => $scale['gpv'],
-                    'gp_credits' => 3.0 * $scale['gpv'],
-                ];
-            }
-        }
-
-        // Below 40%
-        return [
-            'grade'      => 'F',
-            'result'     => 'F',
-            'total_marks' => $total,
-            'credits'    => 0,
-            'gp_value'   => 0,
-            'gp_credits' => 0,
-        ];
+        return $enrollment->gpa()->updateOrCreate(
+            ['enrollment_id' => $enrollment->id],
+            [
+                'hall_ticket'  => $enrollment->hall_ticket,
+                'exam_id'      => $enrollment->exam_id,
+                'sgpa'         => $totals['sgpa'],
+                'cgpa'         => $totals['sgpa'], // CGPA is recalculated when the degree grade is generated
+                'total_marks'  => $totals['total_marks'],
+                'result'       => $totals['result'],
+                'processed_at' => now(),
+            ]
+        );
     }
 
     public function calculateBatch(int $examId): void
@@ -92,82 +111,28 @@ class GpaCalculatorService
             ->get();
 
         foreach ($enrollments as $enrollment) {
-            $results = $enrollment->results;
-
-            if ($results->isEmpty()) {
-                continue;
-            }
-
-            $totalCredits  = $results->sum('credits');
-            $totalGpc      = $results->sum('gp_credits');
-            $totalMarks    = $results->sum('total_marks');
-            $hasFailed     = $results->contains(fn ($r) => in_array($r->result, ['F', 'AB']));
-
-            $sgpa = ($totalCredits > 0) ? round($totalGpc / $totalCredits, 2) : 0.0;
-
-            // Apply floatation: exactly one failing paper → promote
-            $failedCount = $results->where('result', 'F')->count();
-            if ($failedCount === 1) {
-                $this->applyFloatation($enrollment->id);
-                $hasFailed = false;
-            }
-
-            $overallResult = $hasFailed ? 'F' : 'P';
-
-            $enrollment->gpa()->updateOrCreate(
-                ['enrollment_id' => $enrollment->id],
-                [
-                    'hall_ticket' => $enrollment->hall_ticket,
-                    'exam_id'     => $examId,
-                    'sgpa'        => $sgpa,
-                    'cgpa'        => $sgpa, // CGPA will be recalculated when degree grade is generated
-                    'total_marks' => $totalMarks,
-                    'result'      => $overallResult,
-                    'processed_at' => now(),
-                ]
-            );
+            $this->calculateForEnrollment($enrollment, $enrollment->results);
         }
-    }
-
-    public function applyFloatation(int $enrollmentId): void
-    {
-        Result::where('enrollment_id', $enrollmentId)
-            ->where('result', 'F')
-            ->update(['passed_by_floatation' => true, 'result' => 'P']);
     }
 
     public function calculateDegreeCgpa(int $studentId): array
     {
-        // Get all GPAs for the student grouped by part
-        $part1Gpas = Result::where('hall_ticket', function ($q) use ($studentId) {
-            $q->select('hall_ticket')->from('students')->where('id', $studentId);
-        })
-            ->excludeGradeEx()
-            ->where('part', 1)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->selectRaw('SUM(gp_credits) as total_gpc, SUM(credits) as total_credits')
-            ->first();
+        $papers = $this->bestAttemptPapers(
+            Result::where('results.hall_ticket', function ($q) use ($studentId) {
+                $q->select('hall_ticket')->from('students')->where('id', $studentId);
+            })
+        );
 
-        $part2Gpas = Result::where('hall_ticket', function ($q) use ($studentId) {
-            $q->select('hall_ticket')->from('students')->where('id', $studentId);
-        })
-            ->excludeGradeEx()
-            ->where('part', 2)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->selectRaw('SUM(gp_credits) as total_gpc, SUM(credits) as total_credits')
-            ->first();
+        $part1 = $papers->where('part', 1);
+        $part2 = $papers->where('part', 2);
 
-        $part1Cgpa = ($part1Gpas?->total_credits > 0)
-            ? round($part1Gpas->total_gpc / $part1Gpas->total_credits, 2)
-            : 0.0;
-
-        $part2Cgpa = ($part2Gpas?->total_credits > 0)
-            ? round($part2Gpas->total_gpc / $part2Gpas->total_credits, 2)
-            : 0.0;
-
-        $totalCredits = ($part1Gpas?->total_credits ?? 0) + ($part2Gpas?->total_credits ?? 0);
-        $totalGpc     = ($part1Gpas?->total_gpc ?? 0) + ($part2Gpas?->total_gpc ?? 0);
-        $allCgpa = ($totalCredits > 0) ? round($totalGpc / $totalCredits, 2) : 0.0;
+        $part1Cgpa = $this->cgpaFor($part1);
+        $part2Cgpa = $this->cgpaFor($part2);
+        // Filter the source collection rather than merging the two halves:
+        // Eloquent\Collection::merge() de-duplicates by primary key, and these
+        // models carry no id (bestAttemptPapers selects four columns), so every
+        // key is null and the merge would collapse to a single paper.
+        $allCgpa   = $this->cgpaFor($papers->whereIn('part', [1, 2]));
 
         return [
             'part1_cgpa'     => $part1Cgpa,
@@ -181,23 +146,50 @@ class GpaCalculatorService
 
     public function divisionFromCgpa(float $cgpa): string
     {
-        foreach (self::DIVISION_SCALE as $scale) {
-            if ($cgpa >= $scale['min']) {
-                return $scale['label'];
-            }
-        }
-
-        return 'Pass Class';
+        return $this->gradeScale->division($cgpa);
     }
 
     public function hasCoursePassedThreshold(string $hallTicket): bool
     {
-        $totalCredits = Result::forHallTicket($hallTicket)
-            ->whereNotIn('result', ['F', 'AB'])
-            ->excludeGradeEx()
-            ->sum('credits');
+        return $this->bestAttemptPapers(Result::forHallTicket($hallTicket))->sum('credits') >= 164;
+    }
 
-        // Degree pass thresholds
-        return in_array((int) $totalCredits, [164, 181], true) || $totalCredits >= 164;
+    /**
+     * The papers that count toward a degree, one row per paper — the attempt
+     * that earned the most grade points.
+     *
+     * Two things this guards against, both of which inflated the totals:
+     *   - A paper cleared more than once (a re-sit for improvement) used to
+     *     add its credits once per attempt.
+     *   - Papers are matched on the subject *code*, not subject_id. One paper
+     *     has several subjects rows (the unique key is code + group + medium +
+     *     semester + scheme) and separate sittings can point at different
+     *     ones, so subject_id does not identify a paper.
+     *
+     * Only earned passes count: F and AB are not passes, and R (promoted) and
+     * M (malpractice) carry no earned credit either.
+     *
+     * @param  Builder<Result>  $results  Base query, already scoped to one student.
+     * @return Collection<int, Result>
+     */
+    private function bestAttemptPapers(Builder $results): Collection
+    {
+        return $results
+            ->excludeGradeEx()
+            ->whereNotIn('results.result', ['F', 'AB', 'R', 'M'])
+            ->join('subjects', 'subjects.id', '=', 'results.subject_id')
+            // part lives on both tables, so it has to be qualified.
+            ->select('results.part', 'results.credits', 'results.gp_credits', 'subjects.code')
+            ->get()
+            ->groupBy('code')
+            ->map(fn (Collection $attempts) => $attempts->sortByDesc('gp_credits')->first())
+            ->values();
+    }
+
+    private function cgpaFor(Collection $papers): float
+    {
+        $credits = (float) $papers->sum('credits');
+
+        return $credits > 0 ? round((float) $papers->sum('gp_credits') / $credits, 2) : 0.0;
     }
 }
