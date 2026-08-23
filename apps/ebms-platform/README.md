@@ -1,59 +1,217 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# EBMS Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Examination Branch Management System for University Arts & Science College, Hanamkonda (Autonomous).
 
-## About Laravel
+This app is the primary active product inside the `monoebms` monorepo. It is a Laravel 12 modular monolith that incrementally replaces the older multi-domain PHP portals with a single-domain application.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## What This App Is
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Net-new development happens in `apps/ebms-platform/`
+- Legacy portals remain in maintenance mode and should stay stable
+- The current production target is `https://ebmsnova.uasckuexams.in`
+- Local development is designed around Docker and standard Laravel tooling
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Module Boundaries
 
-## Learning Laravel
+The application is path-scoped into two modules:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Module | Path Prefix | Route File | Auth Guard |
+|---|---|---|---|
+| Student | `/student/*` | `routes/student.php` | `student` |
+| Admin | `/admin/*` | `routes/admin.php` | `admin` |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Routing and guest/user redirects are configured in `bootstrap/app.php`.
 
-## Laravel Sponsors
+## Core Domain
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The main business entities are:
 
-### Premium Partners
+- `Student`
+- `Exam`
+- `ExamEnrollment`
+- `ExamEnrollmentSubject`
+- `Result`
+- `Gpa`
+- `Grade`
+- `RevaluationEnrollment`
+- `RevaluationSubject`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+At a high level:
 
-## Contributing
+```text
+Student -> ExamEnrollment -> ExamEnrollmentSubject
+        -> Result
+        -> Gpa
+Student -> Grade
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The most important user-facing workflows are:
 
-## Code of Conduct
+- Student login, profile, enrollment, challan, result viewing, revaluation
+- Admin login, student management, enrollment management, exam setup, paper management, fee rules, grade sheets, feature flags
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Authentication
 
-## Security Vulnerabilities
+The app uses two custom auth providers:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `ebms-student`: hall ticket + DOB, with DOST ID fallback for legacy compatibility
+- `ebms-admin`: username + password from `admin_users`
 
-## License
+Always use explicit guards:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```php
+Auth::guard('student')
+Auth::guard('admin')
+```
+
+Do not rely on the default guard.
+
+## Security Posture
+
+Global middleware adds baseline security and request tracing:
+
+- `SecurityHeadersMiddleware`
+- `AuditRequestMiddleware`
+
+Current protections include:
+
+- CSP with per-request nonce for scripts
+- HSTS on HTTPS requests
+- `X-Trace-Id` correlation header on every request
+- Removal of `X-Powered-By`, `Server`, and `Allow` headers where applicable
+- Login throttling at 5 attempts per 60 seconds
+
+Models also hide sensitive fields such as `aadhaar`, `dob`, and `dost_id`.
+
+## Fees, Results, and GPA
+
+Fee calculation currently lives in `Exam::calculateFee()` and is wrapped by `FeeCalculatorService`.
+
+Behavior by exam type:
+
+- Regular exams: flat fee
+- Supplementary exams: reduced fee up to 2 papers, regular fee beyond that
+- Improvement exams: per-subject fee with no threshold
+- Fine is always added on top when configured
+
+Academic computation is centered in `GpaCalculatorService`, including:
+
+- grade derivation
+- SGPA calculation
+- CGPA/division calculation
+- floatation handling
+
+## Legacy Migration
+
+Legacy data migration is handled by:
+
+```bash
+php artisan ebms:migrate-legacy
+```
+
+The implementation lives in `app/Console/Commands/MigrateLegacyData.php` and migrates data from the read-only legacy database into the new schema.
+
+Important characteristics:
+
+- chunked processing for large tables
+- in-memory lookup maps refreshed between phases
+- `ensure*()` helpers create missing exams, students, subjects, and enrollments instead of silently skipping bad rows
+- support for filtering by legacy `EXAMID`
+- support for dry runs
+
+This command is operationally important and should be treated carefully in production.
+
+## Local Development
+
+### Prerequisites
+
+- PHP 8.2+
+- Composer
+- Node.js / npm
+- Docker Desktop if using the provided containers
+
+### Common Commands
+
+```bash
+# Install dependencies
+composer install
+npm install
+
+# Local development
+composer run dev
+
+# Frontend assets
+npm run dev
+npm run build
+
+# Database
+php artisan migrate
+php artisan migrate:fresh --seed
+
+# Tests
+php artisan test
+php artisan test tests/Feature/Student/AuthTest.php
+php artisan test --coverage --min=75
+```
+
+### Docker
+
+```bash
+docker compose up -d
+docker compose exec app bash
+docker compose down
+```
+
+The local app is intended to run at `http://localhost:8000`.
+
+## Testing
+
+The project includes:
+
+- Feature tests for student/admin auth and enrollment flows
+- Unit tests for fee and GPA logic
+- Browser tests via Laravel Dusk
+
+Tests are configured to use SQLite in memory through `phpunit.xml`.
+
+## Deployment Notes
+
+Production deployment is still fairly manual and order-sensitive.
+
+Key rules:
+
+- Build frontend assets locally with `npm run build`
+- Upload route files before Blade/layout changes that reference those routes
+- Run `php artisan migrate --force` when deploying migrations non-interactively
+- Always run `php artisan optimize:clear` after deploy
+
+See `docs/deployment.md` for the full procedure.
+
+## Known Caveats
+
+- Some documentation still reflects older fee-column naming and should be cross-checked against current code
+- The legacy migration command is intentionally forgiving, which is useful operationally but can create fallback records if source data is incomplete
+- Some repo-level AI skill references described outside this folder do not match the current on-disk layout
+
+## Documentation Map
+
+More detailed docs live in `docs/`:
+
+- `docs/architecture.md`
+- `docs/database.md`
+- `docs/deployment.md`
+- `docs/setup.md`
+- `docs/modules/`
+- `docs/models/`
+- `docs/services/`
+- `docs/legacy/`
+
+## Recommended Validation Before Handoff
+
+When PHP is available in your environment, the minimum sanity checks are:
+
+```bash
+php artisan route:list
+php artisan test
+composer audit --no-interaction
+```

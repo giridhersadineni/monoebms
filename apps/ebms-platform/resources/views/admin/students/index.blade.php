@@ -65,6 +65,7 @@
                             <a href="{{ route('admin.students.show', $student->hall_ticket) }}"
                                class="text-blue-600 hover:underline text-xs font-medium">View</a>
                             <span class="text-slate-200">|</span>
+                            @if(auth('admin')->user()->canAccess('students.manage'))
                             <form method="POST" action="{{ route('admin.students.login-as', $student->hall_ticket) }}">
                                 @csrf
                                 <button type="submit"
@@ -73,6 +74,7 @@
                                     Login as
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

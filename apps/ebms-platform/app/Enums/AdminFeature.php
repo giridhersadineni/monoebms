@@ -20,13 +20,14 @@ enum AdminFeature: string
     case PapersView          = 'papers.view';
     case PapersEdit          = 'papers.edit';
     case PapersDelete        = 'papers.delete';
+    case ResultsView         = 'results.view';
+    case ResultsEdit         = 'results.edit';
+    case RevaluationsView    = 'revaluations.view';
+    case RevaluationsEdit    = 'revaluations.edit';
     case DFormView           = 'dform.view';
     case AttendanceView      = 'attendance.view';
     case GradesheetsView     = 'gradesheets.view';
     case GradesheetsGenerate = 'gradesheets.generate';
-    case ResultsView         = 'results.view';
-    case ResultsEdit         = 'results.edit';
-    case RevaluationsView    = 'revaluations.view';
 
     public function label(): string
     {
@@ -47,13 +48,14 @@ enum AdminFeature: string
             self::PapersView          => 'View Papers',
             self::PapersEdit          => 'Edit Papers',
             self::PapersDelete        => 'Delete Papers',
+            self::ResultsView         => 'View Results',
+            self::ResultsEdit         => 'Edit Results',
+            self::RevaluationsView    => 'View Revaluations',
+            self::RevaluationsEdit    => 'Edit Revaluations',
             self::DFormView           => 'View D-Form',
             self::AttendanceView      => 'View Attendance',
             self::GradesheetsView     => 'View Grade Sheets',
             self::GradesheetsGenerate => 'Generate Grade Sheets',
-            self::ResultsView         => 'View Results',
-            self::ResultsEdit         => 'Enter/Edit Results',
-            self::RevaluationsView    => 'View Revaluations',
         };
     }
 
@@ -76,13 +78,14 @@ enum AdminFeature: string
             self::PapersView,
             self::PapersEdit,
             self::PapersDelete        => 'Papers',
+            self::ResultsView,
+            self::ResultsEdit         => 'Results',
+            self::RevaluationsView,
+            self::RevaluationsEdit    => 'Revaluations',
             self::DFormView           => 'Pre Exam',
             self::AttendanceView      => 'Pre Exam',
             self::GradesheetsView,
             self::GradesheetsGenerate => 'Academic Records',
-            self::ResultsView,
-            self::ResultsEdit,
-            self::RevaluationsView    => 'Academic Records',
         };
     }
 
@@ -98,9 +101,9 @@ enum AdminFeature: string
             self::PapersView,
             self::DFormView,
             self::AttendanceView,
-            self::GradesheetsView,
             self::ResultsView,
-            self::RevaluationsView    => ['admin', 'staff'],
+            self::RevaluationsView,
+            self::GradesheetsView     => ['admin', 'staff'],
             self::StudentsEdit,
             self::StudentsDelete,
             self::EnrollmentsEdit,
@@ -111,7 +114,8 @@ enum AdminFeature: string
             self::CoursesDelete,
             self::PapersEdit,
             self::PapersDelete,
-            self::ResultsEdit        => ['admin'],
+            self::ResultsEdit,
+            self::RevaluationsEdit    => ['admin'],
             self::GradesheetsGenerate => [],
         };
     }

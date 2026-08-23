@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StudentUpdateRequest;
+use App\Models\Course;
+use App\Models\CourseGroup;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,30 +43,43 @@ class StudentController extends Controller
         return view('admin.students.show', compact('student'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function edit(string $hallTicket): View
+    {
+        $student = Student::byHallTicket($hallTicket)->firstOrFail();
+        $courses = Course::orderBy('code')->get();
+        $groups  = CourseGroup::with('course')->orderBy('code')->get();
+
+        return view('admin.students.edit', compact('student', 'courses', 'groups'));
+    }
+
+    public function update(StudentUpdateRequest $request, int $id): RedirectResponse
     {
         $student = Student::findOrFail($id);
+        $student->update($request->validated());
 
-        $validated = $request->validate([
-            'name'       => ['required', 'string', 'max:60'],
-            'father_name' => ['nullable', 'string', 'max:60'],
-            'mother_name' => ['nullable', 'string', 'max:60'],
-            'email'      => ['nullable', 'email', 'max:50'],
-            'phone'      => ['nullable', 'string', 'max:30'],
-            'address'    => ['nullable', 'string', 'max:60'],
-            'city'       => ['nullable', 'string', 'max:30'],
-            'state'      => ['nullable', 'string', 'max:20'],
-            'pincode'    => ['nullable', 'string', 'max:10'],
-        ]);
-
-        $student->update($validated);
-
-        return back()->with('success', 'Student record updated.');
+        return redirect()->route('admin.students.show', $student->hall_ticket)
+            ->with('success', 'Student record updated.');
     }
 
     public function loginAs(string $hallTicket): RedirectResponse
     {
         $student = Student::byHallTicket($hallTicket)->firstOrFail();
+
+        // Scheme-2025+ students are on the new platform.
+        // Older students live on the legacy portal — redirect there via signed SSO.
+        $newSchemes = ['2025', '2026'];
+        if (! in_array($student->scheme, $newSchemes, true)) {
+            $secret = config('services.legacy_sso.secret');
+            $ts     = time();
+            $sig    = hash_hmac('sha256', $hallTicket . '|' . $ts, $secret);
+            $url    = 'https://students.uasckuexams.in/admin_sso.php?' . http_build_query([
+                'ht'  => $hallTicket,
+                'ts'  => $ts,
+                'sig' => $sig,
+            ]);
+            return redirect($url);
+        }
+
         Auth::guard('student')->login($student);
 
         return redirect('/student/dashboard');

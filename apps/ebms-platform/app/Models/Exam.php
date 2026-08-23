@@ -99,13 +99,18 @@ class Exam extends Model
         $feeImprove   = $rule?->fee_improvement   ?? $this->fee_improvement;
         $fine         = $rule?->fee_fine          ?? $this->fee_fine ?? 0;
 
-        // Improvement exams: always per-subject, no threshold
-        if ($this->exam_type === 'improvement' && $feeImprove) {
-            return $feeImprove * max(1, $subjectCount) + $fine;
+        // No regular/elective subjects selected — improvement papers are charged separately.
+        if ($subjectCount === 0) {
+            return 0;
         }
 
-        // Supply exams: flat ≤2-paper tier, then flat regular fee for 3+
-        if ($this->exam_type === 'supplementary' && $feeSupply !== null && $subjectCount > 0 && $subjectCount <= 2) {
+        // Improvement exams: always per-subject, no threshold
+        if ($this->exam_type === 'improvement' && $feeImprove) {
+            return $feeImprove * $subjectCount + $fine;
+        }
+
+        // Supply exams: flat fee for ≤2 papers; full regular fee for 3+
+        if ($this->exam_type === 'supplementary' && $feeSupply !== null && $subjectCount <= 2) {
             return $feeSupply + $fine;
         }
 

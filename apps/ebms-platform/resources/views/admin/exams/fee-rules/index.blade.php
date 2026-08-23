@@ -46,7 +46,9 @@
         @if($exam->fee_regular === null && !$exam->fee_improvement)
             <span class="text-slate-400 italic">No exam-level defaults set</span>
         @endif
+        @if(auth('admin')->user()->canAccess('exams.manage'))
         <a href="{{ route('admin.exams.edit', $exam) }}" class="ml-auto text-blue-600 hover:underline text-xs">Edit exam defaults</a>
+        @endif
     </div>
 
     {{-- Rules table --}}
@@ -101,6 +103,7 @@
                         {{ $rule->fee_fine ? 'Rs.'.number_format($rule->fee_fine) : '—' }}
                     </td>
                     <td class="px-5 py-3 text-right">
+                        @if(auth('admin')->user()->canAccess('exams.manage'))
                         <div class="flex items-center justify-end gap-3">
                             <a href="{{ route('admin.exams.fee-rules.edit', [$exam, $rule]) }}"
                                class="text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors">
@@ -115,6 +118,7 @@
                                 </button>
                             </form>
                         </div>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
@@ -129,6 +133,7 @@
     </div>
 
     {{-- Add Rule Form --}}
+    @if(auth('admin')->user()->canAccess('exams.manage'))
     @php
         $groupsByCourse = $courses->mapWithKeys(fn($c) => [
             $c->code => $c->groups->pluck('code')->values()->all()
@@ -208,6 +213,8 @@
     </div>
 
 </div>
+
+    @endif
 
 @push('scripts')
 <script nonce="{{ $csp_nonce ?? '' }}">

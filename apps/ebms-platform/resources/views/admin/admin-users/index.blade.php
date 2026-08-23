@@ -23,6 +23,7 @@
                     <th class="px-5 py-2.5 text-left">Login ID</th>
                     <th class="px-5 py-2.5 text-left">Role</th>
                     <th class="px-5 py-2.5 text-left">Status</th>
+                    <th class="px-5 py-2.5 text-left">Permissions</th>
                     <th class="px-5 py-2.5 text-left">Actions</th>
                 </tr>
             </thead>
@@ -53,6 +54,20 @@
                         <x-status-badge :status="$user->is_active ? 'active' : 'inactive'" />
                     </td>
                     <td class="px-5 py-3">
+                        @if($user->role->value !== 'superadmin')
+                            @php $grantCount = count($user->permissions ?? []); @endphp
+                            <a href="{{ route('admin.admin-users.permissions', $user) }}"
+                               class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                @if($grantCount > 0)
+                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">{{ $grantCount }}</span>
+                                @endif
+                                Manage
+                            </a>
+                        @else
+                            <span class="text-xs text-slate-400">Full access</span>
+                        @endif
+                    </td>
+                    <td class="px-5 py-3">
                         @if(! $isSelf)
                         <div class="flex items-center gap-3">
                             <form method="POST" action="{{ route('admin.admin-users.toggle-active', $user) }}">
@@ -62,7 +77,7 @@
                                     {{ $user->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>
                             </form>
-                            <button onclick="document.getElementById('pw-modal-{{ $user->id }}').classList.remove('hidden')"
+                            <button type="button" data-show-pw="{{ $user->id }}"
                                     class="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors">
                                 Reset Password
                             </button>
@@ -94,8 +109,7 @@
                                     class="bg-slate-900 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
                                 Save
                             </button>
-                            <button type="button"
-                                    onclick="document.getElementById('pw-modal-{{ $user->id }}').classList.add('hidden')"
+                            <button type="button" data-hide-pw="{{ $user->id }}"
                                     class="text-sm text-slate-500 hover:text-slate-700">
                                 Cancel
                             </button>
@@ -109,4 +123,17 @@
     </div>
 
 </div>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.querySelectorAll('[data-show-pw]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('pw-modal-' + btn.dataset.showPw).classList.remove('hidden');
+    });
+});
+document.querySelectorAll('[data-hide-pw]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('pw-modal-' + btn.dataset.hidePw).classList.add('hidden');
+    });
+});
+</script>
 @endsection

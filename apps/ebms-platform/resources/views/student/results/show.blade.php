@@ -13,11 +13,19 @@
             <h1 class="font-display" style="font-size:24px;font-weight:600;color:var(--navy);margin:0 0 4px;">{{ $exam->name }}</h1>
             <p style="font-size:14px;color:var(--muted);margin:0;">Semester {{ $exam->semester }}</p>
         </div>
-        <button onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;" nonce="{{ $csp_nonce ?? '' }}">
+        <button id="btn-print-result" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print Results
         </button>
     </div>
+</div>
+
+{{-- Print header (only visible when printing) --}}
+<div class="print-only" style="display:none;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:14px;text-align:center;">
+    <img src="https://students.uasckuexams.in/images/Logo1.jpg" alt="University Arts &amp; Science College" style="max-width:100%;height:auto;max-height:80px;display:block;margin:0 auto 4px;">
+    <p style="font-size:10px;font-weight:700;color:#333;margin:0 0 10px;letter-spacing:.2px;">An Autonomous Institute under Kakatiya University, Subedari, Hanamkonda, Warangal, Telangana State-506001</p>
+    <p style="font-size:13px;font-weight:700;color:#000;margin:0 0 2px;">{{ $exam->name }} — Semester {{ $exam->semester }}</p>
+    <p style="font-size:11px;color:#555;margin:0;">{{ $student->name }} &nbsp;|&nbsp; {{ $student->hall_ticket }} &nbsp;|&nbsp; Printed on {{ now()->format('d M Y') }}</p>
 </div>
 
 {{-- Print header (only visible when printing) --}}
@@ -51,24 +59,12 @@
 @endif
 
 {{-- Student info header --}}
-<div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;">
-    <div style="flex:1;min-width:0;">
-        <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $student->name }}</p>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <code class="font-mono-code" style="font-size:12px;background:#EEF0F3;color:var(--navy);padding:2px 8px;border-radius:6px;">{{ $student->hall_ticket }}</code>
-            <span style="font-size:13px;color:var(--muted);">{{ $student->course_name ?? $student->course }}</span>
-        </div>
+<div class="card animate-in delay-1" style="padding:18px 22px;margin-bottom:14px;">
+    <p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 2px;">{{ $student->name }}</p>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <code class="font-mono-code" style="font-size:12px;background:#EEF0F3;color:var(--navy);padding:2px 8px;border-radius:6px;">{{ $student->hall_ticket }}</code>
+        <span style="font-size:13px;color:var(--muted);">{{ $student->course_name ?? $student->course }}</span>
     </div>
-    @if($enrollment->gpa)
-    <div style="display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap;">
-        @if($enrollment->gpa->result !== 'R')
-        <div style="text-align:center;padding:12px 18px;background:linear-gradient(135deg,#F0FDFA 0%,#fff 100%);border:1px solid rgba(13,148,136,.2);border-radius:12px;">
-            <p class="font-display" style="font-size:28px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
-            <p style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:4px 0 0;">SGPA</p>
-        </div>
-        @endif
-    </div>
-    @endif
 </div>
 
 {{-- Papers table --}}
@@ -130,11 +126,23 @@
     <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
         <p style="font-size:13px;font-weight:700;color:var(--navy);margin:0;letter-spacing:.3px;text-transform:uppercase;">GPA Summary</p>
     </div>
+    @php
+        $res = strtoupper($enrollment->gpa->result ?? '');
+        $resBg = match(true) {
+            str_contains($res, 'PASS') || $res === 'PROMOTED' => 'background:rgba(13,148,136,.1);border:1px solid rgba(13,148,136,.25);color:var(--teal);',
+            str_contains($res, 'FAIL') || str_contains($res, 'MALP') || str_contains($res, 'WITH') => 'background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;',
+            default => 'background:#EEF0F3;border:1px solid var(--border);color:var(--muted);'
+        };
+    @endphp
     <div style="padding:20px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;">
-        @if($enrollment->gpa->result !== 'R')
-        <div style="text-align:center;">
+        <div style="text-align:center;padding:12px 18px;background:linear-gradient(135deg,#F0FDFA 0%,#fff 100%);border:1px solid rgba(13,148,136,.2);border-radius:12px;">
             <p class="font-display" style="font-size:26px;font-weight:700;color:var(--teal);margin:0;line-height:1;">{{ $enrollment->gpa->sgpa }}</p>
             <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:6px 0 0;">SGPA</p>
+        </div>
+        @if($enrollment->gpa->result)
+        <div style="text-align:center;padding:12px 18px;border-radius:12px;{{ $resBg }}">
+            <p class="font-display" style="font-size:20px;font-weight:700;margin:0;line-height:1;">{{ $enrollment->gpa->result }}</p>
+            <p style="font-size:11px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin:6px 0 0;">Result</p>
         </div>
         @endif
         @if($enrollment->gpa->cgpa_part1)
@@ -229,17 +237,45 @@
         .result-mobile { display:none !important; }
         .result-desktop { display:block !important; }
         .animate-in { animation:none !important; }
-        body { background:#fff !important; }
+        body { background:#fff !important; font-size:11px !important; }
         .card {
             border:1px solid #ccc !important;
             box-shadow:none !important;
-            border-radius:6px !important;
+            border-radius:4px !important;
             break-inside:avoid;
+            margin-bottom:6px !important;
         }
         nav, header, footer, aside { display:none !important; }
         a { text-decoration:none !important; color:inherit !important; }
-        @page { margin:1.5cm; }
+        /* Tighten spacing throughout */
+        [style*="margin-bottom:14px"] { margin-bottom:6px !important; }
+        [style*="margin-bottom:24px"] { margin-bottom:6px !important; }
+        [style*="padding:18px 22px"] { padding:8px 12px !important; }
+        [style*="padding:20px 22px"] { padding:8px 12px !important; }
+        [style*="padding:14px 20px"] { padding:6px 12px !important; }
+        [style*="padding:16px 20px"] { padding:6px 12px !important; }
+        [style*="padding:13px 20px"] { padding:5px 10px !important; }
+        [style*="font-size:28px"] { font-size:18px !important; }
+        [style*="font-size:26px"] { font-size:16px !important; }
+        [style*="font-size:16px"] { font-size:13px !important; }
+        [style*="font-size:14px"] { font-size:11px !important; }
+        [style*="font-size:13px"] { font-size:10px !important; }
+        [style*="font-size:11px"] { font-size:9px !important; }
+        [style*="font-size:10px"] { font-size:9px !important; }
+        /* Print header compact */
+        .print-only { margin-bottom:8px !important; padding-bottom:6px !important; }
+        /* GPA summary row instead of grid */
+        [style*="grid-template-columns"] { display:flex !important; flex-wrap:wrap !important; gap:8px !important; }
+        /* Grade legend compact */
+        [style*="padding:16px 20px;margin-bottom:24px"] { padding:6px 10px !important; margin-bottom:0 !important; }
+        @page { margin:1cm; size:A4 portrait; }
     }
 </style>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.getElementById('btn-print-result').addEventListener('click', function () {
+    window.print();
+});
+</script>
 
 @endsection

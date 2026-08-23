@@ -37,7 +37,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10A5 5 0 0012 7z"/>
                 </svg>
             </button>
-            <span class="font-medium text-white">{{ auth('admin')->user()?->name }}</span>
+            <a href="{{ route('admin.profile') }}" class="font-medium text-white hover:text-blue-300 transition-colors">{{ auth('admin')->user()?->name }}</a>
             <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-medium uppercase tracking-wider text-[10px]">
                 {{ auth('admin')->user()?->role?->value ?? 'admin' }}
             </span>
@@ -124,7 +124,7 @@
                             'route' => 'admin.revaluations.mark-payment',
                             'label' => 'Reval Payment',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>',
-                            'permission' => 'revaluations.view',
+                            'permission' => 'revaluations.edit',
                         ],
                     ];
 
@@ -155,18 +155,6 @@
                             'label' => 'Attendance',
                             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
                             'permission' => 'attendance.view',
-                        ],
-                        [
-                            'route' => 'admin.script-coding.index',
-                            'label' => 'Script Coding',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>',
-                            'permission' => 'scriptcoding.view',
-                        ],
-                        [
-                            'route' => 'admin.exam-halls.index',
-                            'label' => 'Hall Seating',
-                            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
-                            'permission' => 'seating.view',
                         ],
                     ];
                 @endphp

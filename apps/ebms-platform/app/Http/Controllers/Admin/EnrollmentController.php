@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FeeMarkRequest;
 use App\Models\Exam;
 use App\Models\ExamEnrollment;
+use App\Models\ExamEnrollmentSubject;
 use App\Models\Subject;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,12 +43,16 @@ class EnrollmentController extends Controller
             $query->where('hall_ticket', $request->hall_ticket);
         }
 
+        if ($request->filled('year')) {
+            $query->whereHas('exam', fn($q) => $q->where('year', $request->integer('year')));
+        }
+
         $enrollments = $query->latest('enrolled_at')->paginate(30)->withQueryString();
 
-        $years = Exam::query()->distinct()->orderByDesc('year')->pluck('year');
-        $exams = Exam::query()->orderByDesc('year')->orderBy('semester')->pluck('name', 'id');
+        $exams = Exam::orderByDesc('year')->orderByDesc('id')->pluck('name', 'id');
+        $years = Exam::distinct()->orderByDesc('year')->pluck('year');
 
-        return view('admin.enrollments.index', compact('enrollments', 'years', 'exams'));
+        return view('admin.enrollments.index', compact('enrollments', 'exams', 'years'));
     }
 
     public function markPaymentPage(Request $request): View
@@ -75,7 +81,10 @@ class EnrollmentController extends Controller
         $enrollment = ExamEnrollment::with(['student', 'exam', 'enrollmentSubjects.subject', 'gpa'])
             ->findOrFail($id);
 
-        return view('admin.enrollments.show', compact('enrollment'));
+        $codes = $enrollment->enrollmentSubjects->pluck('subject_code')->unique()->all();
+        $subjectNames = Subject::whereIn('code', $codes)->pluck('name', 'code')->all();
+
+        return view('admin.enrollments.show', compact('enrollment', 'subjectNames'));
     }
 
     public function markFeePaid(FeeMarkRequest $request, int $id): RedirectResponse
@@ -89,65 +98,95 @@ class EnrollmentController extends Controller
             'challan_received_by'  => $request->challan_received_by,
         ]);
 
+        if ($redirect = $request->input('_redirect')) {
+            return redirect($redirect)->with('success', 'Fee payment marked as received.');
+        }
+
         return back()->with('success', 'Fee payment marked as received.');
+    }
+
+    public function clearPayment(Request $request, int $id): RedirectResponse
+    {
+        $enrollment = ExamEnrollment::findOrFail($id);
+
+        $enrollment->update([
+            'fee_paid_at'          => null,
+            'challan_number'       => null,
+            'challan_submitted_on' => null,
+            'challan_received_by'  => null,
+        ]);
+
+        if ($redirect = $request->input('_redirect')) {
+            return redirect($redirect)->with('success', 'Payment cleared for enrollment #' . $id . '.');
+        }
+
+        return back()->with('success', 'Payment cleared for enrollment #' . $id . '.');
     }
 
     public function manageSubjects(int $id): View
     {
-        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
-
         $enrollment = ExamEnrollment::with(['student', 'exam', 'enrollmentSubjects.subject'])
             ->findOrFail($id);
 
-        $student = $enrollment->student;
-        $exam = $enrollment->exam;
+        $enrolledSubjectIds = $enrollment->enrollmentSubjects->pluck('subject_id')->filter()->all();
 
-        $enrolledCodes = $enrollment->enrollmentSubjects->pluck('subject_code')->toArray();
-
-        $availableSubjects = Subject::where('course', $student->course)
-            ->where('semester', $exam->semester)
-            ->whereNotIn('code', $enrolledCodes)
+        $availableSubjects = Subject::forCourse($enrollment->student?->course ?? '')
+            ->forSemester($enrollment->exam?->semester ?? 0)
+            ->whereNotIn('id', $enrolledSubjectIds)
             ->orderBy('code')
             ->get();
 
         return view('admin.enrollments.subjects', compact('enrollment', 'availableSubjects'));
     }
 
-    public function storeSubject(Request $request, int $id): RedirectResponse
+    public function addSubject(Request $request, int $id): RedirectResponse
     {
-        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
+        $enrollment = ExamEnrollment::findOrFail($id);
 
-        $data = $request->validate([
-            'subject_id' => 'required|integer|exists:subjects,id',
-            'subject_type' => 'required|in:regular,improvement,elective',
+        $validated = $request->validate([
+            'subject_id'   => ['required', 'integer', 'exists:subjects,id'],
+            'subject_type' => ['required', 'in:regular,improvement,elective'],
         ]);
 
-        $enrollment = ExamEnrollment::with(['student', 'exam'])->findOrFail($id);
+        $subject = Subject::findOrFail($validated['subject_id']);
 
-        $subject = Subject::where('id', $data['subject_id'])
-            ->where('course', $enrollment->student->course)
-            ->where('semester', $enrollment->exam->semester)
-            ->firstOrFail();
+        // Skip if already enrolled
+        if ($enrollment->enrollmentSubjects()->where('subject_id', $subject->id)->exists()) {
+            return back()->with('success', $subject->code . ' is already in this enrollment.');
+        }
 
-        $enrollment->enrollmentSubjects()->create([
-            'subject_id' => $subject->id,
-            'subject_code' => $subject->code,
-            'subject_type' => $data['subject_type'],
+        ExamEnrollmentSubject::create([
+            'enrollment_id' => $enrollment->id,
+            'subject_id'    => $subject->id,
+            'subject_code'  => $subject->code,
+            'subject_type'  => $validated['subject_type'],
         ]);
 
-        return back()->with('success', "Subject {$subject->code} added to enrollment.");
+        return back()->with('success', $subject->code . ' added to enrollment.');
     }
 
-    public function destroySubject(int $enrollmentId, int $subjectId): RedirectResponse
+    public function removeSubject(int $enrollmentId, int $subjectId): RedirectResponse
     {
-        abort_unless(auth('admin')->user()?->canAccess('enrollments.manage'), 403);
+        $es = ExamEnrollmentSubject::where('enrollment_id', $enrollmentId)
+            ->where('id', $subjectId)
+            ->firstOrFail();
 
-        $enrollment = ExamEnrollment::findOrFail($enrollmentId);
-        $subject = $enrollment->enrollmentSubjects()->findOrFail($subjectId);
+        $code = $es->subject_code;
+        $es->delete();
 
-        $code = $subject->subject_code;
-        $subject->delete();
+        return back()->with('success', $code . ' removed from enrollment.');
+    }
 
-        return back()->with('success', "Subject {$code} removed from enrollment.");
+    public function destroy(int $id): RedirectResponse
+    {
+        $enrollment = ExamEnrollment::findOrFail($id);
+
+        DB::transaction(function () use ($enrollment) {
+            $enrollment->enrollmentSubjects()->delete();
+            $enrollment->delete();
+        });
+
+        return redirect()->route('admin.enrollments.index')
+            ->with('success', "Enrollment #{$id} deleted.");
     }
 }
