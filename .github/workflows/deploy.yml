@@ -71,11 +71,21 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          # The project's deploy key is passphrase-protected and ssh cannot prompt
-          # in CI. Strip it on the ephemeral runner only — the secret itself is
-          # untouched.
-          if [ -n "${SSH_PASSPHRASE:-}" ]; then
-            ssh-keygen -p -f ~/.ssh/deploy_key -P "$SSH_PASSPHRASE" -N "" >/dev/null
+          # ssh cannot prompt for a passphrase in CI, so an encrypted key is
+          # stripped on the ephemeral runner only - the stored secret is untouched.
+          # All three outcomes are handled explicitly, because a mismatched
+          # passphrase otherwise fails here with an opaque ssh-keygen error.
+          if ssh-keygen -y -f ~/.ssh/deploy_key -P "" >/dev/null 2>&1; then
+            echo "Deploy key is not passphrase-protected; using it as-is."
+          elif [ -n "${SSH_PASSPHRASE:-}" ]; then
+            if ! ssh-keygen -p -f ~/.ssh/deploy_key -P "$SSH_PASSPHRASE" -N "" >/dev/null 2>&1; then
+              echo "::error::DEPLOY_SSH_PASSPHRASE does not decrypt DEPLOY_SSH_KEY. If the key was rotated, update both secrets together."
+              exit 1
+            fi
+            echo "Deploy key decrypted."
+          else
+            echo "::error::DEPLOY_SSH_KEY is passphrase-protected but DEPLOY_SSH_PASSPHRASE is not set."
+            exit 1
           fi
 
           if [ -n "${KNOWN_HOSTS:-}" ]; then
