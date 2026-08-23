@@ -62,7 +62,9 @@ class EnrollmentTest extends TestCase
     public function results_require_fee_payment(): void
     {
         $student = Student::factory()->create(['dob' => '2000-01-01']);
-        $exam    = Exam::factory()->closed()->create();
+        // results_visible must be true or show() redirects before reaching the
+        // fee gate, which is the thing this test is about.
+        $exam    = Exam::factory()->closed()->create(['results_visible' => true]);
         ExamEnrollment::factory()->feePending()->create([
             'exam_id'    => $exam->id,
             'student_id' => $student->id,
@@ -108,7 +110,14 @@ class EnrollmentTest extends TestCase
             'scheme'     => 'CBCS',
         ]);
 
+        $priorEnrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id'     => $regularExam->id,
+            'student_id'  => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
         Result::create([
+            'enrollment_id' => $priorEnrollment->id,
             'hall_ticket' => $student->hall_ticket,
             'exam_id'     => $regularExam->id,
             'subject_id'  => $failedSubject->id,
@@ -117,6 +126,7 @@ class EnrollmentTest extends TestCase
             'total_marks' => 100,
         ]);
         Result::create([
+            'enrollment_id' => $priorEnrollment->id,
             'hall_ticket' => $student->hall_ticket,
             'exam_id'     => $regularExam->id,
             'subject_id'  => $passedSubject->id,
@@ -166,7 +176,14 @@ class EnrollmentTest extends TestCase
             'scheme'     => 'CBCS',
         ]);
 
+        $priorEnrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id'     => $regularExam->id,
+            'student_id'  => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
         Result::create([
+            'enrollment_id' => $priorEnrollment->id,
             'hall_ticket' => $student->hall_ticket,
             'exam_id'     => $regularExam->id,
             'subject_id'  => $subject->id,
@@ -218,9 +235,15 @@ class EnrollmentTest extends TestCase
             'semester' => 3, 'scheme' => 'CBCS',
         ]);
 
-        Result::create(['hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
+        $priorEnrollment = ExamEnrollment::factory()->feePaid()->create([
+            'exam_id'     => $regularExam->id,
+            'student_id'  => $student->id,
+            'hall_ticket' => $student->hall_ticket,
+        ]);
+
+        Result::create(['enrollment_id' => $priorEnrollment->id, 'hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
             'subject_id' => $passedSubject->id, 'result' => 'P', 'semester' => 3, 'total_marks' => 100]);
-        Result::create(['hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
+        Result::create(['enrollment_id' => $priorEnrollment->id, 'hall_ticket' => $student->hall_ticket, 'exam_id' => $regularExam->id,
             'subject_id' => $failedSubject->id, 'result' => 'F', 'semester' => 3, 'total_marks' => 100]);
 
         $imprvExam = Exam::factory()->open()->improvement()->create([
