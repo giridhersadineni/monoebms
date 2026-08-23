@@ -80,6 +80,7 @@ $sql = "
         s.course                                                  AS COURSE,
         s.`group`                                                 AS SGROUP,
         s.medium                                                  AS MEDIUM,
+        s.SCHEME                                                  AS SCHEME,
         s.phone                                                   AS PHONE,
         COUNT(*)                                                  AS PAPERS_APPEARED,
         SUM(t.ATTEMPTS)                                           AS ATTEMPTS,
@@ -105,7 +106,7 @@ $sql = "
         GROUP BY r.HALLTICKET, r.PAPERCODE
     ) t
     LEFT JOIN students s ON s.haltckt = t.HALLTICKET
-    GROUP BY t.HALLTICKET, s.sname, s.course, s.`group`, s.medium, s.phone
+    GROUP BY t.HALLTICKET, s.sname, s.course, s.`group`, s.medium, s.SCHEME, s.phone
     HAVING SUM(t.PCREDITS) > 0
        AND (SUM(CASE WHEN t.PASSED = 1 THEN t.PCREDITS ELSE 0 END) * 100
             / SUM(t.PCREDITS)) < ?
@@ -288,6 +289,7 @@ if (!$needStudent) {
                                         <th>Course</th>
                                         <th>Group</th>
                                         <th>Medium</th>
+                                        <th>Scheme</th>
                                         <th>Papers Appeared</th>
                                         <th>Attempts</th>
                                         <th>Credits Appeared</th>
@@ -306,6 +308,7 @@ if (!$needStudent) {
                                             <td><?= htmlspecialchars($r['COURSE'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($r['SGROUP'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($r['MEDIUM'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($r['SCHEME'] ?? '') ?></td>
                                             <td><?= (int)$r['PAPERS_APPEARED'] ?></td>
                                             <td><?= (int)$r['ATTEMPTS'] ?></td>
                                             <td><?= (int)$r['TOTAL_CREDITS'] ?></td>

@@ -2,9 +2,9 @@
 
 session_start();
 if(!isset($_SESSION['userid'])){
- setcookie(PHPSESSID,"expired",time()+0);  
- header("location:index.php?invalid-session");   
- 
+ setcookie("PHPSESSID","expired",time()+0);
+ header("location:index.php?invalid-session");
+ exit;
 }
 
 ?>

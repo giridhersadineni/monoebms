@@ -109,6 +109,7 @@
                     <th>Course</th>
                     <th>Group</th>
                     <th>Medium</th>
+                    <th>Scheme</th>
                     <th>Papers Appeared</th>
                     <th>Attempts</th>
                     <th>Credits Appeared</th>
@@ -130,6 +131,7 @@
                     <td class="text-slate-700">{{ $r->course }}</td>
                     <td class="text-slate-700">{{ $r->group_code }}</td>
                     <td class="text-slate-700">{{ $r->medium }}</td>
+                    <td class="text-slate-700">{{ $r->scheme }}</td>
                     <td class="text-center">{{ (int) $r->papers_appeared }}</td>
                     <td class="text-center">{{ (int) $r->attempts }}</td>
                     <td class="text-center">{{ rtrim(rtrim(number_format((float) $r->total_credits, 1, '.', ''), '0'), '.') }}</td>
