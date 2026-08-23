@@ -175,12 +175,7 @@ class GpaCalculatorService
     private function bestAttemptPapers(Builder $results): Collection
     {
         return $results
-            // results.grade is nullable, and the excludeGradeEx scope's
-            // `grade != 'EX'` evaluates to NULL — and so filters out — every
-            // ungraded row. A passed paper with no letter grade recorded still
-            // earns its credits, so match the null-safe form used by the
-            // Detained List report.
-            ->where(fn ($q) => $q->where('results.grade', '<>', 'EX')->orWhereNull('results.grade'))
+            ->excludeGradeEx()
             ->whereNotIn('results.result', ['F', 'AB', 'R', 'M'])
             ->join('subjects', 'subjects.id', '=', 'results.subject_id')
             // part lives on both tables, so it has to be qualified.
