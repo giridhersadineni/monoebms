@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DetainedListController;
 use App\Http\Controllers\Admin\DFormController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\ExamController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\Admin\ExamFeeRuleController;
 use App\Http\Controllers\Admin\FeatureFlagController;
 use App\Http\Controllers\Admin\GradeSheetController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ResultController;
+use App\Http\Controllers\Admin\RevaluationController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +69,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
         Route::get('/exams/{exam}/planning', [ExamController::class, 'planning'])->name('exams.planning');
         Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
+        Route::get('/exams/{exam}/preview-results/{student}', [ExamController::class, 'previewResults'])->name('exams.preview-results');
         Route::get('/exams/{exam}/fee-rules', [ExamFeeRuleController::class, 'index'])->name('exams.fee-rules.index');
     });
     Route::middleware('permission:exams.edit')->group(function () {
@@ -100,6 +104,37 @@ Route::middleware('auth:admin')->group(function () {
     Route::middleware('permission:courses.delete')->group(function () {
         Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
         Route::delete('/courses/{course}/groups/{group}', [CourseController::class, 'destroyGroup'])->name('courses.groups.destroy');
+    });
+
+    // Results
+    Route::middleware('permission:results.view')->group(function () {
+        Route::get('/results', [ResultController::class, 'index'])->name('results.index');
+        // Specific routes before the /results/{exam} wildcard
+        Route::get('/results/lookup', [ResultController::class, 'lookup'])->name('results.lookup');
+        Route::get('/results/enrollment/{enrollment}', [ResultController::class, 'show'])->name('results.show');
+        Route::get('/results/{exam}/records', [ResultController::class, 'records'])->name('results.records');
+        Route::get('/results/{exam}', [ResultController::class, 'entryForm'])->name('results.entry');
+    });
+    Route::middleware('permission:results.edit')->group(function () {
+        Route::post('/results/enrollment/{enrollment}/subject/{result}/recalculate', [ResultController::class, 'recalculateResult'])->name('results.recalculate-result');
+        Route::post('/results/enrollment/{enrollment}/subject/{result}', [ResultController::class, 'updateResult'])->name('results.update-result');
+        Route::post('/results/enrollment/{enrollment}/recalculate-gpa', [ResultController::class, 'recalculateGpa'])->name('results.recalculate-gpa');
+        Route::post('/results', [ResultController::class, 'store'])->name('results.store');
+        Route::post('/results/{exam}/process-gpa', [ResultController::class, 'processGpa'])->name('results.process');
+    });
+
+    // Detained List
+    Route::middleware('permission:results.view')->group(function () {
+        Route::get('/detained', [DetainedListController::class, 'index'])->name('detained.index');
+    });
+
+    // Revaluations
+    Route::middleware('permission:revaluations.view')->group(function () {
+        Route::get('/revaluations', [RevaluationController::class, 'index'])->name('revaluations.index');
+    });
+    Route::middleware('permission:revaluations.edit')->group(function () {
+        Route::get('/revaluations/mark-payment', [RevaluationController::class, 'markPaymentPage'])->name('revaluations.mark-payment');
+        Route::post('/revaluations/{id}/fee', [RevaluationController::class, 'markFeePaid'])->name('revaluations.fee');
     });
 
     Route::middleware('permission:papers.view')->group(function () {

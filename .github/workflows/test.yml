@@ -7,6 +7,8 @@ on:
   pull_request:
     paths:
       - 'apps/ebms-platform/**'
+  # Lets deploy.yml run this exact job as a gate, rather than duplicating it.
+  workflow_call:
 
 jobs:
   test:

@@ -52,9 +52,14 @@ class Result extends Model
         return $query->where('result', 'P');
     }
 
-    // Exclude EX grade papers from GPA calculation
+    // Exclude EX grade papers from GPA calculation.
+    // grade is nullable, and `grade != 'EX'` evaluates to NULL for those rows,
+    // which would filter out every ungraded paper. A paper that passed without
+    // a letter grade recorded still counts, so match NULL explicitly.
     public function scopeExcludeGradeEx($query)
     {
-        return $query->where('grade', '!=', 'EX');
+        return $query->where(
+            fn ($q) => $q->where('results.grade', '<>', 'EX')->orWhereNull('results.grade')
+        );
     }
 }

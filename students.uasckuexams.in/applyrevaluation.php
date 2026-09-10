@@ -57,18 +57,7 @@ if( isset($_POST['processapplication'])){
 
 ?>
 <?php include "header.php";
-// Fetch revaluable papers by EXAMID + HALLTICKET. The URL id is examenrollments.ID;
-// for some exams the legacy RESULTS.EID does not match it, so keying by EID returns
-// nothing. Prefer explicit examid/hallticket from the link, else derive from the id.
-$eid = intval($_GET["id"]);
-$examid = isset($_GET['examid']) ? intval($_GET['examid']) : 0;
-$hallticket = isset($_GET['hallticket']) ? preg_replace('/[^A-Za-z0-9]/', '', $_GET['hallticket']) : '';
-if (!$examid || $hallticket === '') {
-    $enrollmentrow = get_one_assoc("select EXAMID, HALLTICKET from examenrollments where ID=$eid");
-    $examid = intval($enrollmentrow['EXAMID']);
-    $hallticket = preg_replace('/[^A-Za-z0-9]/', '', $enrollmentrow['HALLTICKET']);
-}
-$res = "select * from RESULTS where EXAMID=$examid and HALLTICKET='$hallticket' group by PAPERCODE";
+$res = "select * from RESULTS where EID=".$_GET["id"];
 $result=get_result_assoc($res);
 
 ?>

@@ -16,7 +16,7 @@ class SsoLoginTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['services.legacy_sso.secret' => $this->secret]);
+        config(['auth.sso_secret' => $this->secret]);
     }
 
     private function validUrl(string $hallTicket, int $ts): string
@@ -41,11 +41,11 @@ class SsoLoginTest extends TestCase
     {
         Student::factory()->create(['hall_ticket' => 'SSO0000002']);
 
-        $staleTs = time() - 400; // older than 5-minute window
+        $staleTs = time() - 120; // older than the 60-second window
         $response = $this->get($this->validUrl('SSO0000002', $staleTs));
 
         $response->assertRedirect('/student/login');
-        $response->assertSessionHasErrors('error');
+        $response->assertSessionHasErrors('hall_ticket');
         $this->assertGuest('student');
     }
 
@@ -59,7 +59,7 @@ class SsoLoginTest extends TestCase
         $response = $this->get("/student/sso?ht=SSO0000003&ts={$ts}&sig=bad{$sig}");
 
         $response->assertRedirect('/student/login');
-        $response->assertSessionHasErrors('error');
+        $response->assertSessionHasErrors('hall_ticket');
         $this->assertGuest('student');
     }
 
@@ -69,7 +69,7 @@ class SsoLoginTest extends TestCase
         $response = $this->get($this->validUrl('DOESNOTEXIST', time()));
 
         $response->assertRedirect('/student/login');
-        $response->assertSessionHasErrors('error');
+        $response->assertSessionHasErrors('hall_ticket');
         $this->assertGuest('student');
     }
 
@@ -79,6 +79,6 @@ class SsoLoginTest extends TestCase
         $response = $this->get('/student/sso');
 
         $response->assertRedirect('/student/login');
-        $response->assertSessionHasErrors('error');
+        $response->assertSessionHasErrors('hall_ticket');
     }
 }

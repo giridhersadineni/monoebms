@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Student\AuthController;
-use App\Http\Controllers\Student\SsoController;
 use App\Http\Controllers\Student\ChallanController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\EnrollmentController;
@@ -11,9 +10,6 @@ use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\RevaluationController;
 use Illuminate\Support\Facades\Route;
-
-// SSO from legacy portal (no auth required, no CSRF)
-Route::get('/sso', [SsoController::class, 'handle'])->name('sso');
 
 // Guest only
 Route::middleware('guest:student')->group(function () {

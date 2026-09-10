@@ -37,9 +37,10 @@ class FeeMarkingTest extends TestCase
     }
 
     #[Test]
-    public function staff_cannot_mark_fee_without_correct_role(): void
+    public function staff_cannot_mark_fee_without_the_enrollments_edit_permission(): void
     {
-        // Staff can still mark fee (role gate is only on student update, result store/process, grade generate)
+        // The fee route sits behind permission:enrollments.edit, and that feature
+        // defaults to the admin role only (AdminFeature::defaultRoles).
         $staff      = AdminUser::factory()->create(['role' => 'staff']);
         $enrollment = ExamEnrollment::factory()->feePending()->create();
 
@@ -50,7 +51,29 @@ class FeeMarkingTest extends TestCase
                 'challan_received_by'  => 'Ravi Kumar',
             ]);
 
-        // Fee marking is allowed for all admin roles
+        $response->assertForbidden();
+        $enrollment->refresh();
+        $this->assertNull($enrollment->fee_paid_at);
+    }
+
+    #[Test]
+    public function staff_granted_enrollments_edit_can_mark_fee(): void
+    {
+        // An explicit grant overrides the role default, so the same staff user
+        // succeeds once the permission is present.
+        $staff = AdminUser::factory()->create([
+            'role'        => 'staff',
+            'permissions' => ['enrollments.edit'],
+        ]);
+        $enrollment = ExamEnrollment::factory()->feePending()->create();
+
+        $response = $this->actingAs($staff, 'admin')
+            ->post("/admin/enrollments/{$enrollment->id}/fee", [
+                'challan_number'       => 'CHLN12345',
+                'challan_submitted_on' => '2025-03-01',
+                'challan_received_by'  => 'Ravi Kumar',
+            ]);
+
         $response->assertRedirect();
         $enrollment->refresh();
         $this->assertNotNull($enrollment->fee_paid_at);

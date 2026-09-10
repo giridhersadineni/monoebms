@@ -1,12 +1,5 @@
+
 <?php include "header.php";?>
-
-<style>
-label{
-    color:black;
-}
-
-</style>
-
 
 <div class="page-wrapper">
 <!-- Bread crumb -->
@@ -19,7 +12,7 @@ label{
 <div class="card">
 
 <div class="card-header">
-<label>Change Password </label>
+<h4 class="m-b-0 text-primary display-6">Change Password </h4>
 </div>
  <br>
 
@@ -29,20 +22,20 @@ label{
     <center>
 <div class="form-group" >
 <div class="col-md-6">
-<label>Current Password:</label>
+<label for="name">Current Password:</label>
 
 <input type="text" class="form-control input-focus " placeholder="Enter password" name="cpswd">
 </div></div>
 
 <div class="form-group">
 <div class="col-md-6">
-<label>New Password:</label>
+<label for="name">New Password:</label>
 <input type="text" class="form-control input-focus " placeholder="New password" name="npswd">
 </div></div>
 
 <div class="form-group">
 <div class="col-md-6">
-<label>Re-enter Password:</label>
+<label for="name">Re-enter Password:</label>
 <input type="text" class="form-control input-focus " placeholder="Re-enter password" name="rpswd">
 </div></div>
 </center>

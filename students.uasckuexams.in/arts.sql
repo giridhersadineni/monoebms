@@ -73,7 +73,7 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`id`, `sname`, `fname`, `mname`, `email`, `phone`, `group`, `haltckt`, `sem`, `year`, `aadhar`, `address`, `address2`, `mandal`, `city`, `state`, `pincode`, `imgurl`, `signature`) VALUES
-(1, 'rajesh', 'kannaiah', 'shobhrani', 'rajesh.koraboina19@gmail.com', '', 'cse', '', '', 0, 123456789, 'gudibandal', 'gudibandal', 'hnk', 'hnk', 'TELANGANA', 506001, '', ''),
+(1, 'rajesh', 'kannaiah', 'shobhrani', 'rajesh.koraboina19@gmail.com', '8686962607', 'cse', '12s51a516', '', 0, 123456789, 'gudibandal', 'gudibandal', 'hnk', 'hnk', 'TELANGANA', 506001, '', ''),
 (2, 'manish', 'praveen', 'vijaya', 'mainshkotti@gmail.com', '122554555', 'b.com', '12511245862', '', 0, 1478956933, 'new shampet', 'subadari', 'hnk', 'hnk', 'TELANGANA', 506002, '', '');
 
 --

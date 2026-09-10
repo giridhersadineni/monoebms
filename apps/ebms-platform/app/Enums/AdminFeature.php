@@ -20,6 +20,10 @@ enum AdminFeature: string
     case PapersView          = 'papers.view';
     case PapersEdit          = 'papers.edit';
     case PapersDelete        = 'papers.delete';
+    case ResultsView         = 'results.view';
+    case ResultsEdit         = 'results.edit';
+    case RevaluationsView    = 'revaluations.view';
+    case RevaluationsEdit    = 'revaluations.edit';
     case DFormView           = 'dform.view';
     case AttendanceView      = 'attendance.view';
     case GradesheetsView     = 'gradesheets.view';
@@ -44,6 +48,10 @@ enum AdminFeature: string
             self::PapersView          => 'View Papers',
             self::PapersEdit          => 'Edit Papers',
             self::PapersDelete        => 'Delete Papers',
+            self::ResultsView         => 'View Results',
+            self::ResultsEdit         => 'Edit Results',
+            self::RevaluationsView    => 'View Revaluations',
+            self::RevaluationsEdit    => 'Edit Revaluations',
             self::DFormView           => 'View D-Form',
             self::AttendanceView      => 'View Attendance',
             self::GradesheetsView     => 'View Grade Sheets',
@@ -70,6 +78,10 @@ enum AdminFeature: string
             self::PapersView,
             self::PapersEdit,
             self::PapersDelete        => 'Papers',
+            self::ResultsView,
+            self::ResultsEdit         => 'Results',
+            self::RevaluationsView,
+            self::RevaluationsEdit    => 'Revaluations',
             self::DFormView           => 'Pre Exam',
             self::AttendanceView      => 'Pre Exam',
             self::GradesheetsView,
@@ -89,6 +101,8 @@ enum AdminFeature: string
             self::PapersView,
             self::DFormView,
             self::AttendanceView,
+            self::ResultsView,
+            self::RevaluationsView,
             self::GradesheetsView     => ['admin', 'staff'],
             self::StudentsEdit,
             self::StudentsDelete,
@@ -99,7 +113,9 @@ enum AdminFeature: string
             self::CoursesEdit,
             self::CoursesDelete,
             self::PapersEdit,
-            self::PapersDelete        => ['admin'],
+            self::PapersDelete,
+            self::ResultsEdit,
+            self::RevaluationsEdit    => ['admin'],
             self::GradesheetsGenerate => [],
         };
     }

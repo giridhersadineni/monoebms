@@ -15,6 +15,8 @@
         'P'                 => ['bg-emerald-50', 'text-emerald-800', 'ring-emerald-200'],
         'F'                 => ['bg-red-50',     'text-red-700',     'ring-red-200'],
         'AB'                => ['bg-orange-50',  'text-orange-700',  'ring-orange-200'],
+        'MP'                => ['bg-red-50',     'text-red-700',     'ring-red-200'],
+        'R'                 => ['bg-amber-50',   'text-amber-800',   'ring-amber-200'],
         default             => ['bg-stone-100',  'text-stone-600',   'ring-stone-200'],
     };
     $label = match($status) {
@@ -24,6 +26,8 @@
         'P'                 => 'Pass',
         'F'                 => 'Fail',
         'AB'                => 'Absent',
+        'MP'                => 'Malpractice',
+        'R'                 => 'Promoted',
         default             => strtoupper($status),
     };
 @endphp

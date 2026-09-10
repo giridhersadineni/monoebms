@@ -55,9 +55,9 @@ monoebms/
 │       │   ├── admin.php
 │       │   └── student.php
 │       └── docs/               ← you are here
-├── students.uasckuexams.in/    ← legacy portal (maintenance only)
-├── backoffice.uasckuexams.in/  ← legacy portal (maintenance only)
-└── postexams.uasckuexams.in/   ← legacy portal (maintenance only)
+├── students.uasckuexams.in/    ← legacy student portal (maintenance only)
+├── backoffice.uasckuexams.in/  ← legacy admin portal (maintenance only)
+└── postexams.uasckuexams.in/   ← legacy result processing (maintenance only)
 ```
 
 > **Legacy portals** are in maintenance mode — do not add features.

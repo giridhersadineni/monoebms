@@ -17,21 +17,10 @@ function getresult($sql)
        else{
          $resultset=$conn->query($sql);    
        }
-       
+        $conn->close();
     }
-
+    
     return $resultset;
-
-}
-
-function getconnection()
-{
-    global $servername, $dbuser, $dbpwd, $dbname;
-    $conn = mysqli_connect($servername, $dbuser, $dbpwd, $dbname);
-    if (!$conn) {
-        die("connection failed:" . mysqli_connect_error());
-    } 
-    return $conn;
 
 }
 
@@ -51,16 +40,8 @@ function get_one($sql)
        else{
          $resultset=$conn->query($sql);    
        }
-       
+       $conn->close();
     }
-    
-    return $resultset;
-
-}
-
-function get_one_assoc($sql)
-{
-    $resultset=get_one($sql);
     $returndata=mysqli_fetch_assoc($resultset);
     return $returndata;
 
@@ -76,14 +57,6 @@ function get_result_array($sql){
     return $ret;
 }
 
-function get_result_assoc($sql){
-    $resultset=getresult($sql);
-    $ret=array();
-    while($row=mysqli_fetch_assoc($resultset)){
-        array_push($ret,$row);
-    }
-    return $ret;
-}
 
 
 
@@ -111,7 +84,7 @@ function getjsonresult($sql)
 
 }
 
-function getdatatable($sql,$class,$id,$action="",$secondaction=""){
+function getdatatable($sql,$class,$id,$action="",$secondaction="",$thirdaction){
     
     $rows=getresult($sql);
     $flag=true;
@@ -124,7 +97,9 @@ function getdatatable($sql,$class,$id,$action="",$secondaction=""){
     if($secondaction!=""){
         echo "<th>Action 2</th>";
     }
-    $delid=array_shift($firstrow);
+    if($thirdaction!=""){
+        echo "<th>Action 3</th>";
+    }
     foreach($firstrow as $key=>$value){
        echo "<th>".$key."</th>";
     }
@@ -136,8 +111,12 @@ function getdatatable($sql,$class,$id,$action="",$secondaction=""){
         $json=json_encode($row);
         $id=array_shift($row);
         echo "<td><button onclick='$action($id);'  class='btn btn-primary' data='$json' id='$id'>$action</button></td>";
+        echo "<td>$id</td>";
         if($secondaction!=""){
         echo "<td><button onclick='$secondaction($id);'  class='btn btn-info' data='$json' id='$id'>$secondaction</button></td>";
+        }
+        if($thirdaction!=""){
+        echo "<td><button onclick='$thirdaction($id);'  class='btn btn-info' data='$json' id='$id'>$thirdaction</button></td>";
         }
         foreach($row as $value){
          echo "<td>$value</td>";   

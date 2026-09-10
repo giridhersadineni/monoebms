@@ -6,6 +6,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **EBMS monorepo** — a Strangler Fig migration from legacy multi-domain PHP portals to a single-domain Laravel 12 modular monolith. All net-new development happens in `apps/ebms-platform/`. Legacy apps (`students.uasckuexams.in/`, `backoffice.uasckuexams.in/`, `postexams.uasckuexams.in/`) are in maintenance mode — keep them stable, do not add features.
 
+### Legacy apps
+
+| Directory | Role | Login |
+|---|---|---|
+| `students.uasckuexams.in/` | **Student portal** — apply for an exam, pay, hall ticket, results, revaluation | Hall ticket + DOB / DOST ID |
+| `backoffice.uasckuexams.in/` | **Admin portal** — add students, enter marks, tabulation, BOS reports, consolidated memos. Staff pages also live in subdirs (`ebms/`, `exams/`, `manage/`, `preexam/`, `grades/`) | Mixed; see that app's pages |
+| `postexams.uasckuexams.in/` | Result processing (moderation, floatation, GPA scripts). **Currently empty in this checkout** — nothing tracked in git | — |
+
+Check which app you are in before adding a page: a staff-only list does not belong in
+`students.uasckuexams.in/`, and a student self-service page does not belong in
+`backoffice.uasckuexams.in/`.
+
+> **Path history:** until 2026-08-11 these two checkouts sat in each other's directories — the student
+> portal's files were under `backoffice.uasckuexams.in/` and the admin portal's under
+> `students.uasckuexams.in/`. They were swapped so each directory matches the hostname it deploys to.
+> Commits before that date have the two paths reversed.
+
+`students.uasckuexams.in/CLAUDE.md` documents the student portal in detail — its page recipe, the
+`examsmaster.STATUS` lifecycle, the `S1..S10`/`E1..E5` flat-subject-column schema, dead/duplicated
+files, and the security rules for editing it (identity currently comes from a client-controlled
+cookie, and SQL is string-interpolated throughout). **Read it before touching that directory.**
+
+All three legacy apps share the legacy MySQL DB `uascexams_ebms` via env vars
+(`EBMS_DB_HOST`/`EBMS_DB_USER`/`EBMS_DB_PASSWORD`/`EBMS_DB_NAME`). `database/schema.sql` at the repo
+root is a **partial** dump — `rholdernew`, `enrolledview`, `transactions`, and `subs5sem` are missing
+from it; inspect the live DB for those.
+
 ## Primary App: `apps/ebms-platform/`
 
 ### Commands
@@ -148,15 +175,6 @@ Blade templates with inline styles (CSS variables from `resources/css/app.css`).
 - After every deploy run: `php artisan optimize:clear` to flush route/view/config caches
 - Deploys happen off the `release` branch, which multiple people push to — `git push origin release` frequently rejects; `git pull --rebase origin release` before pushing, and expect the occasional same-file conflict to resolve
 - Frontend: run `npm run build` locally and scp `public/build/` to server — Node.js is not available on the server
-- **SSH key is passphrase-protected.** Direct `ssh`/`scp` fails without loading the key first. Use ssh-agent in the same shell context:
-
-```bash
-eval $(ssh-agent -s) && \
-printf '#!/bin/sh\necho "PASSPHRASE"' > /tmp/askpass.sh && chmod +x /tmp/askpass.sh && \
-DISPLAY=fake SSH_ASKPASS=/tmp/askpass.sh ssh-add ~/.ssh/ebmsnova 2>/dev/null && \
-# scp / ssh commands here
-rm /tmp/askpass.sh
-```
 
 ### Known Open Issues (production)
 
@@ -187,7 +205,7 @@ Repo-specific skills live in `skills/` and teach AI coding agents the project's 
 
 All skills in this repo share the same core rules regardless of agent:
 
-1. **Net-new code only in `apps/ebms-platform/`** — never add features to `studentsportal/`.
+1. **Net-new code only in `apps/ebms-platform/`** — never add features to the legacy portals (`students.uasckuexams.in/`, `backoffice.uasckuexams.in/`, `postexams.uasckuexams.in/`).
 2. **Module path boundaries** — `/student/*`, `/backoffice/*`, `/postexam/*` must be preserved.
 3. **OWASP security controls** — parameterized queries, `FormRequest` validation, JSON error contract with `trace_id`, security headers, audit logging for identity/finance/enrollment/result actions.
 4. **No hardcoded secrets** — all credentials via env vars.
@@ -208,7 +226,7 @@ Edit the relevant `SKILL.md` under `skills/<agent>/`. Keep the YAML frontmatter 
 - Single domain, module paths `/student/*` and `/admin/*` (future: `/backoffice/*`, `/postexam/*`) must be preserved
 - OWASP controls and PII handling required — `aadhaar`, `dob`, `dost_id`, `email` are `$hidden` on models
 - No hardcoded secrets; use env vars
-- `studentsportal/` legacy app must remain stable during migration
+- The legacy portals (`students.uasckuexams.in/`, `backoffice.uasckuexams.in/`, `postexams.uasckuexams.in/`) must remain stable during migration — hotfixes and security fixes only
 
 ## AI Agent Skills
 
@@ -235,7 +253,7 @@ Agent-specific skill files live in `skills/<platform>/SKILL.md`. Each file is a 
 1. Net-new code only in `apps/ebms-platform/`.
 2. Respect module path boundaries: `/student/*`, `/admin/*` (future: `/backoffice/*`, `/postexam/*`).
 3. Never hardcode secrets — use env vars.
-4. Keep `studentsportal/` stable (hotfixes/security only).
+4. Keep the legacy portals stable (hotfixes/security only) — see `students.uasckuexams.in/CLAUDE.md` for the student portal's rules.
 5. After every change run `php artisan route:list && php artisan test`.
 
 ### Adding or updating a skill

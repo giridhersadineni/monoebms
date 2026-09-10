@@ -1,31 +1,100 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Contact Us</title>
-</head>
-<body>
+<?php include "header.php"?>
+
+<style>
+.button
+{
+    background-color:#008CBA;
+    color:white;
+}
+h3
+{
+    color:blue;
+}
+</style>
+
+<div class="page-wrapper">
+<!-- Bread crumb -->
+
+
+<div class="row justify-content-center">
+<div class="col-lg-9">
+<div class="card card-outline-primary">
+
+<center>
+<div class="card-header">
+<h4 class="m-b-0 text-white">EMAIL US</h4>                          
+</center>
+     
+                
+<div class="col-md-15">
+<div class="card">
+<div class="card-body">
+<h4 class="card-title"></h4>
+
+<!-- Tab panes -->
+<div class="tab-pane active" id="employee" role="tabpanel">
+<div class="p-100">
+
+<div class="card-body">
+<div class="basic-form">
+
+
 <?php
 	if (!array_key_exists('Submitted',$_POST))
 	{
 ?>
-		<form method="post" action="email.php">
 
-		<input type="hidden" name="Submitted" value="true">
+<form method="post" action="email.php">
+            
+<div class="row ">
+<div class="col-md-6">
+<div class="form-group">
+<input type="hidden"  name="Submitted" value="true">
+    </div>
+    </div>
+    </div>
 
-		Mail Server: <input type="text" name="Host" size="25"><br>
-
-		To: <input type="text" name="To" size="25"><br>
-
-		From: <input type="text" name="From" size="25"><br>
-
-		Subject: <input type="text" name="Subject" size="25"><br>
-
-		<textarea name="Message" cols="50" rows="10"></textarea><br>
-
-		<input type="submit" value="Send Email">
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+	<b style="color:Black;">To:</b> <input type="text" class="form-control input-focus" name="To" size="25">
+    </div>
+    </div>
+    </div>
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+		<b style="color:Black;">From:</b> <input type="text" class="form-control input-focus" name="From" size="25">
+    </div>
+    </div>
+    </div>
+    <div class="row ">
+<div class="col-md-6">
+<div class="form-group">
+<b style="color:Black;">Subject:</b> <input type="text" class="form-control input-focus" name="Subject" size="25">
+    </div>
+    </div>
+    </div>
+    <div class="row ">
+<div class="col-md-6">
+    <div class="form-group">
+<b style="color:Black;">Message:</b><br>
+<textarea name="Message" class="input-focus" cols="60" rows="10"></textarea>
+    </div>
+    </div>
+    </div>
+		<input type="submit" class="button" value="Send Email">
         
 		</form>
+        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- /# card -->
+</div>
+<!-- /# column -->
+
 
 <?php
 	}
@@ -47,5 +116,9 @@
 		}
 	}
 ?>
-</body>
-</html>
+</div>
+</div>
+<?php include "footer.php"?>
+
+
+
